@@ -121,7 +121,7 @@ export default function TaskDetailPage() {
 
   return (
     <div className="flex-1 flex flex-col">
-      <TopBar title={task.title} onBack={() => router.push("/tasks")} />
+     <TopBar title={task.title} onBack={() => router.push("/")} />
 
       <div className="px-6 pt-4">
         <TaskAnnouncement task={task} />
