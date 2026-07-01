@@ -62,13 +62,13 @@ export default function HomePage() {
                 <button
                   key={g.key}
                   onClick={() => setModal(g)}
-                  className="group bg-white border border-gray-200 rounded-2xl p-4 flex flex-col gap-2 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition"
+                  className="group bg-white border border-gray-200 rounded-2xl p-4 flex flex-col gap-1 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition"
                 >
-                  <Icon size={20} className="text-emerald-500 shrink-0" />
-                  <div>
+                  <div className="flex items-center gap-1.5">
+                    <Icon size={15} className="text-emerald-500 shrink-0" />
                     <p className="text-sm font-semibold text-gray-800 whitespace-nowrap">{g.title}</p>
-                    <p className="text-[11px] text-gray-400 mt-0.5 whitespace-nowrap">查看圖文步驟</p>
                   </div>
+                  <p className="text-[11px] text-gray-400 whitespace-nowrap pl-[21px]">查看圖文步驟</p>
                 </button>
               );
             })}
