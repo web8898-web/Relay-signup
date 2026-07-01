@@ -43,28 +43,31 @@ export default function TaskListCard({ task, signupCount, onEdit, onDelete }) {
             <MoreVertical size={18} />
           </button>
           {menuOpen && (
-            <div className="absolute right-0 top-9 bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-20 w-32">
+            <div className="absolute right-0 top-9 bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-20 w-44">
               {!confirmDelete ? (
                 <button
                   onClick={() => setConfirmDelete(true)}
-                  className="w-full text-left px-3 py-2 text-sm text-rose-500 hover:bg-rose-50"
+                  className="w-full text-center px-3 py-2.5 text-sm text-rose-500 hover:bg-rose-50 rounded-lg"
                 >
                   移除
                 </button>
               ) : (
-                <div className="px-3 py-2">
-                  <p className="text-[11px] text-gray-500 mb-1.5">確定移除？</p>
-                  <div className="flex gap-3">
+                <div className="px-3 py-3">
+                  <p className="text-xs text-gray-500 mb-2.5 text-center">確定移除？</p>
+                  <div className="flex gap-2">
                     <button
                       onClick={() => {
                         onDelete();
                         setMenuOpen(false);
                       }}
-                      className="text-xs text-rose-500 font-medium"
+                      className="flex-1 text-sm text-rose-500 font-medium py-2 rounded-lg hover:bg-rose-50"
                     >
                       是
                     </button>
-                    <button onClick={() => setConfirmDelete(false)} className="text-xs text-gray-400">
+                    <button
+                      onClick={() => setConfirmDelete(false)}
+                      className="flex-1 text-sm text-gray-500 py-2 rounded-lg hover:bg-gray-50"
+                    >
                       否
                     </button>
                   </div>
