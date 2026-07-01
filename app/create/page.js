@@ -64,8 +64,6 @@ export default function CreateTaskPage() {
         以 <span className="font-medium text-gray-600">{profile.displayName}</span> 身分登入
       </div>
       <TaskForm accessToken={profile.accessToken} onCreated={(id) => router.push(`/create/share/${id}`)} />
-        }}
-      />
     </div>
   );
 }
