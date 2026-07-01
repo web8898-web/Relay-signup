@@ -144,7 +144,7 @@ export default function MyTasksPage() {
       </div>
 
       {toast && (
-        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm px-4 py-2 rounded-full shadow-lg z-50">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm px-4 py-2 rounded-full shadow-lg z-50 whitespace-nowrap">
           {toast}
         </div>
       )}
