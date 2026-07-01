@@ -9,11 +9,11 @@ export function TopBar({ title, backHref, onBack, right }) {
         <Link href={backHref} className="text-white/90 hover:text-white">
           <ArrowLeft size={20} />
         </Link>
-      ) : (
+      ) : onBack ? (
         <button onClick={onBack} className="text-white/90 hover:text-white">
           <ArrowLeft size={20} />
         </button>
-      )}
+      ) : null}
       <p className="font-bold flex-1 truncate">{title}</p>
       {right}
     </div>
