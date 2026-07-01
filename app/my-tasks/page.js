@@ -13,7 +13,7 @@ export default function MyTasksPage() {
   const router = useRouter();
   const { profile, loading, error, login } = useLineProfile();
   const [tasks, setTasks] = useState([]);
-  const [counts, setCounts] = useState({});
+  const [signupsByTask, setSignupsByTask] = useState({});
   const [tasksLoading, setTasksLoading] = useState(true);
   const [toast, setToast] = useState("");
 
@@ -35,13 +35,15 @@ export default function MyTasksPage() {
     if (data?.length) {
       const { data: signupData } = await supabase
         .from("signups")
-        .select("task_id")
-        .in("task_id", data.map((t) => t.id));
+        .select("task_id, name, note, category, created_at")
+        .in("task_id", data.map((t) => t.id))
+        .order("created_at", { ascending: true });
       const map = {};
       (signupData || []).forEach((s) => {
-        map[s.task_id] = (map[s.task_id] || 0) + 1;
+        if (!map[s.task_id]) map[s.task_id] = [];
+        map[s.task_id].push(s);
       });
-      setCounts(map);
+      setSignupsByTask(map);
     }
     setTasksLoading(false);
   }
@@ -124,7 +126,7 @@ export default function MyTasksPage() {
           <TaskListCard
             key={t.id}
             task={t}
-            signupCount={counts[t.id] || 0}
+            signups={signupsByTask[t.id] || []}
             onEdit={() => router.push(`/my-tasks/${t.id}/edit`)}
             onShare={() => router.push(`/create/share/${t.id}`)}
             onDelete={() => handleDelete(t.id)}
