@@ -50,6 +50,11 @@ export default function TaskDetailPage() {
 
   const closed = task ? taskStatus(task).label === "已截止" : false;
 
+  const categoryCounts = {};
+  for (const s of signups) {
+    if (s.category) categoryCounts[s.category] = (categoryCounts[s.category] || 0) + 1;
+  }
+
   async function handleSend() {
     if (!name.trim() || !task) return;
     if (task.categories?.length > 0 && !category) return;
@@ -170,6 +175,7 @@ export default function TaskDetailPage() {
                   }`}
                 >
                   {c}
+                  <span className={`ml-1 ${category === c ? "text-white/70" : "text-gray-400"}`}>{categoryCounts[c] || 0}</span>
                 </button>
               ))}
             </div>
