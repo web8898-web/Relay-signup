@@ -1,124 +1,53 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { Share2, Copy, Loader2 } from "lucide-react";
-import { TopBar } from "@/components/TopBar";
-import TaskShareCard from "@/components/TaskShareCard";
-import { supabase } from "@/lib/supabaseClient";
-import { buildShareText, lineShareUrl, buildFlexMessage } from "@/lib/utils";
-import { liff } from "@/lib/liff";
+import Link from "next/link";
+import { ClipboardList, PenLine, ChevronRight, MessageCircle } from "lucide-react";
 
-export default function ShareTaskPage() {
-  const { id } = useParams();
-  const router = useRouter();
-  const [task, setTask] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState("");
-
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase.from("tasks").select("*").eq("id", id).single();
-      setTask(data || null);
-      setLoading(false);
-    })();
-  }, [id]);
-
-  function showToast(msg) {
-    setToast(msg);
-    setTimeout(() => setToast(""), 2600);
-  }
-
-  function taskUrl() {
-    return `${window.location.origin}/tasks/${id}`;
-  }
-
-  async function handleLineShare() {
-    if (!task) return;
-    const url = taskUrl();
-    try {
-      if (liff.isApiAvailable && liff.isApiAvailable("shareTargetPicker")) {
-        const flexMessage = buildFlexMessage(task, url);
-        await liff.shareTargetPicker([flexMessage]);
-        showToast("已開啟分享選單");
-        return;
-      }
-    } catch (e) {
-      showToast("卡片分享失敗，改用文字分享");
-    }
-    const text = buildShareText(task, url);
-    window.open(lineShareUrl(text), "_blank", "noopener,noreferrer");
-  }
-
-  async function handleCopy() {
-    if (!task) return;
-    const text = buildShareText(task, taskUrl());
-    try {
-      await navigator.clipboard.writeText(text);
-      showToast("已複製訊息文字");
-    } catch (e) {
-      showToast("複製失敗，請手動選取文字");
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex-1 flex flex-col">
-        <TopBar title="分享任務" onBack={() => router.push("/my-tasks")} />
-        <div className="flex-1 flex items-center justify-center text-emerald-500">
-          <Loader2 className="animate-spin" size={28} />
-        </div>
-      </div>
-    );
-  }
-
-  if (!task) return null;
-
+export default function HomePage() {
   return (
-    <div className="flex-1 flex flex-col relative">
-      <TopBar title="分享任務" onBack={() => router.push(`/my-tasks/${id}`)} />
-      <div className="flex-1 px-5 py-5 overflow-y-auto">
-        <p className="text-xs text-gray-400 mb-3 text-center">這是分享到 LINE 群組時，成員會看到的卡片樣式</p>
-        <TaskShareCard
-          task={task}
-          signupCount={0}
-          previewOnly
-          onPreviewTap={() => showToast("這是預覽卡片，請用下方「分享到 LINE」分享出去")}
-        />
-
-        <div className="mt-6 flex flex-col gap-3">
-          <button
-            onClick={handleLineShare}
-            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-3 font-semibold flex items-center justify-center gap-2 shadow-md shadow-emerald-200 transition"
-          >
-            <Share2 size={17} /> 分享到 LINE
-          </button>
-          <button
-            onClick={handleCopy}
-            className="w-full border border-gray-200 text-gray-600 rounded-full py-3 font-medium flex items-center justify-center gap-2 hover:bg-gray-50 transition"
-          >
-            <Copy size={16} /> 複製訊息文字
-          </button>
+    <div className="flex-1 flex flex-col">
+      <div className="bg-emerald-500 text-white px-6 pt-12 pb-10 rounded-b-[2.5rem] shadow-md">
+        <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mb-4">
+          <MessageCircle size={28} />
         </div>
-
-        <p className="text-[11px] text-gray-300 text-center mt-4 leading-relaxed px-2 break-all">
-          報名連結：{taskUrl()}
+        <h1 className="text-3xl font-bold tracking-tight">接龍報名</h1>
+        <p className="text-emerald-50 mt-2 text-sm leading-relaxed">
+          像在聊天室接龍一樣，開一個任務，讓大家一則一則回覆完成報名。
         </p>
       </div>
 
-      <div className="px-5 pb-6 pt-2">
-        <button
-          onClick={() => router.push(`/my-tasks/${id}`)}
-          className="w-full bg-gray-800 hover:bg-gray-900 text-white rounded-full py-3 font-semibold transition"
+      <div className="flex-1 px-6 py-8 flex flex-col gap-4">
+        <Link
+          href="/my-tasks"
+          className="group w-full bg-white border border-emerald-200 rounded-3xl p-5 flex items-center gap-4 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition"
         >
-          完成
-        </button>
-      </div>
+          <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+            <ClipboardList size={22} />
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-gray-800">任務清單</p>
+            <p className="text-xs text-gray-400 mt-0.5">使用 LINE 登入，管理你建立的任務</p>
+          </div>
+          <ChevronRight size={18} className="text-gray-300 group-hover:text-emerald-400" />
+        </Link>
 
-      {toast && (
-        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm px-4 py-2 rounded-full shadow-lg z-50">
-          {toast}
+        <Link
+          href="/create"
+          className="group w-full bg-white border border-gray-200 rounded-3xl p-5 flex items-center gap-4 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-gray-100 text-gray-600 flex items-center justify-center shrink-0">
+            <PenLine size={22} />
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-gray-800">建立任務</p>
+            <p className="text-xs text-gray-400 mt-0.5">使用 LINE 登入，建立任務並分享到群組</p>
+          </div>
+          <ChevronRight size={18} className="text-gray-300 group-hover:text-emerald-400" />
+        </Link>
+
+        <div className="mt-auto text-center text-[11px] text-gray-300 pt-8">
+          豐碩企業有限公司 版權所有
         </div>
-      )}
+      </div>
     </div>
   );
 }
