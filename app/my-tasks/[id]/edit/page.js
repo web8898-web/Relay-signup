@@ -73,8 +73,8 @@ export default function EditTaskPage() {
 
   return (
     <div className="flex-1 flex flex-col">
-      <TopBar title="編輯任務" onBack={() => router.push(`/my-tasks/${id}`)} />
-      <EditForm task={task} accessToken={profile.accessToken} onSaved={() => router.push(`/my-tasks/${id}`)} />
+      <TopBar title="編輯任務" onBack={() => router.push("/my-tasks")} />
+      <EditForm task={task} accessToken={profile.accessToken} onSaved={() => router.push("/my-tasks")} />
     </div>
   );
 }
