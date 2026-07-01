@@ -1,4 +1,5 @@
 import "./globals.css";
+import LiffBootstrap from "@/components/LiffBootstrap";
 
 export const metadata = {
   title: "接龍報名",
@@ -8,7 +9,8 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="zh-Hant">
-      <body className="bg-gradient-to-b from-emerald-50 via-white to-emerald-50 min-h-screen">
+     <body className="bg-gradient-to-b from-emerald-50 via-white to-emerald-50 min-h-screen">
+        <LiffBootstrap />
         <div className="w-full max-w-md mx-auto min-h-screen bg-white shadow-xl relative flex flex-col">
           {children}
         </div>
