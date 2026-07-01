@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { verifyLineAccessToken, getBearerToken } from "@/lib/lineAuth";
+import { generateShortCode } from "@/lib/shortCode";
 
 export async function POST(request) {
   try {
@@ -14,20 +15,28 @@ export async function POST(request) {
     }
 
     const supabase = getSupabaseAdmin();
-    const { data, error } = await supabase
-      .from("tasks")
-      .insert({
-        title: String(title).slice(0, 200),
-        description: String(description || "").slice(0, 2000),
-        categories: Array.isArray(categories) ? categories.slice(0, 30) : [],
-        start_date,
-        end_date,
-        note: String(note || "").slice(0, 1000),
-        creator_id: profile.userId,
-        creator_name: profile.displayName,
-      })
-      .select()
-      .single();
+
+    // short_code has a unique constraint; on the (very unlikely) chance of
+    // a collision, generate a new one and retry a few times before giving up.
+    let data, error;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      ({ data, error } = await supabase
+        .from("tasks")
+        .insert({
+          title: String(title).slice(0, 200),
+          description: String(description || "").slice(0, 2000),
+          categories: Array.isArray(categories) ? categories.slice(0, 30) : [],
+          start_date,
+          end_date,
+          note: String(note || "").slice(0, 1000),
+          creator_id: profile.userId,
+          creator_name: profile.displayName,
+          short_code: generateShortCode(),
+        })
+        .select()
+        .single());
+      if (!error || error.code !== "23505") break;
+    }
 
     if (error) throw error;
     return NextResponse.json({ task: data });
