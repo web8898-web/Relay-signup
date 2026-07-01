@@ -30,16 +30,16 @@ export default function HomePage() {
           <ChevronRight size={18} className="text-gray-300 group-hover:text-emerald-400" />
         </Link>
 
-        <Link
-          href="/create"
-          className="group w-full bg-white border border-gray-200 rounded-3xl p-5 flex items-center gap-4 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition"
+         <Link
+          href="/my-tasks"
+          className="group w-full bg-white border border-emerald-200 rounded-3xl p-5 flex items-center gap-4 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition"
         >
-          <div className="w-12 h-12 rounded-2xl bg-gray-100 text-gray-600 flex items-center justify-center shrink-0">
-            <PenLine size={22} />
+          <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+            <ClipboardList size={22} />
           </div>
           <div className="flex-1">
-            <p className="font-semibold text-gray-800">建立任務</p>
-            <p className="text-xs text-gray-400 mt-0.5">使用 LINE 登入，建立任務並分享到群組</p>
+            <p className="font-semibold text-gray-800">任務清單</p>
+            <p className="text-xs text-gray-400 mt-0.5">使用 LINE 登入，管理你建立的任務</p>
           </div>
           <ChevronRight size={18} className="text-gray-300 group-hover:text-emerald-400" />
         </Link>
