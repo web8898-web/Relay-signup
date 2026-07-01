@@ -16,7 +16,7 @@ export default function TaskAnnouncement({ task }) {
             <p className="font-bold">{task.title}</p>
             <span className="shrink-0 text-[10px] px-2 py-0.5 rounded-full bg-white/20">{st.label}</span>
           </div>
-          {task.description && <p className="text-sm text-emerald-50 mt-1.5 leading-relaxed">{task.description}</p>}
+          {task.description && <p className="text-sm text-emerald-50 mt-1.5 leading-relaxed whitespace-pre-wrap">{task.description}</p>}
           <div className="flex items-center gap-1 text-[11px] text-emerald-50 mt-2">
             <Calendar size={12} /> {task.start_date} ~ {task.end_date}
           </div>
@@ -27,7 +27,7 @@ export default function TaskAnnouncement({ task }) {
               ))}
             </div>
           )}
-          {task.note && <p className="text-xs text-emerald-50/90 mt-2 border-t border-white/20 pt-2">備註：{task.note}</p>}
+          {task.note && <p className="text-xs text-emerald-50/90 mt-2 border-t border-white/20 pt-2 whitespace-pre-wrap">備註：{task.note}</p>}
         </div>
       </div>
     </div>
