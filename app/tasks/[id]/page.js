@@ -50,11 +50,6 @@ export default function TaskDetailPage() {
 
   const closed = task ? taskStatus(task).label === "已截止" : false;
 
-  const categoryCounts = {};
-  for (const s of signups) {
-    if (s.category) categoryCounts[s.category] = (categoryCounts[s.category] || 0) + 1;
-  }
-
   async function handleSend() {
     if (!name.trim() || !task) return;
     if (task.categories?.length > 0 && !category) return;
@@ -74,12 +69,21 @@ export default function TaskDetailPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setSignups((prev) => [...prev, data.signup]);
       rememberMySignup(data.signup.id);
       setMyIds(getMySignupIds());
       setName("");
       setNote("");
       showToast("已成功接龍！");
+      // Re-fetch from the database instead of only patching local state, so
+      // the list is always guaranteed to match what's actually saved —
+      // this is what fixes the "first signup doesn't show until you leave
+      // and re-open the page" issue.
+      const { data: signupData } = await supabase
+        .from("signups")
+        .select("*")
+        .eq("task_id", id)
+        .order("created_at", { ascending: true });
+      setSignups(signupData || []);
       requestAnimationFrame(() => {
         listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
       });
@@ -162,23 +166,25 @@ export default function TaskDetailPage() {
           此任務已截止，無法再接龍
         </div>
       ) : (
-        <div className="px-6 pb-6 pt-3 border-t border-gray-100 bg-white">
+        <div className="px-6 pb-6 pt-3 border-t-2 border-emerald-100 bg-emerald-50/40">
           {error && <p className="text-xs text-rose-500 mb-2">{error}</p>}
           {task.categories?.length > 0 && (
-            <div className="flex gap-1.5 overflow-x-auto pb-2 mb-1 -mx-1 px-1">
-              {task.categories.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setCategory(c)}
-                  className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition ${
-                    category === c ? "bg-emerald-500 text-white border-emerald-500" : "bg-gray-50 text-gray-500 border-gray-200"
-                  }`}
-                >
-                  {c}
-                  <span className={`ml-1 ${category === c ? "text-white/70" : "text-gray-400"}`}>{categoryCounts[c] || 0}</span>
-                </button>
-              ))}
-            </div>
+            <>
+              <p className="text-[11px] font-semibold text-emerald-700 mb-1.5 px-0.5">👉 選擇你要報名的分類</p>
+              <div className="flex gap-1.5 overflow-x-auto pb-2 mb-1 -mx-1 px-1">
+                {task.categories.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setCategory(c)}
+                    className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition ${
+                      category === c ? "bg-emerald-500 text-white border-emerald-500" : "bg-white text-gray-500 border-gray-200"
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </>
           )}
           <div className="flex flex-col gap-2">
             <input
