@@ -32,7 +32,7 @@ export default function ShareTaskPage() {
     return `${window.location.origin}/tasks/${id}`;
   }
 
-   async function handleLineShare() {
+  async function handleLineShare() {
     if (!task) return;
     const url = taskUrl();
     try {
@@ -42,9 +42,12 @@ export default function ShareTaskPage() {
         showToast("已開啟分享選單");
         return;
       }
-    } catch (e) {}
+    } catch (e) {
+      window.alert("卡片分享失敗，原因：" + (e?.message || JSON.stringify(e)));
+    }
     const text = buildShareText(task, url);
     window.open(lineShareUrl(text), "_blank", "noopener,noreferrer");
+  }
 
   async function handleCopy() {
     if (!task) return;
