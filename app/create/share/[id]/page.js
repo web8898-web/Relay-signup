@@ -5,7 +5,8 @@ import { Share2, Copy, Loader2 } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import TaskShareCard from "@/components/TaskShareCard";
 import { supabase } from "@/lib/supabaseClient";
-import { buildShareText, lineShareUrl } from "@/lib/utils";
+import { buildShareText, lineShareUrl, buildFlexMessage } from "@/lib/utils";
+import { liff } from "@/lib/liff";
 
 export default function ShareTaskPage() {
   const { id } = useParams();
@@ -31,11 +32,19 @@ export default function ShareTaskPage() {
     return `${window.location.origin}/tasks/${id}`;
   }
 
-  function handleLineShare() {
+   async function handleLineShare() {
     if (!task) return;
-    const text = buildShareText(task, taskUrl());
+    const url = taskUrl();
+    try {
+      if (liff.isApiAvailable && liff.isApiAvailable("shareTargetPicker")) {
+        const flexMessage = buildFlexMessage(task, url);
+        await liff.shareTargetPicker([flexMessage]);
+        showToast("已開啟分享選單");
+        return;
+      }
+    } catch (e) {}
+    const text = buildShareText(task, url);
     window.open(lineShareUrl(text), "_blank", "noopener,noreferrer");
-  }
 
   async function handleCopy() {
     if (!task) return;
