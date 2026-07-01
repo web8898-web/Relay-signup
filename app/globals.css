@@ -24,3 +24,6 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+input, textarea, select {
+  font-size: 16px !important;
+}
