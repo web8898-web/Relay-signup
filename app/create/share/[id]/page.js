@@ -12,6 +12,7 @@ export default function ShareTaskPage() {
   const { id } = useParams();
   const router = useRouter();
   const [task, setTask] = useState(null);
+  const [signupCount, setSignupCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
 
@@ -19,6 +20,11 @@ export default function ShareTaskPage() {
     (async () => {
       const { data } = await supabase.from("tasks").select("*").eq("id", id).single();
       setTask(data || null);
+      const { count } = await supabase
+        .from("signups")
+        .select("id", { count: "exact", head: true })
+        .eq("task_id", id);
+      setSignupCount(count || 0);
       setLoading(false);
     })();
   }, [id]);
@@ -80,7 +86,7 @@ export default function ShareTaskPage() {
         <p className="text-xs text-gray-400 mb-3 text-center">這是分享到 LINE 群組時，成員會看到的卡片樣式</p>
         <TaskShareCard
           task={task}
-          signupCount={0}
+          signupCount={signupCount}
           previewOnly
           onPreviewTap={() => showToast("這是預覽卡片，請用下方「分享到 LINE」分享出去")}
         />
