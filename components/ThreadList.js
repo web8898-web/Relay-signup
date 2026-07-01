@@ -14,6 +14,11 @@ export default function ThreadList({ signups, myIds, categories, onUpdate, onDel
 
   const filtered = filter === "全部" ? signups : signups.filter((s) => s.category === filter);
 
+  const categoryCounts = {};
+  for (const s of signups) {
+    if (s.category) categoryCounts[s.category] = (categoryCounts[s.category] || 0) + 1;
+  }
+
   function startEdit(s) {
     setEditingId(s.id);
     setEditName(s.name);
@@ -38,6 +43,7 @@ export default function ThreadList({ signups, myIds, categories, onUpdate, onDel
             className={`shrink-0 text-xs px-3 py-1 rounded-full border ${filter === "全部" ? "bg-gray-800 text-white border-gray-800" : "bg-gray-50 text-gray-500 border-gray-200"}`}
           >
             全部
+            <span className={`ml-1 ${filter === "全部" ? "text-white/70" : "text-gray-400"}`}>{signups.length}</span>
           </button>
           {categories.map((c) => (
             <button
@@ -46,6 +52,7 @@ export default function ThreadList({ signups, myIds, categories, onUpdate, onDel
               className={`shrink-0 text-xs px-3 py-1 rounded-full border ${filter === c ? "bg-emerald-500 text-white border-emerald-500" : chipClass(c)}`}
             >
               {c}
+              <span className={`ml-1 ${filter === c ? "text-white/70" : "opacity-60"}`}>{categoryCounts[c] || 0}</span>
             </button>
           ))}
         </div>
