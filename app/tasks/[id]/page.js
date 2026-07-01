@@ -162,25 +162,26 @@ export default function TaskDetailPage() {
               ))}
             </div>
           )}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-2">
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="你的姓名"
-              className="flex-1 border border-gray-200 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              className="w-full border border-gray-200 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
             />
             <input
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="備註（選填）"
-              className="flex-1 border border-gray-200 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              className="w-full border border-gray-200 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
             />
             <button
               onClick={handleSend}
               disabled={!name.trim() || (task.categories?.length > 0 && !category) || sending}
-              className="w-10 h-10 rounded-full bg-emerald-500 disabled:bg-gray-200 text-white flex items-center justify-center shrink-0 hover:bg-emerald-600"
+              className="w-full bg-emerald-500 disabled:bg-gray-200 disabled:text-gray-400 text-white rounded-full py-3.5 font-semibold flex items-center justify-center gap-2 hover:bg-emerald-600 shadow-md shadow-emerald-200 transition"
             >
-              {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+              {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+              送出報名
             </button>
           </div>
         </div>
