@@ -13,6 +13,7 @@ create table if not exists tasks (
   note text default '',
   creator_id text not null,
   creator_name text not null,
+  short_code text unique,
   created_at timestamptz not null default now()
 );
 
@@ -28,6 +29,7 @@ create table if not exists signups (
 
 create index if not exists signups_task_id_idx on signups(task_id);
 create index if not exists tasks_creator_id_idx on tasks(creator_id);
+create index if not exists tasks_short_code_idx on tasks(short_code);
 
 -- Row Level Security: reads are public (this is a public relay-signup
 -- tool), but writes only happen through the server-side API routes using
