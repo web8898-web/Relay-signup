@@ -2,8 +2,17 @@
 import { ClipboardCheck, PenLine, Calendar, Users, FileText, ClipboardEdit, Sparkles } from "lucide-react";
 import { taskStatus, chipClass } from "@/lib/utils";
 
-export default function TaskShareCard({ task, signupCount, onOpen }) {
+export default function TaskShareCard({ task, signupCount, onOpen, previewOnly, onPreviewTap }) {
   const st = taskStatus(task);
+
+  function handleButtonClick() {
+    if (previewOnly) {
+      onPreviewTap?.();
+      return;
+    }
+    onOpen?.();
+  }
+
   return (
     <div className="relative rounded-[1.75rem] overflow-hidden shadow-md border border-emerald-100 bg-white">
       <div className="relative bg-gradient-to-br from-emerald-400 to-emerald-600 px-5 pt-5 pb-6">
@@ -60,11 +69,14 @@ export default function TaskShareCard({ task, signupCount, onOpen }) {
         )}
 
         <button
-          onClick={onOpen}
+          onClick={handleButtonClick}
           className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-3 font-semibold flex items-center justify-center gap-2 shadow-md shadow-emerald-200 transition"
         >
           <PenLine size={16} /> 我要報名
         </button>
+        {previewOnly && (
+          <p className="text-center text-[11px] text-gray-300 mt-2">這是預覽卡片，不會離開此頁</p>
+        )}
       </div>
 
       <div className="absolute bottom-3 left-4 grid grid-cols-3 gap-1 opacity-30 pointer-events-none">
