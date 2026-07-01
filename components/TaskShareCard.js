@@ -51,7 +51,7 @@ export default function TaskShareCard({ task, signupCount, onOpen, previewOnly, 
           <p className="text-xs font-bold">任務內容：</p>
         </div>
         <div className="border border-dashed border-emerald-200 rounded-xl px-3.5 py-2.5 mb-3 bg-emerald-50/40 min-h-[3rem]">
-          <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">
+          <p className="text-sm text-gray-600 leading-relaxed line-clamp-3 whitespace-pre-wrap">
             {task.description || "（無簡介）"}
           </p>
         </div>
