@@ -7,8 +7,15 @@ export default function TaskListCard({ task, signups = [], onEdit, onDelete, onS
   const [expanded, setExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [filter, setFilter] = useState("全部");
   const st = taskStatus(task);
   const signupCount = signups.length;
+
+  const categoryCounts = {};
+  for (const s of signups) {
+    if (s.category) categoryCounts[s.category] = (categoryCounts[s.category] || 0) + 1;
+  }
+  const filteredSignups = filter === "全部" ? signups : signups.filter((s) => s.category === filter);
 
   function toggleExpand() {
     setExpanded((v) => !v);
@@ -107,13 +114,6 @@ export default function TaskListCard({ task, signups = [], onEdit, onDelete, onS
               <span className="flex items-center gap-1"><Calendar size={12} />{task.start_date} ~ {task.end_date}</span>
               <span className="flex items-center gap-1"><Users size={12} />{signupCount} 人已報名</span>
             </div>
-            {task.categories?.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {task.categories.map((c) => (
-                  <span key={c} className={`text-[10px] px-2 py-0.5 rounded-full border ${chipClass(c)}`}>{c}</span>
-                ))}
-              </div>
-            )}
             {task.note && (
               <p className="text-xs text-gray-400 mt-2 border-t border-emerald-100 pt-2 whitespace-pre-wrap">備註：{task.note}</p>
             )}
@@ -121,11 +121,36 @@ export default function TaskListCard({ task, signups = [], onEdit, onDelete, onS
 
           <div className="mb-3">
             <p className="text-[11px] font-medium text-gray-400 mb-1.5 px-0.5">報名名單</p>
-            {signups.length === 0 ? (
-              <p className="text-xs text-gray-300 text-center py-4">還沒有人報名</p>
+
+            {task.categories?.length > 0 && (
+              <div className="flex gap-1.5 overflow-x-auto pb-2 -mx-0.5 px-0.5">
+                <button
+                  onClick={() => setFilter("全部")}
+                  className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${filter === "全部" ? "bg-gray-800 text-white border-gray-800" : "bg-gray-50 text-gray-500 border-gray-200"}`}
+                >
+                  全部
+                  <span className={`ml-1 ${filter === "全部" ? "text-white/70" : "text-gray-400"}`}>{signupCount}</span>
+                </button>
+                {task.categories.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setFilter(c)}
+                    className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${filter === c ? "bg-emerald-500 text-white border-emerald-500" : chipClass(c)}`}
+                  >
+                    {c}
+                    <span className={`ml-1 ${filter === c ? "text-white/70" : "opacity-60"}`}>{categoryCounts[c] || 0}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {filteredSignups.length === 0 ? (
+              <p className="text-xs text-gray-300 text-center py-4">
+                {signups.length === 0 ? "還沒有人報名" : "這個分類還沒有人報名"}
+              </p>
             ) : (
               <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto pr-0.5">
-                {signups.map((s, i) => (
+                {filteredSignups.map((s, i) => (
                   <div key={i} className="flex items-start gap-2 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2">
                     <div className={`w-6 h-6 rounded-full ${avatarClass(s.name)} text-white flex items-center justify-center text-[10px] font-bold shrink-0`}>
                       {s.name?.[0] || "?"}
