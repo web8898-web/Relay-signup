@@ -1,37 +1,75 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ClipboardList, Loader2, LogIn, LogOut, MessageCircle, Calendar, Plus } from "lucide-react";
+import { ClipboardList, Loader2, LogIn, LogOut, MessageCircle, Plus } from "lucide-react";
 import { TopBar, EmptyState } from "@/components/TopBar";
 import OrganizerTabs from "@/components/OrganizerTabs";
+import TaskListCard from "@/components/TaskListCard";
 import { useLineProfile } from "@/lib/useLineProfile";
-import { avatarClass, taskStatus } from "@/lib/utils";
+import { avatarClass } from "@/lib/utils";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function MyTasksPage() {
   const router = useRouter();
   const { profile, loading, error, login, logout } = useLineProfile();
   const [tasks, setTasks] = useState([]);
+  const [counts, setCounts] = useState({});
   const [tasksLoading, setTasksLoading] = useState(true);
+  const [toast, setToast] = useState("");
+
+  function showToast(msg) {
+    setToast(msg);
+    setTimeout(() => setToast(""), 2200);
+  }
+
+  async function loadTasks() {
+    if (!profile) return;
+    setTasksLoading(true);
+    const { data } = await supabase
+      .from("tasks")
+      .select("*")
+      .eq("creator_id", profile.userId)
+      .order("created_at", { ascending: false });
+    setTasks(data || []);
+
+    if (data?.length) {
+      const { data: signupData } = await supabase
+        .from("signups")
+        .select("task_id")
+        .in("task_id", data.map((t) => t.id));
+      const map = {};
+      (signupData || []).forEach((s) => {
+        map[s.task_id] = (map[s.task_id] || 0) + 1;
+      });
+      setCounts(map);
+    }
+    setTasksLoading(false);
+  }
 
   useEffect(() => {
-    if (!profile) return;
-    (async () => {
-      setTasksLoading(true);
-      const { data } = await supabase
-        .from("tasks")
-        .select("*")
-        .eq("creator_id", profile.userId)
-        .order("created_at", { ascending: false });
-      setTasks(data || []);
-      setTasksLoading(false);
-    })();
+    loadTasks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile]);
+
+  async function handleDelete(taskId) {
+    try {
+      const res = await fetch(`/api/tasks/${taskId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${profile.accessToken}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setTasks((prev) => prev.filter((t) => t.id !== taskId));
+      showToast("已移除任務");
+    } catch (e) {
+      showToast(e.message || "移除失敗");
+    }
+  }
 
   if (loading) {
     return (
       <div className="flex-1 flex flex-col">
-        <TopBar title="我的任務" backHref="/" />
+        <TopBar title="任務清單" backHref="/" />
         <div className="flex-1 flex items-center justify-center text-emerald-500">
           <Loader2 className="animate-spin" size={28} />
         </div>
@@ -42,12 +80,14 @@ export default function MyTasksPage() {
   if (!profile) {
     return (
       <div className="flex-1 flex flex-col">
-        <TopBar title="我的任務" backHref="/" />
+        <TopBar title="任務清單" backHref="/" />
         <div className="flex-1 px-6 py-10 flex flex-col items-center">
           <div className="w-20 h-20 rounded-full bg-emerald-500 text-white flex items-center justify-center mb-6 shadow-lg shadow-emerald-200">
             <MessageCircle size={34} />
           </div>
-          <p className="text-gray-500 text-sm text-center mb-8 leading-relaxed">請先使用 LINE 登入以查看你的任務。</p>
+          <p className="text-gray-500 text-sm text-center mb-8 leading-relaxed">
+            請先使用 LINE 登入，<br />才能查看你建立的任務。
+          </p>
           {error && <p className="text-xs text-rose-500 mb-4">{error}</p>}
           <button
             onClick={login}
@@ -61,9 +101,9 @@ export default function MyTasksPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col relative">
       <TopBar
-        title="我的任務"
+        title="任務清單"
         backHref="/"
         right={
           <button onClick={logout} className="text-white/80 hover:text-white" title="登出">
@@ -88,25 +128,15 @@ export default function MyTasksPage() {
         {!tasksLoading && tasks.length === 0 && (
           <EmptyState icon={<ClipboardList size={30} />} title="還沒有任務" desc="點擊上方「建立任務」開始建立第一個接龍吧。" />
         )}
-        {tasks.map((t) => {
-          const st = taskStatus(t);
-          return (
-            <button
-              key={t.id}
-              onClick={() => router.push(`/my-tasks/${t.id}`)}
-              className="text-left bg-white border border-gray-100 rounded-2xl p-4 shadow-sm hover:shadow-md hover:border-emerald-200 transition"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <p className="font-semibold text-gray-800 leading-snug">{t.title}</p>
-                <span className={`shrink-0 text-[11px] px-2 py-0.5 rounded-full border ${st.cls}`}>{st.label}</span>
-              </div>
-              {t.description && <p className="text-xs text-gray-400 mt-1 line-clamp-2">{t.description}</p>}
-              <div className="flex items-center gap-3 mt-3 text-[11px] text-gray-400">
-                <span className="flex items-center gap-1"><Calendar size={12} />{t.start_date} ~ {t.end_date}</span>
-              </div>
-            </button>
-          );
-        })}
+        {tasks.map((t) => (
+          <TaskListCard
+            key={t.id}
+            task={t}
+            signupCount={counts[t.id] || 0}
+            onEdit={() => router.push(`/my-tasks/${t.id}/edit`)}
+            onDelete={() => handleDelete(t.id)}
+          />
+        ))}
       </div>
 
       <div className="px-6 pb-6 pt-2">
@@ -117,6 +147,12 @@ export default function MyTasksPage() {
           <Plus size={18} /> 新增任務
         </button>
       </div>
+
+      {toast && (
+        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm px-4 py-2 rounded-full shadow-lg z-50">
+          {toast}
+        </div>
+      )}
     </div>
   );
 }
