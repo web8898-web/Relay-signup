@@ -38,9 +38,16 @@ export default function ShareTaskPage() {
     return `${window.location.origin}/tasks/${id}`;
   }
 
+  // Every task gets a short_code at creation time, so the share link is
+  // always short and doesn't depend on any external shortening service.
+  function shareUrl() {
+    if (task?.short_code) return `${window.location.origin}/s/${task.short_code}`;
+    return taskUrl();
+  }
+
   async function handleLineShare() {
     if (!task) return;
-    const url = taskUrl();
+    const url = shareUrl();
     try {
       if (liff.isApiAvailable && liff.isApiAvailable("shareTargetPicker")) {
         const flexMessage = buildFlexMessage(task, url);
@@ -57,7 +64,8 @@ export default function ShareTaskPage() {
 
   async function handleCopy() {
     if (!task) return;
-    const text = buildShareText(task, taskUrl());
+    const url = shareUrl();
+    const text = buildShareText(task, url);
     try {
       await navigator.clipboard.writeText(text);
       showToast("已複製訊息文字");
@@ -107,7 +115,7 @@ export default function ShareTaskPage() {
         </div>
 
         <p className="text-[11px] text-gray-300 text-center mt-4 leading-relaxed px-2 break-all">
-          報名連結：{taskUrl()}
+          報名連結：{shareUrl()}
         </p>
       </div>
 
