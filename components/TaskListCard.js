@@ -1,9 +1,9 @@
 "use client";
 import { useState } from "react";
-import { MessageCircle, ChevronDown, MoreVertical, Edit2, Calendar, Users } from "lucide-react";
+import { MessageCircle, ChevronDown, MoreVertical, Edit2, Share2, Calendar, Users } from "lucide-react";
 import { taskStatus, chipClass } from "@/lib/utils";
 
-export default function TaskListCard({ task, signupCount, onEdit, onDelete }) {
+export default function TaskListCard({ task, signupCount, onEdit, onDelete, onShare }) {
   const [expanded, setExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -16,7 +16,7 @@ export default function TaskListCard({ task, signupCount, onEdit, onDelete }) {
 
   return (
     <div className="relative rounded-2xl border border-gray-100 bg-white shadow-sm overflow-visible">
-      <div className="w-full px-4 py-3 flex items-center gap-3">
+      <div className="w-full px-4 py-3 flex items-center gap-2">
         <div onClick={toggleExpand} className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
           <div className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
             <MessageCircle size={16} />
@@ -31,7 +31,18 @@ export default function TaskListCard({ task, signupCount, onEdit, onDelete }) {
           </div>
         </div>
 
-        <div className="relative">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onShare?.();
+          }}
+          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-emerald-500 shrink-0"
+          title="分享"
+        >
+          <Share2 size={17} />
+        </button>
+
+        <div className="relative shrink-0">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -77,7 +88,7 @@ export default function TaskListCard({ task, signupCount, onEdit, onDelete }) {
           )}
         </div>
 
-        <button onClick={toggleExpand} className="w-8 h-8 flex items-center justify-center text-gray-300">
+        <button onClick={toggleExpand} className="w-8 h-8 flex items-center justify-center text-gray-300 shrink-0">
           <ChevronDown size={18} className={`transition-transform ${expanded ? "rotate-180" : ""}`} />
         </button>
       </div>
@@ -107,12 +118,20 @@ export default function TaskListCard({ task, signupCount, onEdit, onDelete }) {
             )}
           </div>
 
-          <button
-            onClick={onEdit}
-            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-2.5 font-semibold flex items-center justify-center gap-2 transition"
-          >
-            <Edit2 size={15} /> 編輯任務
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={onShare}
+              className="flex-1 border border-emerald-200 text-emerald-600 rounded-full py-2.5 font-semibold flex items-center justify-center gap-2 hover:bg-emerald-50 transition"
+            >
+              <Share2 size={15} /> 分享
+            </button>
+            <button
+              onClick={onEdit}
+              className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-2.5 font-semibold flex items-center justify-center gap-2 transition"
+            >
+              <Edit2 size={15} /> 編輯任務
+            </button>
+          </div>
         </div>
       )}
     </div>
