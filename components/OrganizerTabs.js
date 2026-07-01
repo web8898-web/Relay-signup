@@ -11,11 +11,11 @@ export default function OrganizerTabs({ current }) {
         >
           建立任務
         </Link>
-        <Link
+         <Link
           href="/my-tasks"
           className={`flex-1 text-center text-sm py-2 rounded-full font-medium transition ${current === "tasks" ? "bg-white text-emerald-600 shadow-sm" : "text-gray-400"}`}
         >
-          我的任務
+          任務清單
         </Link>
       </div>
     </div>
