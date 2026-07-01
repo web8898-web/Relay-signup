@@ -206,7 +206,7 @@ export default function TaskDetailPage() {
       )}
 
       {toast && (
-        <div className="absolute bottom-28 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm px-4 py-2 rounded-full shadow-lg flex items-center gap-2 z-50">
+        <div className="fixed bottom-28 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm px-4 py-2 rounded-full shadow-lg flex items-center gap-2 z-50 whitespace-nowrap">
           <CheckCircle2 size={16} className="text-emerald-400" />
           {toast}
         </div>
