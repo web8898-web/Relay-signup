@@ -9,9 +9,12 @@ import { supabase } from "@/lib/supabaseClient";
 import { taskStatus } from "@/lib/utils";
 import { getOwnerToken, getMySignupIds, rememberMySignup, forgetMySignup } from "@/lib/ownerToken";
 
-export default function TaskDetailPage() {
+export default function ShareTaskPage() {
   const { id } = useParams();
   const router = useRouter();
+  useEffect(() => {
+    window.alert("分享頁已載入，id=" + id);
+  }, [id]);
   const [loading, setLoading] = useState(true);
   const [task, setTask] = useState(null);
   const [signups, setSignups] = useState([]);
