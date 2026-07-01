@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, CheckCircle2, X, LogIn, MessageCircle } from "lucide-react";
+import { Loader2, CheckCircle2, X, LogIn, MessageCircle, AlertTriangle } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import OrganizerTabs from "@/components/OrganizerTabs";
 import { useLineProfile } from "@/lib/useLineProfile";
@@ -46,21 +46,16 @@ export default function CreateTaskPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col">
-      <TopBar title="建立任務" backHref="/" />
-      <OrganizerTabs current="new" />
-      <div className="px-6 pt-2 pb-1 flex items-center gap-2 text-xs text-gray-400">
-        <div className={`w-6 h-6 rounded-full ${avatarClass(profile.displayName)} text-white flex items-center justify-center text-[11px] font-bold`}>
-          {profile.displayName?.[0] || "?"}
-        </div>
-        以 <span className="font-medium text-gray-600">{profile.displayName}</span> 身分登入
-      </div>
-      <TaskForm accessToken={profile.accessToken} onCreated={(id) => router.push(`/create/share/${id}`)} />
-    </div>
+    <TaskForm
+      profile={profile}
+      accessToken={profile.accessToken}
+      onCreated={(id) => router.push(`/create/share/${id}`)}
+      onLeave={() => router.push("/")}
+    />
   );
 }
 
-function TaskForm({ accessToken, onCreated }) {
+function TaskForm({ profile, accessToken, onCreated, onLeave }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [categories, setCategories] = useState([]);
@@ -70,6 +65,45 @@ function TaskForm({ accessToken, onCreated }) {
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+
+  const defaults = useRef({ start_date: todayStr(), end_date: todayStr() });
+
+  const dirty =
+    title.trim() !== "" ||
+    description.trim() !== "" ||
+    categories.length > 0 ||
+    note.trim() !== "" ||
+    startDate !== defaults.current.start_date ||
+    endDate !== defaults.current.end_date;
+
+  // Warn on actual browser/tab close or refresh while there's unsaved input.
+  useEffect(() => {
+    function handleBeforeUnload(e) {
+      if (!dirty) return;
+      e.preventDefault();
+      e.returnValue = "";
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [dirty]);
+
+  // Intercept the browser/system back gesture while there's unsaved input.
+  useEffect(() => {
+    if (!dirty) return;
+    window.history.pushState(null, "", window.location.href);
+    function handlePopState() {
+      window.history.pushState(null, "", window.location.href);
+      setShowLeaveConfirm(true);
+    }
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [dirty]);
+
+  function handleBackClick() {
+    if (dirty) setShowLeaveConfirm(true);
+    else onLeave();
+  }
 
   function addCategory() {
     const v = catInput.trim();
@@ -110,7 +144,16 @@ function TaskForm({ accessToken, onCreated }) {
   }
 
   return (
-    <>
+    <div className="flex-1 flex flex-col relative">
+      <TopBar title="建立任務" onBack={handleBackClick} />
+      <OrganizerTabs current="new" />
+      <div className="px-6 pt-2 pb-1 flex items-center gap-2 text-xs text-gray-400">
+        <div className={`w-6 h-6 rounded-full ${avatarClass(profile.displayName)} text-white flex items-center justify-center text-[11px] font-bold`}>
+          {profile.displayName?.[0] || "?"}
+        </div>
+        以 <span className="font-medium text-gray-600">{profile.displayName}</span> 身分登入
+      </div>
+
       <div className="flex-1 px-6 py-4 flex flex-col gap-5 overflow-y-auto">
         {error && <p className="text-xs text-rose-500">{error}</p>}
         <Field label="任務標題">
@@ -138,7 +181,7 @@ function TaskForm({ accessToken, onCreated }) {
               value={catInput}
               onChange={(e) => setCatInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCategory())}
-              placeholder="例如：領隊、餐食"
+              placeholder="例如：蘋果"
               className="flex-1 border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
             />
             <button onClick={addCategory} className="px-4 rounded-2xl bg-gray-100 text-gray-600 text-sm font-medium hover:bg-gray-200">
@@ -196,7 +239,44 @@ function TaskForm({ accessToken, onCreated }) {
           儲存任務
         </button>
       </div>
-    </>
+
+      {showLeaveConfirm && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-6"
+          onClick={() => setShowLeaveConfirm(false)}
+        >
+          <div
+            className="bg-white rounded-3xl p-6 w-full max-w-xs shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mb-3">
+              <AlertTriangle size={20} />
+            </div>
+            <p className="font-semibold text-gray-800 text-base mb-1">尚未儲存這個任務</p>
+            <p className="text-sm text-gray-500 mb-5 leading-relaxed">
+              離開後，目前填寫的內容不會被儲存，確定要離開嗎？
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowLeaveConfirm(false)}
+                className="flex-1 py-2.5 rounded-full border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50"
+              >
+                繼續填寫
+              </button>
+              <button
+                onClick={() => {
+                  setShowLeaveConfirm(false);
+                  onLeave();
+                }}
+                className="flex-1 py-2.5 rounded-full bg-rose-500 text-white text-sm font-medium hover:bg-rose-600"
+              >
+                不儲存離開
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
