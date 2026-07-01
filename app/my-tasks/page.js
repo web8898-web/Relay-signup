@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ClipboardList, Loader2, LogIn, LogOut, MessageCircle, Plus } from "lucide-react";
+import { ClipboardList, Loader2, LogIn, MessageCircle, Plus } from "lucide-react";
 import { TopBar, EmptyState } from "@/components/TopBar";
 import OrganizerTabs from "@/components/OrganizerTabs";
 import TaskListCard from "@/components/TaskListCard";
@@ -11,7 +11,7 @@ import { supabase } from "@/lib/supabaseClient";
 
 export default function MyTasksPage() {
   const router = useRouter();
-  const { profile, loading, error, login, logout } = useLineProfile();
+  const { profile, loading, error, login } = useLineProfile();
   const [tasks, setTasks] = useState([]);
   const [counts, setCounts] = useState({});
   const [tasksLoading, setTasksLoading] = useState(true);
@@ -102,15 +102,7 @@ export default function MyTasksPage() {
 
   return (
     <div className="flex-1 flex flex-col relative">
-      <TopBar
-        title="任務清單"
-        backHref="/"
-        right={
-          <button onClick={logout} className="text-white/80 hover:text-white" title="登出">
-            <LogOut size={18} />
-          </button>
-        }
-      />
+      <TopBar title="任務清單" backHref="/" />
       <OrganizerTabs current="tasks" />
       <div className="px-6 pt-2 pb-2 flex items-center gap-2 text-xs text-gray-400">
         <div className={`w-6 h-6 rounded-full ${avatarClass(profile.displayName)} text-white flex items-center justify-center text-[11px] font-bold`}>
