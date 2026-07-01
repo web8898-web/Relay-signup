@@ -8,12 +8,16 @@ export default function LiffBootstrap() {
       try {
         await initLiff();
         if (liff.isLoggedIn()) {
-          const target = sessionStorage.getItem("liff-redirect-after-login");
-          if (target) {
-            sessionStorage.removeItem("liff-redirect-after-login");
-            if (target !== window.location.pathname) {
-              window.location.replace(target);
-            }
+          const raw = sessionStorage.getItem("liff-redirect-after-login");
+          sessionStorage.removeItem("liff-redirect-after-login");
+          if (raw) {
+            try {
+              const { path, ts } = JSON.parse(raw);
+              const fresh = Date.now() - ts < 15000;
+              if (fresh && path && path !== window.location.pathname) {
+                window.location.replace(path);
+              }
+            } catch (e) {}
           }
         }
       } catch (e) {}
