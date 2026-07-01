@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2, Send, Users } from "lucide-react";
+import { Loader2, Send, Users, CheckCircle2 } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import TaskAnnouncement from "@/components/TaskAnnouncement";
 import ThreadList from "@/components/ThreadList";
@@ -21,6 +21,13 @@ export default function TaskDetailPage() {
   const [note, setNote] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [toast, setToast] = useState("");
+  const listRef = useRef(null);
+
+  function showToast(msg) {
+    setToast(msg);
+    setTimeout(() => setToast(""), 2200);
+  }
 
   async function load() {
     setLoading(true);
@@ -68,6 +75,10 @@ export default function TaskDetailPage() {
       setMyIds(getMySignupIds());
       setName("");
       setNote("");
+      showToast("已成功接龍！");
+      requestAnimationFrame(() => {
+        listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
+      });
     } catch (e) {
       setError(e.message || "送出失敗");
     }
@@ -83,6 +94,7 @@ export default function TaskDetailPage() {
     const data = await res.json();
     if (res.ok) {
       setSignups((prev) => prev.map((s) => (s.id === signupId ? data.signup : s)));
+      showToast("已更新");
     }
   }
 
@@ -94,13 +106,14 @@ export default function TaskDetailPage() {
       setSignups((prev) => prev.filter((s) => s.id !== signupId));
       forgetMySignup(signupId);
       setMyIds(getMySignupIds());
+      showToast("已刪除");
     }
   }
 
   if (loading) {
     return (
       <div className="flex-1 flex flex-col">
-        <TopBar title="載入中" backHref="/tasks" />
+        <TopBar title="載入中" backHref="/" />
         <div className="flex-1 flex items-center justify-center text-emerald-500">
           <Loader2 className="animate-spin" size={28} />
         </div>
@@ -111,7 +124,7 @@ export default function TaskDetailPage() {
   if (!task) {
     return (
       <div className="flex-1 flex flex-col">
-        <TopBar title="找不到任務" backHref="/tasks" />
+        <TopBar title="找不到任務" backHref="/" />
         <div className="flex-1 flex items-center justify-center text-sm text-gray-400">
           這個任務可能已經被刪除。
         </div>
@@ -120,8 +133,8 @@ export default function TaskDetailPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col">
-     <TopBar title={task.title} onBack={() => router.push("/")} />
+    <div className="flex-1 flex flex-col relative">
+      <TopBar title={task.title} onBack={() => router.push("/")} />
 
       <div className="px-6 pt-4">
         <TaskAnnouncement task={task} />
@@ -130,7 +143,7 @@ export default function TaskDetailPage() {
         </div>
       </div>
 
-      <div className="flex-1 px-6 pb-3 overflow-y-auto">
+      <div ref={listRef} className="flex-1 px-6 pb-3 overflow-y-auto scroll-smooth">
         <ThreadList
           signups={signups}
           myIds={myIds}
@@ -184,6 +197,13 @@ export default function TaskDetailPage() {
               送出報名
             </button>
           </div>
+        </div>
+      )}
+
+      {toast && (
+        <div className="absolute bottom-28 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm px-4 py-2 rounded-full shadow-lg flex items-center gap-2 z-50">
+          <CheckCircle2 size={16} className="text-emerald-400" />
+          {toast}
         </div>
       )}
     </div>
