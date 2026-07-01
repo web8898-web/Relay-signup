@@ -126,6 +126,7 @@ export default function MyTasksPage() {
             task={t}
             signupCount={counts[t.id] || 0}
             onEdit={() => router.push(`/my-tasks/${t.id}/edit`)}
+            onShare={() => router.push(`/create/share/${t.id}`)}
             onDelete={() => handleDelete(t.id)}
           />
         ))}
