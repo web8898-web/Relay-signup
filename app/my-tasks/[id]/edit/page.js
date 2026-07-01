@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2, CheckCircle2, X, LogIn, MessageCircle } from "lucide-react";
+import { Loader2, CheckCircle2, X, LogIn, MessageCircle, AlertTriangle } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import { useLineProfile } from "@/lib/useLineProfile";
 import { chipClass } from "@/lib/utils";
@@ -72,14 +72,16 @@ export default function EditTaskPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col">
-      <TopBar title="編輯任務" onBack={() => router.push("/my-tasks")} />
-      <EditForm task={task} accessToken={profile.accessToken} onSaved={() => router.push("/my-tasks")} />
-    </div>
+    <EditForm
+      task={task}
+      accessToken={profile.accessToken}
+      onSaved={() => router.push("/my-tasks")}
+      onLeave={() => router.push("/my-tasks")}
+    />
   );
 }
 
-function EditForm({ task, accessToken, onSaved }) {
+function EditForm({ task, accessToken, onSaved, onLeave }) {
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || "");
   const [categories, setCategories] = useState(task.categories || []);
@@ -89,6 +91,54 @@ function EditForm({ task, accessToken, onSaved }) {
   const [note, setNote] = useState(task.note || "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+
+  const original = useRef({
+    title: task.title,
+    description: task.description || "",
+    categories: task.categories || [],
+    start_date: task.start_date,
+    end_date: task.end_date,
+    note: task.note || "",
+  });
+
+  const dirty =
+    title !== original.current.title ||
+    description !== original.current.description ||
+    JSON.stringify(categories) !== JSON.stringify(original.current.categories) ||
+    startDate !== original.current.start_date ||
+    endDate !== original.current.end_date ||
+    note !== original.current.note;
+
+  // Warn on actual browser/tab close or refresh while there are unsaved changes.
+  useEffect(() => {
+    function handleBeforeUnload(e) {
+      if (!dirty) return;
+      e.preventDefault();
+      e.returnValue = "";
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [dirty]);
+
+  // Intercept the browser/system back gesture (swipe back, back button) while
+  // there are unsaved changes, and show our own confirm dialog instead of
+  // silently navigating away.
+  useEffect(() => {
+    if (!dirty) return;
+    window.history.pushState(null, "", window.location.href);
+    function handlePopState() {
+      window.history.pushState(null, "", window.location.href);
+      setShowLeaveConfirm(true);
+    }
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [dirty]);
+
+  function handleBackClick() {
+    if (dirty) setShowLeaveConfirm(true);
+    else onLeave();
+  }
 
   function addCategory() {
     const v = catInput.trim();
@@ -129,7 +179,8 @@ function EditForm({ task, accessToken, onSaved }) {
   }
 
   return (
-    <>
+    <div className="flex-1 flex flex-col relative">
+      <TopBar title="編輯任務" onBack={handleBackClick} />
       <div className="flex-1 px-6 py-5 flex flex-col gap-5 overflow-y-auto">
         {error && <p className="text-xs text-rose-500">{error}</p>}
         <Field label="任務標題">
@@ -195,7 +246,44 @@ function EditForm({ task, accessToken, onSaved }) {
           儲存變更
         </button>
       </div>
-    </>
+
+      {showLeaveConfirm && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-6"
+          onClick={() => setShowLeaveConfirm(false)}
+        >
+          <div
+            className="bg-white rounded-3xl p-6 w-full max-w-xs shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mb-3">
+              <AlertTriangle size={20} />
+            </div>
+            <p className="font-semibold text-gray-800 text-base mb-1">尚未儲存變更</p>
+            <p className="text-sm text-gray-500 mb-5 leading-relaxed">
+              離開後，這次修改的內容不會被儲存，確定要離開嗎？
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowLeaveConfirm(false)}
+                className="flex-1 py-2.5 rounded-full border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50"
+              >
+                繼續編輯
+              </button>
+              <button
+                onClick={() => {
+                  setShowLeaveConfirm(false);
+                  onLeave();
+                }}
+                className="flex-1 py-2.5 rounded-full bg-rose-500 text-white text-sm font-medium hover:bg-rose-600"
+              >
+                不儲存離開
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
