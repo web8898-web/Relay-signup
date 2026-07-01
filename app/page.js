@@ -62,11 +62,9 @@ export default function HomePage() {
                 <button
                   key={g.key}
                   onClick={() => setModal(g)}
-                  className="group bg-white border border-gray-200 rounded-2xl p-4 flex flex-col gap-3 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition"
+                  className="group bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-3 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition"
                 >
-                  <div className="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                    <Icon size={20} />
-                  </div>
+                  <Icon size={20} className="text-emerald-500 shrink-0" />
                   <div>
                     <p className="text-sm font-semibold text-gray-800 leading-snug">{g.title}</p>
                     <p className="text-[11px] text-gray-400 mt-0.5">查看圖文步驟</p>
