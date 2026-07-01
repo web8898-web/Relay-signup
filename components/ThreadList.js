@@ -37,25 +37,28 @@ export default function ThreadList({ signups, myIds, categories, onUpdate, onDel
   return (
     <div>
       {categories?.length > 0 && (
-        <div className="flex gap-1.5 overflow-x-auto pb-3 -mx-1 px-1">
-          <button
-            onClick={() => setFilter("全部")}
-            className={`shrink-0 text-xs px-3 py-1 rounded-full border ${filter === "全部" ? "bg-gray-800 text-white border-gray-800" : "bg-gray-50 text-gray-500 border-gray-200"}`}
-          >
-            全部
-            <span className={`ml-1 ${filter === "全部" ? "text-white/70" : "text-gray-400"}`}>{signups.length}</span>
-          </button>
-          {categories.map((c) => (
+        <>
+          <p className="text-[11px] text-gray-400 mb-1.5 px-0.5">瀏覽名單（點分類篩選）</p>
+          <div className="flex gap-1.5 overflow-x-auto pb-3 -mx-1 px-1">
             <button
-              key={c}
-              onClick={() => setFilter(c)}
-              className={`shrink-0 text-xs px-3 py-1 rounded-full border ${filter === c ? "bg-emerald-500 text-white border-emerald-500" : chipClass(c)}`}
+              onClick={() => setFilter("全部")}
+              className={`shrink-0 text-xs px-3 py-1 rounded-full border ${filter === "全部" ? "bg-gray-800 text-white border-gray-800" : "bg-gray-50 text-gray-500 border-gray-200"}`}
             >
-              {c}
-              <span className={`ml-1 ${filter === c ? "text-white/70" : "opacity-60"}`}>{categoryCounts[c] || 0}</span>
+              全部
+              <span className={`ml-1 ${filter === "全部" ? "text-white/70" : "text-gray-400"}`}>{signups.length}</span>
             </button>
-          ))}
-        </div>
+            {categories.map((c) => (
+              <button
+                key={c}
+                onClick={() => setFilter(c)}
+                className={`shrink-0 text-xs px-3 py-1 rounded-full border ${filter === c ? "bg-gray-800 text-white border-gray-800" : "bg-gray-50 text-gray-500 border-gray-200"}`}
+              >
+                {c}
+                <span className={`ml-1 ${filter === c ? "text-white/70" : "text-gray-400"}`}>{categoryCounts[c] || 0}</span>
+              </button>
+            ))}
+          </div>
+        </>
       )}
 
       {filtered.length === 0 && (
