@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, CheckCircle2, X, LogIn, LogOut, MessageCircle } from "lucide-react";
+import { Loader2, CheckCircle2, X, LogIn, MessageCircle } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import OrganizerTabs from "@/components/OrganizerTabs";
 import { useLineProfile } from "@/lib/useLineProfile";
@@ -9,7 +9,7 @@ import { avatarClass, chipClass, todayStr } from "@/lib/utils";
 
 export default function CreateTaskPage() {
   const router = useRouter();
-  const { profile, loading, error, login, logout } = useLineProfile();
+  const { profile, loading, error, login } = useLineProfile();
 
   if (loading) {
     return (
@@ -47,15 +47,7 @@ export default function CreateTaskPage() {
 
   return (
     <div className="flex-1 flex flex-col">
-      <TopBar
-        title="建立任務"
-        backHref="/"
-        right={
-          <button onClick={logout} className="text-white/80 hover:text-white" title="登出">
-            <LogOut size={18} />
-          </button>
-        }
-      />
+      <TopBar title="建立任務" backHref="/" />
       <OrganizerTabs current="new" />
       <div className="px-6 pt-2 pb-1 flex items-center gap-2 text-xs text-gray-400">
         <div className={`w-6 h-6 rounded-full ${avatarClass(profile.displayName)} text-white flex items-center justify-center text-[11px] font-bold`}>
