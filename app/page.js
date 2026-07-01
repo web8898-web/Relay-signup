@@ -1,12 +1,12 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { ClipboardList, PenLine, ChevronRight, MessageCircle, HelpCircle } from "lucide-react";
+import { ClipboardList, PenLine, ChevronRight, MessageCircle, Send } from "lucide-react";
 import ImageModal from "@/components/ImageModal";
 
 const GUIDES = [
-  { key: "create", title: "如何建立任務？", src: "/how-to-create-task.png" },
-  { key: "signup", title: "如何接龍報名？", src: "/how-to-signup.png" },
+  { key: "create", title: "如何建立任務？", src: "/how-to-create-task.png", icon: PenLine },
+  { key: "signup", title: "如何接龍報名？", src: "/how-to-signup.png", icon: Send },
 ];
 
 export default function HomePage() {
@@ -56,18 +56,24 @@ export default function HomePage() {
         <div className="mt-2">
           <p className="text-xs font-semibold text-gray-400 mb-2 px-1">使用教學</p>
           <div className="grid grid-cols-2 gap-3">
-            {GUIDES.map((g) => (
-              <button
-                key={g.key}
-                onClick={() => setModal(g)}
-                className="group bg-white border border-gray-200 rounded-2xl p-4 flex flex-col items-start gap-2 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition"
-              >
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-100 transition">
-                  <HelpCircle size={17} />
-                </div>
-                <p className="text-sm font-semibold text-gray-700 leading-snug">{g.title}</p>
-              </button>
-            ))}
+            {GUIDES.map((g) => {
+              const Icon = g.icon;
+              return (
+                <button
+                  key={g.key}
+                  onClick={() => setModal(g)}
+                  className="group bg-white border border-gray-200 rounded-2xl p-4 flex flex-col gap-3 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition"
+                >
+                  <div className="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                    <Icon size={20} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800 leading-snug">{g.title}</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">查看圖文步驟</p>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
