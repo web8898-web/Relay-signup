@@ -170,7 +170,7 @@ export default function TaskDetailPage() {
           {error && <p className="text-xs text-rose-500 mb-2">{error}</p>}
           {task.categories?.length > 0 && (
             <>
-              <p className="text-[11px] font-semibold text-emerald-700 mb-1.5 px-0.5">👉 選擇你要報名的分類</p>
+              <p className="text-[11px] font-semibold text-emerald-700 mb-1.5 px-0.5">👉 選擇您要報名的類別</p>
               <div className="flex gap-1.5 overflow-x-auto pb-2 mb-1 -mx-1 px-1">
                 {task.categories.map((c) => (
                   <button
