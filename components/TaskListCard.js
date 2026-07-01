@@ -1,13 +1,14 @@
 "use client";
 import { useState } from "react";
 import { MessageCircle, ChevronDown, MoreVertical, Edit2, Share2, Calendar, Users } from "lucide-react";
-import { taskStatus, chipClass } from "@/lib/utils";
+import { taskStatus, chipClass, avatarClass, relTime } from "@/lib/utils";
 
-export default function TaskListCard({ task, signupCount, onEdit, onDelete, onShare }) {
+export default function TaskListCard({ task, signups = [], onEdit, onDelete, onShare }) {
   const [expanded, setExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const st = taskStatus(task);
+  const signupCount = signups.length;
 
   function toggleExpand() {
     setExpanded((v) => !v);
@@ -115,6 +116,33 @@ export default function TaskListCard({ task, signupCount, onEdit, onDelete, onSh
             )}
             {task.note && (
               <p className="text-xs text-gray-400 mt-2 border-t border-emerald-100 pt-2 whitespace-pre-wrap">備註：{task.note}</p>
+            )}
+          </div>
+
+          <div className="mb-3">
+            <p className="text-[11px] font-medium text-gray-400 mb-1.5 px-0.5">報名名單</p>
+            {signups.length === 0 ? (
+              <p className="text-xs text-gray-300 text-center py-4">還沒有人報名</p>
+            ) : (
+              <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto pr-0.5">
+                {signups.map((s, i) => (
+                  <div key={i} className="flex items-start gap-2 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2">
+                    <div className={`w-6 h-6 rounded-full ${avatarClass(s.name)} text-white flex items-center justify-center text-[10px] font-bold shrink-0`}>
+                      {s.name?.[0] || "?"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-xs font-medium text-gray-700 truncate">{s.name}</span>
+                        {s.category && (
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${chipClass(s.category)}`}>{s.category}</span>
+                        )}
+                        <span className="text-[10px] text-gray-300 ml-auto shrink-0">{relTime(s.created_at)}</span>
+                      </div>
+                      {s.note && <p className="text-xs text-gray-500 mt-0.5 break-words">{s.note}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
 
