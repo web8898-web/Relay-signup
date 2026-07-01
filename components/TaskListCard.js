@@ -100,7 +100,7 @@ export default function TaskListCard({ task, signupCount, onEdit, onDelete, onSh
               <span className={`text-[10px] px-2 py-0.5 rounded-full border ${st.cls}`}>{st.label}</span>
             </div>
             {task.description && (
-              <p className="text-sm text-gray-600 leading-relaxed mb-2">{task.description}</p>
+              <p className="text-sm text-gray-600 leading-relaxed mb-2 whitespace-pre-wrap">{task.description}</p>
             )}
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-400">
               <span className="flex items-center gap-1"><Calendar size={12} />{task.start_date} ~ {task.end_date}</span>
@@ -114,7 +114,7 @@ export default function TaskListCard({ task, signupCount, onEdit, onDelete, onSh
               </div>
             )}
             {task.note && (
-              <p className="text-xs text-gray-400 mt-2 border-t border-emerald-100 pt-2">備註：{task.note}</p>
+              <p className="text-xs text-gray-400 mt-2 border-t border-emerald-100 pt-2 whitespace-pre-wrap">備註：{task.note}</p>
             )}
           </div>
 
