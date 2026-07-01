@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Loader2, Send, Users, CheckCircle2 } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import TaskAnnouncement from "@/components/TaskAnnouncement";
@@ -11,7 +11,6 @@ import { getOwnerToken, getMySignupIds, rememberMySignup, forgetMySignup } from 
 
 export default function TaskDetailPage() {
   const { id } = useParams();
-  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [task, setTask] = useState(null);
   const [signups, setSignups] = useState([]);
@@ -113,7 +112,7 @@ export default function TaskDetailPage() {
   if (loading) {
     return (
       <div className="flex-1 flex flex-col">
-        <TopBar title="載入中" backHref="/" />
+        <TopBar title="載入中" />
         <div className="flex-1 flex items-center justify-center text-emerald-500">
           <Loader2 className="animate-spin" size={28} />
         </div>
@@ -124,7 +123,7 @@ export default function TaskDetailPage() {
   if (!task) {
     return (
       <div className="flex-1 flex flex-col">
-        <TopBar title="找不到任務" backHref="/" />
+        <TopBar title="找不到任務" />
         <div className="flex-1 flex items-center justify-center text-sm text-gray-400">
           這個任務可能已經被刪除。
         </div>
@@ -134,7 +133,7 @@ export default function TaskDetailPage() {
 
   return (
     <div className="flex-1 flex flex-col relative">
-      <TopBar title={task.title} onBack={() => router.push("/")} />
+      <TopBar title={task.title} />
 
       <div className="px-6 pt-4">
         <TaskAnnouncement task={task} />
