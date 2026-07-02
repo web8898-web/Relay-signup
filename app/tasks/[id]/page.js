@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2, Send, Users, CheckCircle2, ChevronRight, AlertCircle } from "lucide-react";
+import { Send, Users, CheckCircle2, ChevronRight, AlertCircle } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import TaskAnnouncement from "@/components/TaskAnnouncement";
 import ThreadList from "@/components/ThreadList";
@@ -245,10 +245,23 @@ export default function TaskDetailPage() {
             <button
               onClick={handleSend}
               disabled={sending}
-              className="w-full bg-emerald-500 disabled:bg-gray-200 disabled:text-gray-400 text-white rounded-full py-3.5 font-semibold flex items-center justify-center gap-2 hover:bg-emerald-600 shadow-md shadow-emerald-200 transition"
+              className="w-full bg-emerald-500 disabled:opacity-90 text-white rounded-full py-3.5 font-semibold flex items-center justify-center gap-2 hover:bg-emerald-600 shadow-md shadow-emerald-200 transition"
             >
-              {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-              送出報名
+              {sending ? (
+                <>
+                  報名中
+                  <span className="flex gap-1 ml-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-bounce [animation-delay:-0.3s]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-bounce [animation-delay:-0.15s]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-bounce" />
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Send size={18} />
+                  送出報名
+                </>
+              )}
             </button>
           </div>
         </div>
