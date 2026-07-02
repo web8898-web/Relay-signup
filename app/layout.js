@@ -1,4 +1,5 @@
 import "./globals.css";
+import Script from "next/script";
 import LiffBootstrap from "@/components/LiffBootstrap";
 import LiffTransitionOverlay from "@/components/LiffTransitionOverlay";
 
@@ -7,17 +8,6 @@ export const metadata = {
   description: "在 LINE 上分享、免登入即可完成報名的接龍小工具",
 };
 
-// Runs synchronously as the very first thing inside <body>, before any of
-// the app's own markup is even parsed, let alone painted. LIFF's deep-link
-// redirect (e.g. https://liff.line.me/{liffId}/my-tasks/xxx) always makes a
-// brief first stop on this root page with a `liff.state` query param before
-// the SDK auto-navigates to the real target — that first stop is a fixed
-// part of LINE's redirect protocol and can't be skipped. What CAN be
-// avoided is people actually seeing the homepage during that gap: this
-// plain inline script covers the screen the instant it detects that param,
-// which is well before React's JS bundle has even loaded — a React
-// component can't run early enough to prevent the flash, only a raw
-// <script> parsed inline in the HTML can.
 const antiFlashScript = `
 (function () {
   try {
@@ -33,7 +23,7 @@ const antiFlashScript = `
       '<span style="width:8px;height:8px;border-radius:9999px;background:#34d399;"></span>' +
       '<span style="width:8px;height:8px;border-radius:9999px;background:#34d399;"></span>' +
       "</div>";
-    document.body.appendChild(el);
+    document.documentElement.appendChild(el);
   } catch (e) {}
 })();
 `;
@@ -42,7 +32,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="zh-Hant">
       <body className="bg-gradient-to-b from-emerald-50 via-white to-emerald-50 min-h-screen">
-        <script dangerouslySetInnerHTML={{ __html: antiFlashScript }} />
+        <Script id="liff-anti-flash" strategy="beforeInteractive">
+          {antiFlashScript}
+        </Script>
         <LiffBootstrap />
         <LiffTransitionOverlay />
         <div className="w-full max-w-md mx-auto min-h-screen bg-white shadow-xl relative flex flex-col">
