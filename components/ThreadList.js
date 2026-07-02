@@ -12,7 +12,7 @@ export default function ThreadList({ signups, myIds, categories, onUpdate, onDel
   const [editNote, setEditNote] = useState("");
   const [editCategory, setEditCategory] = useState("");
   const [busy, setBusy] = useState(false);
-  const [filterScrollRef, filterCanScrollRight] = useScrollFadeRight(categories?.length);
+  const [filterScrollRef, filterCanScrollRight] = useScrollFadeRight((categories?.length || 0) + 2);
 
   const NO_CATEGORY = "__no_category__";
   const filtered =
@@ -71,7 +71,7 @@ export default function ThreadList({ signups, myIds, categories, onUpdate, onDel
                 <button
                   key={c}
                   onClick={() => setFilter(c)}
-                  className={`shrink-0 text-xs px-3 py-1 rounded-full border ${filter === c ? "bg-gray-800 text-white border-gray-800" : "bg-gray-50 text-gray-500 border-gray-200"}`}
+                  className={`shrink-0 text-xs px-3 py-1 rounded-full border ${filter === c ? "bg-emerald-700 text-white border-emerald-700" : "bg-gray-50 text-gray-500 border-gray-200"}`}
                 >
                   {c}
                   <span className={`ml-1 ${filter === c ? "text-white/70" : "text-gray-400"}`}>{categoryCounts[c] || 0}</span>

@@ -9,7 +9,7 @@ export default function TaskListCard({ task, signups = [], onEdit, onDelete, onS
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [filter, setFilter] = useState("全部");
-  const [filterScrollRef, filterCanScrollRight] = useScrollFadeRight(task.categories?.length);
+  const [filterScrollRef, filterCanScrollRight] = useScrollFadeRight((task.categories?.length || 0) + 2);
   const st = taskStatus(task);
   const signupCount = signups.length;
 
@@ -155,7 +155,7 @@ export default function TaskListCard({ task, signups = [], onEdit, onDelete, onS
                     <button
                       key={c}
                       onClick={() => setFilter(c)}
-                      className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${filter === c ? "bg-gray-800 text-white border-gray-800" : "bg-gray-50 text-gray-500 border-gray-200"}`}
+                      className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${filter === c ? "bg-emerald-700 text-white border-emerald-700" : "bg-gray-50 text-gray-500 border-gray-200"}`}
                     >
                       {c}
                       <span className={`ml-1 ${filter === c ? "text-white/70" : "opacity-60"}`}>{categoryCounts[c] || 0}</span>
