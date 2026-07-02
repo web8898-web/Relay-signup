@@ -144,7 +144,7 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
   }
 
   return (
-    <div className="flex-1 flex flex-col relative">
+    <div className="flex-1 flex flex-col relative min-w-0">
       <TopBar title="建立任務" onBack={handleBackClick} />
       <OrganizerTabs current="new" />
       <div className="px-6 pt-2 pb-1 flex items-center gap-2 text-xs text-gray-400">
