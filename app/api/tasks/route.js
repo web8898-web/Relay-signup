@@ -3,13 +3,23 @@ import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { verifyLineAccessToken, getBearerToken } from "@/lib/lineAuth";
 import { generateShortCode } from "@/lib/shortCode";
 
+// Parses the optional "報名人數上限" field. Empty/blank/zero/invalid all
+// mean "no cap" (null), since the field is optional and a 0 or negative
+// limit wouldn't make sense.
+function parseMaxSignups(value) {
+  if (value === undefined || value === null || value === "") return null;
+  const n = parseInt(value, 10);
+  if (Number.isNaN(n) || n <= 0) return null;
+  return n;
+}
+
 export async function POST(request) {
   try {
     const token = getBearerToken(request);
     const profile = await verifyLineAccessToken(token);
     const body = await request.json();
 
-    const { title, description, categories, start_date, end_date, note } = body;
+    const { title, description, categories, start_date, end_date, note, max_signups } = body;
     if (!title || !start_date || !end_date) {
       return NextResponse.json({ error: "缺少必要欄位" }, { status: 400 });
     }
@@ -32,6 +42,7 @@ export async function POST(request) {
           creator_id: profile.userId,
           creator_name: profile.displayName,
           short_code: generateShortCode(),
+          max_signups: parseMaxSignups(max_signups),
         })
         .select()
         .single());
