@@ -10,7 +10,7 @@ export default function TaskListCard({ task, signups = [], onEdit, onDelete, onS
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [filter, setFilter] = useState("全部");
-  const [filterScrollRef, filterSentinelRef, filterCanScrollRight] = useScrollFadeRight(task.categories?.length > 0);
+  const [filterScrollRef, filterSentinelRef, filterCanScrollRight] = useScrollFadeRight(expanded && task.categories?.length > 0);
 
   // LINE's in-app browser often silently fails to download client-generated
   // blob files, so we hit a real server URL instead and force it open in
@@ -234,13 +234,13 @@ export default function TaskListCard({ task, signups = [], onEdit, onDelete, onS
               <div className="flex gap-2">
                 <button
                   onClick={handleExportCsv}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-gray-200 rounded-full py-2 text-xs font-medium text-gray-600 hover:border-emerald-300 hover:text-emerald-600 transition"
+                  className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-emerald-200 rounded-full py-2 text-xs font-medium text-emerald-600 hover:bg-emerald-50 transition"
                 >
                   <FileSpreadsheet size={14} /> CSV（Excel）
                 </button>
                 <button
                   onClick={handleExportTxt}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-gray-200 rounded-full py-2 text-xs font-medium text-gray-600 hover:border-emerald-300 hover:text-emerald-600 transition"
+                  className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-emerald-200 rounded-full py-2 text-xs font-medium text-emerald-600 hover:bg-emerald-50 transition"
                 >
                   <FileText size={14} /> 文字檔
                 </button>
@@ -257,7 +257,7 @@ export default function TaskListCard({ task, signups = [], onEdit, onDelete, onS
             </button>
             <button
               onClick={onEdit}
-              className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-2.5 font-semibold flex items-center justify-center gap-2 transition"
+              className="flex-1 border border-emerald-200 text-emerald-600 rounded-full py-2.5 font-semibold flex items-center justify-center gap-2 hover:bg-emerald-50 transition"
             >
               <Edit2 size={15} /> 編輯任務
             </button>
