@@ -5,6 +5,7 @@ import { Loader2, CheckCircle2, X, LogIn, MessageCircle, AlertTriangle } from "l
 import { TopBar } from "@/components/TopBar";
 import OrganizerTabs from "@/components/OrganizerTabs";
 import LoadingBubble from "@/components/LoadingBubble";
+import AutoGrowTextarea from "@/components/AutoGrowTextarea";
 import { useLineProfile } from "@/lib/useLineProfile";
 import { avatarClass, chipClass, todayStr } from "@/lib/utils";
 
@@ -172,12 +173,12 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
         </Field>
 
         <Field label="簡介">
-          <textarea
+          <AutoGrowTextarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="簡單說明這個任務在做什麼"
-            rows={3}
-            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-300"
+            minRows={3}
+            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
           />
         </Field>
 
@@ -225,12 +226,12 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
         </Field>
 
         <Field label="備註">
-          <textarea
+          <AutoGrowTextarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="其他提醒事項"
-            rows={2}
-            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-300"
+            minRows={2}
+            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
           />
         </Field>
       </div>
