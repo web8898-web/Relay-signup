@@ -5,6 +5,7 @@ import { Loader2, Send, Users, CheckCircle2, ChevronRight } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import TaskAnnouncement from "@/components/TaskAnnouncement";
 import ThreadList from "@/components/ThreadList";
+import LoadingBubble from "@/components/LoadingBubble";
 import TaskGoneIllustration from "@/components/TaskGoneIllustration";
 import { supabase } from "@/lib/supabaseClient";
 import { taskStatus } from "@/lib/utils";
@@ -123,8 +124,8 @@ export default function TaskDetailPage() {
     return (
       <div className="flex-1 flex flex-col">
         <TopBar title="載入中" />
-        <div className="flex-1 flex items-center justify-center text-emerald-500">
-          <Loader2 className="animate-spin" size={28} />
+        <div className="flex-1 flex items-center justify-center">
+          <LoadingBubble />
         </div>
       </div>
     );
