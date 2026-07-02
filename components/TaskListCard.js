@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { MessageCircle, ChevronDown, MoreVertical, Edit2, Share2, Calendar, Users } from "lucide-react";
+import { MessageCircle, ChevronDown, ChevronRight, MoreVertical, Edit2, Share2, Calendar, Users } from "lucide-react";
 import { taskStatus, chipClass, avatarClass, relTime } from "@/lib/utils";
 
 export default function TaskListCard({ task, signups = [], onEdit, onDelete, onShare }) {
@@ -131,33 +131,40 @@ export default function TaskListCard({ task, signups = [], onEdit, onDelete, onS
             <p className="text-[11px] font-medium text-gray-400 mb-1.5 px-0.5">報名名單</p>
 
             {task.categories?.length > 0 && (
-              <div className="flex gap-1.5 overflow-x-auto pb-2 -mx-0.5 px-0.5">
-                <button
-                  onClick={() => setFilter("全部")}
-                  className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${filter === "全部" ? "bg-gray-800 text-white border-gray-800" : "bg-gray-50 text-gray-500 border-gray-200"}`}
-                >
-                  全部
-                  <span className={`ml-1 ${filter === "全部" ? "text-white/70" : "text-gray-400"}`}>{signupCount}</span>
-                </button>
-                <button
-                  onClick={() => setFilter(NO_CATEGORY)}
-                  className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${
-                    filter === NO_CATEGORY ? "bg-gray-800 text-white border-gray-800" : "bg-gray-50 text-gray-400 border-gray-200 border-dashed"
-                  }`}
-                >
-                  沒選類別
-                  <span className={`ml-1 ${filter === NO_CATEGORY ? "text-white/70" : "text-gray-400"}`}>{noCategoryCount}</span>
-                </button>
-                {task.categories.map((c) => (
+              <div className="relative -mx-0.5">
+                <div className="flex gap-1.5 overflow-x-auto pb-2 px-0.5">
                   <button
-                    key={c}
-                    onClick={() => setFilter(c)}
-                    className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${filter === c ? "bg-gray-800 text-white border-gray-800" : "bg-gray-50 text-gray-500 border-gray-200"}`}
+                    onClick={() => setFilter("全部")}
+                    className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${filter === "全部" ? "bg-gray-800 text-white border-gray-800" : "bg-gray-50 text-gray-500 border-gray-200"}`}
                   >
-                    {c}
-                    <span className={`ml-1 ${filter === c ? "text-white/70" : "opacity-60"}`}>{categoryCounts[c] || 0}</span>
+                    全部
+                    <span className={`ml-1 ${filter === "全部" ? "text-white/70" : "text-gray-400"}`}>{signupCount}</span>
                   </button>
-                ))}
+                  <button
+                    onClick={() => setFilter(NO_CATEGORY)}
+                    className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${
+                      filter === NO_CATEGORY ? "bg-gray-800 text-white border-gray-800" : "bg-gray-50 text-gray-400 border-gray-200 border-dashed"
+                    }`}
+                  >
+                    沒選類別
+                    <span className={`ml-1 ${filter === NO_CATEGORY ? "text-white/70" : "text-gray-400"}`}>{noCategoryCount}</span>
+                  </button>
+                  {task.categories.map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setFilter(c)}
+                      className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${filter === c ? "bg-gray-800 text-white border-gray-800" : "bg-gray-50 text-gray-500 border-gray-200"}`}
+                    >
+                      {c}
+                      <span className={`ml-1 ${filter === c ? "text-white/70" : "opacity-60"}`}>{categoryCounts[c] || 0}</span>
+                    </button>
+                  ))}
+                </div>
+                {task.categories.length > 2 && (
+                  <div className="pointer-events-none absolute right-0 top-0 bottom-2 w-10 flex items-center justify-end bg-gradient-to-l from-white to-transparent">
+                    <ChevronRight size={13} className="text-gray-300" />
+                  </div>
+                )}
               </div>
             )}
 
