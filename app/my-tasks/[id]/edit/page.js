@@ -5,6 +5,7 @@ import { Loader2, CheckCircle2, X, LogIn, MessageCircle, AlertTriangle } from "l
 import { TopBar } from "@/components/TopBar";
 import LoadingBubble from "@/components/LoadingBubble";
 import AutoGrowTextarea from "@/components/AutoGrowTextarea";
+import DatePickerField from "@/components/DatePickerField";
 import TaskGoneIllustration from "@/components/TaskGoneIllustration";
 import { useLineProfile } from "@/lib/useLineProfile";
 import { chipClass } from "@/lib/utils";
@@ -240,9 +241,17 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
         </Field>
         <Field label="日期">
           <div className="flex items-center gap-2">
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="flex-1 border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300" />
+            <DatePickerField
+              value={startDate}
+              onChange={setStartDate}
+              className="flex-1 border border-gray-200 rounded-2xl px-3 py-2.5 text-sm"
+            />
             <span className="text-gray-300">~</span>
-            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="flex-1 border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300" />
+            <DatePickerField
+              value={endDate}
+              onChange={setEndDate}
+              className="flex-1 border border-gray-200 rounded-2xl px-3 py-2.5 text-sm"
+            />
           </div>
         </Field>
         <Field label="備註">
