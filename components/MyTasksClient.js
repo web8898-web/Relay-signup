@@ -169,10 +169,13 @@ export default function MyTasksClient() {
         ) : (
           <button
             onClick={() => setBannerExpanded(true)}
-            className="flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-3 py-1.5 self-start hover:bg-emerald-100 transition"
+            className="w-full flex items-center justify-between text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-3 hover:bg-emerald-100 transition"
             aria-label="展開提示"
           >
-            <Bell size={12} /> 加好友才能收到報名通知 <ChevronDown size={12} />
+            <span className="flex items-center gap-2">
+              <Bell size={14} /> 加好友才能收到報名通知
+            </span>
+            <ChevronDown size={14} />
           </button>
         )}
 
