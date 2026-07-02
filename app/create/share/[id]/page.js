@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Share2, Copy, Loader2 } from "lucide-react";
+import { Share2, Copy } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import TaskShareCard from "@/components/TaskShareCard";
+import LoadingBubble from "@/components/LoadingBubble";
 import { supabase } from "@/lib/supabaseClient";
 import { buildShareText, lineShareUrl, buildFlexMessage } from "@/lib/utils";
 import { liff } from "@/lib/liff";
@@ -78,8 +79,8 @@ export default function ShareTaskPage() {
     return (
       <div className="flex-1 flex flex-col">
         <TopBar title="分享任務" onBack={() => router.push("/my-tasks")} />
-        <div className="flex-1 flex items-center justify-center text-emerald-500">
-          <Loader2 className="animate-spin" size={28} />
+        <div className="flex-1 flex items-center justify-center">
+          <LoadingBubble />
         </div>
       </div>
     );
