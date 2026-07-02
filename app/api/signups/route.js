@@ -20,7 +20,7 @@ export async function POST(request) {
     if (taskErr || !task) {
       return NextResponse.json({ error: "找不到這個任務" }, { status: 404 });
     }
-    if (task.categories?.length > 0 && !task.categories.includes(category)) {
+    if (category && task.categories?.length > 0 && !task.categories.includes(category)) {
       return NextResponse.json({ error: "請選擇有效的分類" }, { status: 400 });
     }
 
