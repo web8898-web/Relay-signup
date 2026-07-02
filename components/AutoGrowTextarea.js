@@ -30,14 +30,24 @@ export default function AutoGrowTextarea({
   className = "",
 }) {
   const ref = useRef(null);
+  const prevLengthRef = useRef((value || "").length);
 
-  function resize() {
+  function resize(mayHaveShrunk) {
     const el = ref.current;
     if (!el) return;
     const scrollParent = getScrollParent(el);
     const prevScrollTop = scrollParent.scrollTop;
 
-    el.style.height = "auto";
+    // scrollHeight already reflects the full content height even without
+    // resetting to "auto" first — that reset is only needed to correctly
+    // detect when the content got *shorter* (e.g. deleting text). Skipping
+    // it for the common "typing more, including pressing Enter" case
+    // avoids a brief shrink-then-grow flash that was triggering the
+    // browser's own "keep the caret visible" auto-scroll, which is what
+    // caused the jumpy page position while typing.
+    if (mayHaveShrunk) {
+      el.style.height = "auto";
+    }
     el.style.height = Math.min(el.scrollHeight, maxHeight) + "px";
 
     // Restore the scroll position immediately, before the browser paints,
@@ -46,8 +56,11 @@ export default function AutoGrowTextarea({
   }
 
   useLayoutEffect(() => {
-    resize();
-    const raf = requestAnimationFrame(resize);
+    const newLength = (value || "").length;
+    const mayHaveShrunk = newLength < prevLengthRef.current;
+    resize(mayHaveShrunk);
+    prevLengthRef.current = newLength;
+    const raf = requestAnimationFrame(() => resize(false));
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, maxHeight]);
@@ -56,10 +69,7 @@ export default function AutoGrowTextarea({
     <textarea
       ref={ref}
       value={value}
-      onChange={(e) => {
-        onChange(e);
-        resize();
-      }}
+      onChange={onChange}
       placeholder={placeholder}
       rows={minRows}
       className={`${className} resize-none overflow-y-auto`}
