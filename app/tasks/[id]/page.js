@@ -141,7 +141,7 @@ export default function TaskDetailPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col relative">
+    <div className="flex-1 flex flex-col relative min-w-0">
       <TopBar title={task.title} />
 
       <div className="px-6 pt-4">
