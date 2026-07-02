@@ -2,12 +2,14 @@
 import { useState } from "react";
 import { MessageCircle, ChevronDown, ChevronRight, MoreVertical, Edit2, Share2, Calendar, Users } from "lucide-react";
 import { taskStatus, chipClass, avatarClass, relTime } from "@/lib/utils";
+import { useScrollFadeRight } from "@/lib/useScrollFadeRight";
 
 export default function TaskListCard({ task, signups = [], onEdit, onDelete, onShare }) {
   const [expanded, setExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [filter, setFilter] = useState("全部");
+  const [filterScrollRef, filterCanScrollRight] = useScrollFadeRight(task.categories?.length);
   const st = taskStatus(task);
   const signupCount = signups.length;
 
@@ -132,7 +134,7 @@ export default function TaskListCard({ task, signups = [], onEdit, onDelete, onS
 
             {task.categories?.length > 0 && (
               <div className="relative -mx-0.5">
-                <div className="flex gap-1.5 overflow-x-auto pb-2 px-0.5">
+                <div ref={filterScrollRef} className="flex gap-1.5 overflow-x-auto pb-2 px-0.5">
                   <button
                     onClick={() => setFilter("全部")}
                     className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${filter === "全部" ? "bg-gray-800 text-white border-gray-800" : "bg-gray-50 text-gray-500 border-gray-200"}`}
@@ -160,7 +162,7 @@ export default function TaskListCard({ task, signups = [], onEdit, onDelete, onS
                     </button>
                   ))}
                 </div>
-                {task.categories.length > 2 && (
+                {filterCanScrollRight && (
                   <div className="pointer-events-none absolute right-0 top-0 bottom-2 w-10 flex items-center justify-end bg-gradient-to-l from-white to-transparent">
                     <ChevronRight size={13} className="text-gray-300" />
                   </div>

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Edit2, Trash2, ChevronRight } from "lucide-react";
 import { avatarClass, chipClass, relTime } from "@/lib/utils";
+import { useScrollFadeRight } from "@/lib/useScrollFadeRight";
 
 export default function ThreadList({ signups, myIds, categories, onUpdate, onDelete }) {
   const [filter, setFilter] = useState("全部");
@@ -11,6 +12,7 @@ export default function ThreadList({ signups, myIds, categories, onUpdate, onDel
   const [editNote, setEditNote] = useState("");
   const [editCategory, setEditCategory] = useState("");
   const [busy, setBusy] = useState(false);
+  const [filterScrollRef, filterCanScrollRight] = useScrollFadeRight(categories?.length);
 
   const NO_CATEGORY = "__no_category__";
   const filtered =
@@ -48,7 +50,7 @@ export default function ThreadList({ signups, myIds, categories, onUpdate, onDel
         <>
           <p className="text-[11px] text-gray-400 mb-1.5 px-0.5">瀏覽名單（點分類篩選）</p>
           <div className="relative -mx-1">
-            <div className="flex gap-1.5 overflow-x-auto pb-3 px-1">
+            <div ref={filterScrollRef} className="flex gap-1.5 overflow-x-auto pb-3 px-1">
               <button
                 onClick={() => setFilter("全部")}
                 className={`shrink-0 text-xs px-3 py-1 rounded-full border ${filter === "全部" ? "bg-gray-800 text-white border-gray-800" : "bg-gray-50 text-gray-500 border-gray-200"}`}
@@ -76,7 +78,7 @@ export default function ThreadList({ signups, myIds, categories, onUpdate, onDel
                 </button>
               ))}
             </div>
-            {categories.length > 2 && (
+            {filterCanScrollRight && (
               <div className="pointer-events-none absolute right-0 top-0 bottom-3 w-10 flex items-center justify-end bg-gradient-to-l from-white to-transparent">
                 <ChevronRight size={14} className="text-gray-300" />
               </div>
