@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { MessageCircle, ChevronDown, ChevronRight, MoreVertical, Edit2, Share2, Calendar, Users } from "lucide-react";
+import { MessageCircle, ChevronDown, ChevronRight, MoreVertical, Edit2, Share2, Calendar, Users, Download, FileSpreadsheet, FileText } from "lucide-react";
 import { taskStatus, chipClass, avatarClass, relTime } from "@/lib/utils";
 import { useScrollFadeRight } from "@/lib/useScrollFadeRight";
 
@@ -10,6 +10,68 @@ export default function TaskListCard({ task, signups = [], onEdit, onDelete, onS
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [filter, setFilter] = useState("全部");
   const [filterScrollRef, filterSentinelRef, filterCanScrollRight] = useScrollFadeRight(task.categories?.length > 0);
+
+  function fmtTime(iso) {
+    try {
+      return new Date(iso).toLocaleString("zh-TW", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+    } catch {
+      return "";
+    }
+  }
+
+  function safeFilename(s) {
+    return (s || "任務").replace(/[\\/:*?"<>|]/g, "_").slice(0, 60);
+  }
+
+  function downloadFile(filename, content, mime) {
+    const blob = new Blob(["\uFEFF" + content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function csvEscape(value) {
+    const str = String(value ?? "");
+    if (/[",\n]/.test(str)) return `"${str.replace(/"/g, '""')}"`;
+    return str;
+  }
+
+  function handleExportCsv(e) {
+    e.stopPropagation();
+    const headers = ["姓名", "分類", "備註", "報名時間"];
+    const rows = signups.map((s) => [s.name, s.category || "", s.note || "", fmtTime(s.created_at)]);
+    const lines = [headers, ...rows].map((r) => r.map(csvEscape).join(","));
+    downloadFile(`${safeFilename(task.title)}-報名名單.csv`, lines.join("\r\n"), "text/csv;charset=utf-8");
+  }
+
+  function handleExportTxt(e) {
+    e.stopPropagation();
+    const lines = [];
+    lines.push(`任務：${task.title}`);
+    lines.push(`匯出時間：${fmtTime(new Date().toISOString())}`);
+    lines.push(`總計：${signups.length} 人報名`);
+    lines.push("");
+    signups.forEach((s, i) => {
+      const parts = [`${i + 1}. ${s.name}`];
+      if (s.category) parts.push(`分類：${s.category}`);
+      parts.push(`備註：${s.note || "無"}`);
+      parts.push(`報名時間：${fmtTime(s.created_at)}`);
+      lines.push(parts.join("　"));
+    });
+    downloadFile(`${safeFilename(task.title)}-報名名單.txt`, lines.join("\n"), "text/plain;charset=utf-8");
+  }
   const st = taskStatus(task);
   const signupCount = signups.length;
 
@@ -197,6 +259,28 @@ export default function TaskListCard({ task, signups = [], onEdit, onDelete, onS
               </div>
             )}
           </div>
+
+          {signups.length > 0 && (
+            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-3 mb-3">
+              <p className="text-[11px] font-medium text-gray-400 mb-2 flex items-center gap-1">
+                <Download size={12} /> 匯出名單
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleExportCsv}
+                  className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-gray-200 rounded-full py-2 text-xs font-medium text-gray-600 hover:border-emerald-300 hover:text-emerald-600 transition"
+                >
+                  <FileSpreadsheet size={14} /> CSV（Excel）
+                </button>
+                <button
+                  onClick={handleExportTxt}
+                  className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-gray-200 rounded-full py-2 text-xs font-medium text-gray-600 hover:border-emerald-300 hover:text-emerald-600 transition"
+                >
+                  <FileText size={14} /> 文字檔
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="flex gap-2">
             <button
