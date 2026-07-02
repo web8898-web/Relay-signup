@@ -25,9 +25,31 @@ export default function TaskDetailPage() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
+  const [cooldown, setCooldown] = useState(0);
+  const cooldownIntervalRef = useRef(null);
   const listRef = useRef(null);
   const nameInputRef = useRef(null);
   const [catScrollRef, catSentinelRef, catCanScrollRight] = useScrollFadeRight(!loading && task?.categories?.length > 0);
+
+  function startCooldown(seconds) {
+    setCooldown(seconds);
+    if (cooldownIntervalRef.current) clearInterval(cooldownIntervalRef.current);
+    cooldownIntervalRef.current = setInterval(() => {
+      setCooldown((c) => {
+        if (c <= 1) {
+          clearInterval(cooldownIntervalRef.current);
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (cooldownIntervalRef.current) clearInterval(cooldownIntervalRef.current);
+    };
+  }, []);
 
   function showToast(msg) {
     setToast(msg);
@@ -54,6 +76,7 @@ export default function TaskDetailPage() {
   }, [id]);
 
   const closed = task ? taskStatus(task).label === "已截止" : false;
+  const full = task?.max_signups ? signups.length >= task.max_signups : false;
 
   async function handleSend() {
     if (!task) return;
@@ -77,12 +100,16 @@ export default function TaskDetailPage() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) {
+        if (data.cooldown_seconds) startCooldown(data.cooldown_seconds);
+        throw new Error(data.error);
+      }
       rememberMySignup(data.signup.id);
       setMyIds(getMySignupIds());
       setName("");
       setNote("");
       showToast("已成功接龍！");
+      startCooldown(30);
       // Re-fetch from the database instead of only patching local state, so
       // the list is always guaranteed to match what's actually saved —
       // this is what fixes the "first signup doesn't show until you leave
@@ -162,7 +189,8 @@ export default function TaskDetailPage() {
       <div className="px-6 pt-4">
         <TaskAnnouncement task={task} />
         <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-4 mb-2">
-          <Users size={13} /> {signups.length} 人已接龍
+          <Users size={13} />
+          {task.max_signups ? `${signups.length} / ${task.max_signups} 人已報名` : `${signups.length} 人已接龍`}
         </div>
       </div>
 
@@ -179,6 +207,10 @@ export default function TaskDetailPage() {
       {closed ? (
         <div className="px-6 pb-6 pt-2 text-center text-xs text-gray-400 border-t border-gray-100">
           此任務已截止，無法再接龍
+        </div>
+      ) : full ? (
+        <div className="px-6 pb-6 pt-2 text-center text-xs text-gray-400 border-t border-gray-100">
+          這個任務已經額滿，無法再接龍
         </div>
       ) : (
         <div className="px-6 pb-6 pt-3 border-t-2 border-emerald-100 bg-emerald-50/40 min-w-0 overflow-hidden">
@@ -244,8 +276,8 @@ export default function TaskDetailPage() {
             />
             <button
               onClick={handleSend}
-              disabled={sending}
-              className="w-full bg-emerald-500 disabled:opacity-90 text-white rounded-full py-3.5 font-semibold flex items-center justify-center gap-2 hover:bg-emerald-600 shadow-md shadow-emerald-200 transition"
+              disabled={sending || cooldown > 0}
+              className="w-full bg-emerald-500 disabled:opacity-70 text-white rounded-full py-3.5 font-semibold flex items-center justify-center gap-2 hover:bg-emerald-600 shadow-md shadow-emerald-200 transition"
             >
               {sending ? (
                 <>
@@ -256,6 +288,8 @@ export default function TaskDetailPage() {
                     <span className="w-1.5 h-1.5 rounded-full bg-white animate-bounce" />
                   </span>
                 </>
+              ) : cooldown > 0 ? (
+                `30 秒後可再次報名（${cooldown}）`
               ) : (
                 <>
                   <Send size={18} />
