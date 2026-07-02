@@ -123,9 +123,9 @@ export default function ShareTaskPage() {
       <div className="px-5 pb-6 pt-2">
         <button
           onClick={() => router.push("/my-tasks")}
-          className="w-full bg-gray-800 hover:bg-gray-900 text-white rounded-full py-3 font-semibold transition"
+          className="w-full border border-gray-200 text-gray-600 rounded-full py-3 font-semibold hover:bg-gray-50 transition"
         >
-          完成
+          回到任務清單
         </button>
       </div>
 
