@@ -68,6 +68,7 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
   const [catInput, setCatInput] = useState("");
   const [startDate, setStartDate] = useState(todayStr());
   const [endDate, setEndDate] = useState(todayStr());
+  const [maxSignups, setMaxSignups] = useState("");
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -145,6 +146,7 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
           categories,
           start_date: startDate,
           end_date: endDate,
+          max_signups: maxSignups,
           note: note.trim(),
         }),
       });
@@ -233,6 +235,18 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
             <span className="text-gray-300">~</span>
             <DatePickerField value={endDate} onChange={setEndDate} className={`flex-1 ${fieldClass} py-2.5`} />
           </div>
+        </Field>
+
+        <Field label="報名人數上限（選填，不填代表不限人數）">
+          <input
+            type="number"
+            min="1"
+            inputMode="numeric"
+            value={maxSignups}
+            onChange={(e) => setMaxSignups(e.target.value)}
+            placeholder="例如：20"
+            className={fieldClass}
+          />
         </Field>
 
         <Field label="備註">
