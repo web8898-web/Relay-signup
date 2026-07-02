@@ -50,8 +50,8 @@ export async function GET(request, { params }) {
   let content, mime, ext;
 
   if (format === "csv") {
-    const headers = ["姓名", "分類", "備註", "報名時間"];
-    const rows = list.map((s) => [s.name, s.category || "", s.note || "", fmtTime(s.created_at)]);
+    const headers = ["編號", "姓名", "分類", "備註", "報名時間"];
+    const rows = list.map((s, i) => [i + 1, s.name, s.category || "", s.note || "", fmtTime(s.created_at)]);
     content = "\uFEFF" + [headers, ...rows].map((r) => r.map(csvEscape).join(",")).join("\r\n");
     mime = "text/csv;charset=utf-8";
     ext = "csv";
