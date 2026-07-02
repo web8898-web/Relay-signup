@@ -143,15 +143,14 @@ export default function ThreadList({ signups, myIds, categories, onUpdate, onDel
                         <button disabled={busy} onClick={() => saveEdit(s)} className="text-xs bg-emerald-500 text-white px-3 py-1 rounded-full disabled:opacity-50">儲存</button>
                       </div>
                     </div>
-                  ) : (
+                  ) : (s.category || s.note) ? (
                     <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-sm px-3.5 py-2.5 shadow-sm inline-block max-w-full">
                       {s.category && (
                         <span className={`text-[10px] px-2 py-0.5 rounded-full border mr-1.5 ${chipClass(s.category)}`}>{s.category}</span>
                       )}
                       {s.note && <span className="text-sm text-gray-600 break-words">{s.note}</span>}
-                      {!s.note && !s.category && <span className="text-sm text-gray-400">已完成報名</span>}
                     </div>
-                  )}
+                  ) : null}
 
                   {mine && !isEditing && (
                     <div className="flex gap-3 mt-1 ml-1">
