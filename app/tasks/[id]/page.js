@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
-import { Loader2, Send, Users, CheckCircle2 } from "lucide-react";
+import { Loader2, Send, Users, CheckCircle2, ChevronRight } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import TaskAnnouncement from "@/components/TaskAnnouncement";
 import ThreadList from "@/components/ThreadList";
@@ -169,28 +169,35 @@ export default function TaskDetailPage() {
           {task.categories?.length > 0 && (
             <>
               <p className="text-[11px] font-semibold text-emerald-700 mb-1.5 px-0.5">👉 選擇您要報名的類別</p>
-              <div className="flex gap-1.5 overflow-x-auto pb-2 mb-1 -mx-1 px-1">
-                <button
-                  onClick={() => setCategory("")}
-                  className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition ${
-                    category === ""
-                      ? "bg-gray-700 text-white border-gray-700"
-                      : "bg-white text-gray-400 border-gray-200 border-dashed"
-                  }`}
-                >
-                  不選類別
-                </button>
-                {task.categories.map((c) => (
+              <div className="relative -mx-1">
+                <div className="flex gap-1.5 overflow-x-auto pb-2 mb-1 px-1">
                   <button
-                    key={c}
-                    onClick={() => setCategory(c)}
+                    onClick={() => setCategory("")}
                     className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition ${
-                      category === c ? "bg-emerald-500 text-white border-emerald-500" : "bg-white text-gray-500 border-gray-200"
+                      category === ""
+                        ? "bg-gray-700 text-white border-gray-700"
+                        : "bg-white text-gray-400 border-gray-200 border-dashed"
                     }`}
                   >
-                    {c}
+                    不選類別
                   </button>
-                ))}
+                  {task.categories.map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setCategory(c)}
+                      className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition ${
+                        category === c ? "bg-emerald-500 text-white border-emerald-500" : "bg-white text-gray-500 border-gray-200"
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+                {task.categories.length > 3 && (
+                  <div className="pointer-events-none absolute right-0 top-0 bottom-2 w-10 flex items-center justify-end bg-gradient-to-l from-emerald-50 to-transparent">
+                    <ChevronRight size={14} className="text-emerald-400" />
+                  </div>
+                )}
               </div>
             </>
           )}
