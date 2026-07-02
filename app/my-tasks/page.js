@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ClipboardList, LogIn, MessageCircle, Plus } from "lucide-react";
+import { ClipboardList, LogIn, MessageCircle, Plus, Bell, X } from "lucide-react";
 import { TopBar, EmptyState } from "@/components/TopBar";
 import OrganizerTabs from "@/components/OrganizerTabs";
 import LoadingBubble from "@/components/LoadingBubble";
@@ -10,6 +10,10 @@ import { useLineProfile } from "@/lib/useLineProfile";
 import { avatarClass } from "@/lib/utils";
 import { supabase } from "@/lib/supabaseClient";
 
+// LINE's official "add friend" deep link format for a given Basic ID.
+const FRIEND_ADD_URL = "https://line.me/R/ti/p/%40085uqqfg";
+const FRIEND_BANNER_KEY = "hideFriendBanner";
+
 export default function MyTasksPage() {
   const router = useRouter();
   const { profile, loading, error, login } = useLineProfile();
@@ -17,6 +21,18 @@ export default function MyTasksPage() {
   const [signupsByTask, setSignupsByTask] = useState({});
   const [tasksLoading, setTasksLoading] = useState(true);
   const [toast, setToast] = useState("");
+  const [showFriendBanner, setShowFriendBanner] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && !localStorage.getItem(FRIEND_BANNER_KEY)) {
+      setShowFriendBanner(true);
+    }
+  }, []);
+
+  function dismissFriendBanner() {
+    setShowFriendBanner(false);
+    localStorage.setItem(FRIEND_BANNER_KEY, "1");
+  }
 
   function showToast(msg) {
     setToast(msg);
@@ -119,6 +135,35 @@ export default function MyTasksPage() {
       />
       <OrganizerTabs current="tasks" />
       <div className="flex-1 px-6 py-3 flex flex-col gap-3 overflow-y-auto">
+        {showFriendBanner && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 flex items-start gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+              <Bell size={15} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-emerald-800">加好友才能收到報名通知</p>
+              <p className="text-[11px] text-emerald-700 mt-0.5 leading-relaxed">
+                加入官方帳號好友，有人報名時 LINE 就會直接通知你。可以在每個任務旁的鈴鐺圖示，個別開關要不要收通知。
+              </p>
+              <a
+                href={FRIEND_ADD_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block mt-2 bg-emerald-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-emerald-600 transition"
+              >
+                加官方帳號好友
+              </a>
+            </div>
+            <button
+              onClick={dismissFriendBanner}
+              className="text-emerald-400 hover:text-emerald-600 shrink-0"
+              aria-label="關閉提示"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
         {tasksLoading && (
           <div className="flex justify-center py-6">
             <LoadingBubble size={18} />
@@ -132,6 +177,7 @@ export default function MyTasksPage() {
             key={t.id}
             task={t}
             signups={signupsByTask[t.id] || []}
+            accessToken={profile.accessToken}
             onEdit={() => router.push(`/my-tasks/${t.id}/edit`)}
             onShare={() => router.push(`/create/share/${t.id}`)}
             onDelete={() => handleDelete(t.id)}
