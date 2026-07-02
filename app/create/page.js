@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Loader2, CheckCircle2, X, LogIn, MessageCircle, AlertTriangle } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import OrganizerTabs from "@/components/OrganizerTabs";
+import LoadingBubble from "@/components/LoadingBubble";
 import { useLineProfile } from "@/lib/useLineProfile";
 import { avatarClass, chipClass, todayStr } from "@/lib/utils";
 
@@ -15,8 +16,8 @@ export default function CreateTaskPage() {
     return (
       <div className="flex-1 flex flex-col">
         <TopBar title="建立任務" backHref="/" />
-        <div className="flex-1 flex items-center justify-center text-emerald-500">
-          <Loader2 className="animate-spin" size={28} />
+        <div className="flex-1 flex items-center justify-center">
+          <LoadingBubble />
         </div>
       </div>
     );
