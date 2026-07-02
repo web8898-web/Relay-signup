@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ClipboardList, Loader2, LogIn, MessageCircle, Plus } from "lucide-react";
+import { ClipboardList, LogIn, MessageCircle, Plus } from "lucide-react";
 import { TopBar, EmptyState } from "@/components/TopBar";
 import OrganizerTabs from "@/components/OrganizerTabs";
+import LoadingBubble from "@/components/LoadingBubble";
 import TaskListCard from "@/components/TaskListCard";
 import { useLineProfile } from "@/lib/useLineProfile";
 import { avatarClass } from "@/lib/utils";
@@ -72,8 +73,8 @@ export default function MyTasksPage() {
     return (
       <div className="flex-1 flex flex-col">
         <TopBar title="任務清單" backHref="/" />
-        <div className="flex-1 flex items-center justify-center text-emerald-500">
-          <Loader2 className="animate-spin" size={28} />
+        <div className="flex-1 flex items-center justify-center">
+          <LoadingBubble />
         </div>
       </div>
     );
@@ -119,8 +120,8 @@ export default function MyTasksPage() {
       <OrganizerTabs current="tasks" />
       <div className="flex-1 px-6 py-3 flex flex-col gap-3 overflow-y-auto">
         {tasksLoading && (
-          <div className="flex justify-center py-10 text-emerald-500">
-            <Loader2 className="animate-spin" size={24} />
+          <div className="flex justify-center py-6">
+            <LoadingBubble size={18} />
           </div>
         )}
         {!tasksLoading && tasks.length === 0 && (
