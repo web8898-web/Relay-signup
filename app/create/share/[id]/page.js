@@ -88,7 +88,7 @@ export default function ShareTaskPage() {
   if (!task) return null;
 
   return (
-    <div className="flex-1 flex flex-col relative">
+    <div className="flex-1 flex flex-col relative min-w-0">
       <TopBar title="分享任務" onBack={() => router.push("/my-tasks")} />
       <div className="flex-1 px-5 py-5 overflow-y-auto">
         <p className="text-xs text-gray-400 mb-3 text-center">這是分享到 LINE 群組時，成員會看到的卡片樣式</p>
