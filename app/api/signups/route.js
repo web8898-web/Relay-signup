@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+import { sendLinePush } from "@/lib/linePush";
 
 export async function POST(request) {
   try {
@@ -14,7 +15,7 @@ export async function POST(request) {
 
     const { data: task, error: taskErr } = await supabase
       .from("tasks")
-      .select("id, categories, end_date")
+      .select("id, title, categories, end_date, creator_id")
       .eq("id", task_id)
       .single();
     if (taskErr || !task) {
@@ -37,6 +38,29 @@ export async function POST(request) {
       .single();
 
     if (error) throw error;
+
+    // Notify the organizer via a LINE push message. This is fire-and-forget
+    // — if it fails (e.g. the organizer hasn't added the notification
+    // Official Account as a friend yet), the signup itself still succeeds.
+    if (task.creator_id) {
+      const { count } = await supabase
+        .from("signups")
+        .select("id", { count: "exact", head: true })
+        .eq("task_id", task_id);
+
+      const lines = [`📋 ${task.title} 有新的接龍報名！`, "", `👤 姓名：${data.name}`];
+      if (data.category) lines.push(`🏷 分類：${data.category}`);
+      if (data.note) lines.push(`📝 備註：${data.note}`);
+      lines.push("", `目前共 ${count ?? "?"} 人報名`);
+
+      const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
+      if (liffId) {
+        lines.push("", "👉 查看完整名單", `https://liff.line.me/${liffId}/my-tasks/${task_id}`);
+      }
+
+      await sendLinePush(task.creator_id, lines.join("\n"));
+    }
+
     return NextResponse.json({ signup: data });
   } catch (err) {
     return NextResponse.json({ error: err.message || "送出失敗" }, { status: 400 });
