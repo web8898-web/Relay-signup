@@ -32,7 +32,6 @@ export default function TaskDetailPage() {
     setLoading(true);
     const { data: taskData } = await supabase.from("tasks").select("*").eq("id", id).single();
     setTask(taskData || null);
-    if (taskData?.categories?.length > 0) setCategory(taskData.categories[0]);
 
     const { data: signupData } = await supabase
       .from("signups")
@@ -52,7 +51,6 @@ export default function TaskDetailPage() {
 
   async function handleSend() {
     if (!name.trim() || !task) return;
-    if (task.categories?.length > 0 && !category) return;
     setSending(true);
     setError("");
     try {
@@ -172,6 +170,16 @@ export default function TaskDetailPage() {
             <>
               <p className="text-[11px] font-semibold text-emerald-700 mb-1.5 px-0.5">👉 選擇您要報名的類別</p>
               <div className="flex gap-1.5 overflow-x-auto pb-2 mb-1 -mx-1 px-1">
+                <button
+                  onClick={() => setCategory("")}
+                  className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition ${
+                    category === ""
+                      ? "bg-gray-700 text-white border-gray-700"
+                      : "bg-white text-gray-400 border-gray-200 border-dashed"
+                  }`}
+                >
+                  不選類別
+                </button>
                 {task.categories.map((c) => (
                   <button
                     key={c}
@@ -201,7 +209,7 @@ export default function TaskDetailPage() {
             />
             <button
               onClick={handleSend}
-              disabled={!name.trim() || (task.categories?.length > 0 && !category) || sending}
+              disabled={!name.trim() || sending}
               className="w-full bg-emerald-500 disabled:bg-gray-200 disabled:text-gray-400 text-white rounded-full py-3.5 font-semibold flex items-center justify-center gap-2 hover:bg-emerald-600 shadow-md shadow-emerald-200 transition"
             >
               {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
