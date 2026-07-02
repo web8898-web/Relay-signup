@@ -137,7 +137,7 @@ export default function TaskListCard({ task, signups = [], onEdit, onDelete, onS
                 <div ref={filterScrollRef} className="flex gap-1.5 overflow-x-auto pb-2 px-0.5">
                   <button
                     onClick={() => setFilter("全部")}
-                    className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${filter === "全部" ? "bg-gray-800 text-white border-gray-800" : "bg-gray-50 text-gray-500 border-gray-200"}`}
+                    className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${filter === "全部" ? "bg-emerald-700 text-white border-emerald-700" : "bg-gray-50 text-gray-500 border-gray-200"}`}
                   >
                     全部
                     <span className={`ml-1 ${filter === "全部" ? "text-white/70" : "text-gray-400"}`}>{signupCount}</span>
@@ -145,11 +145,11 @@ export default function TaskListCard({ task, signups = [], onEdit, onDelete, onS
                   <button
                     onClick={() => setFilter(NO_CATEGORY)}
                     className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${
-                      filter === NO_CATEGORY ? "bg-gray-800 text-white border-gray-800" : "bg-gray-50 text-gray-400 border-gray-200 border-dashed"
+                      filter === NO_CATEGORY ? "bg-emerald-700 text-white border-emerald-700" : "bg-white text-emerald-600/70 border-emerald-200 border-dashed"
                     }`}
                   >
                     沒選類別
-                    <span className={`ml-1 ${filter === NO_CATEGORY ? "text-white/70" : "text-gray-400"}`}>{noCategoryCount}</span>
+                    <span className={`ml-1 ${filter === NO_CATEGORY ? "text-white/70" : "text-emerald-400"}`}>{noCategoryCount}</span>
                   </button>
                   {task.categories.map((c) => (
                     <button
