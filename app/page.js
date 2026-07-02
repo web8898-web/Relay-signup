@@ -13,7 +13,7 @@ export default function HomePage() {
   const [modal, setModal] = useState(null);
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col min-w-0">
       <div className="bg-emerald-500 text-white px-6 pt-12 pb-10 rounded-b-[2.5rem] shadow-md">
         <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mb-4">
           <MessageCircle size={28} />
