@@ -1,16 +1,40 @@
 "use client";
 import { useState } from "react";
-import { MessageCircle, ChevronDown, ChevronRight, MoreVertical, Edit2, Share2, Calendar, Users, Download, FileSpreadsheet, FileText } from "lucide-react";
+import { MessageCircle, ChevronDown, ChevronRight, MoreVertical, Edit2, Share2, Calendar, Users, Download, FileSpreadsheet, FileText, Bell, BellOff } from "lucide-react";
 import { taskStatus, chipClass, avatarClass, relTime } from "@/lib/utils";
 import { useScrollFadeRight } from "@/lib/useScrollFadeRight";
 import { liff } from "@/lib/liff";
 
-export default function TaskListCard({ task, signups = [], onEdit, onDelete, onShare }) {
+export default function TaskListCard({ task, signups = [], accessToken, onEdit, onDelete, onShare }) {
   const [expanded, setExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [filter, setFilter] = useState("全部");
+  const [notifyEnabled, setNotifyEnabled] = useState(task.notify_enabled !== false);
+  const [notifyBusy, setNotifyBusy] = useState(false);
   const [filterScrollRef, filterSentinelRef, filterCanScrollRight] = useScrollFadeRight(expanded && task.categories?.length > 0);
+
+  async function toggleNotify(e) {
+    e.stopPropagation();
+    if (notifyBusy) return;
+    const next = !notifyEnabled;
+    setNotifyEnabled(next); // optimistic
+    setNotifyBusy(true);
+    try {
+      const res = await fetch(`/api/tasks/${task.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ notify_enabled: next }),
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      setNotifyEnabled(!next); // revert on failure
+    }
+    setNotifyBusy(false);
+  }
 
   // LINE's in-app browser often silently fails to download client-generated
   // blob files, so we hit a real server URL instead and force it open in
@@ -76,6 +100,16 @@ export default function TaskListCard({ task, signups = [], onEdit, onDelete, onS
             )}
           </div>
         </div>
+
+        <button
+          onClick={toggleNotify}
+          className={`w-8 h-8 flex items-center justify-center shrink-0 transition ${
+            notifyEnabled ? "text-emerald-500" : "text-gray-300"
+          }`}
+          title={notifyEnabled ? "已開啟報名通知" : "已關閉報名通知"}
+        >
+          {notifyEnabled ? <Bell size={17} /> : <BellOff size={17} />}
+        </button>
 
         <button
           onClick={(e) => {
