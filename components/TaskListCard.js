@@ -74,11 +74,13 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
 
     const deleteThreshold = -st.cardWidth * DELETE_FRACTION;
     if (dragX <= deleteThreshold) {
-      // Swiped (almost) all the way — finish the animation off-screen and
-      // fire the actual delete, same as tapping the revealed trash button.
+      // Finish the slide-off animation locally, then hand off to the
+      // parent — which now removes the task from the list immediately
+      // (optimistic update) rather than waiting on the network, so there's
+      // no dead pause sitting on the red background in between.
       setRemoving(true);
       setDragX(-st.cardWidth);
-      onDelete?.();
+      setTimeout(() => onDelete?.(), 200);
     } else if (dragX <= -REVEAL_WIDTH / 2) {
       setDragX(-REVEAL_WIDTH);
     } else {
@@ -89,7 +91,7 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
   function handleTrashTap() {
     setRemoving(true);
     setDragX(-(cardRef.current?.offsetWidth || 320));
-    onDelete?.();
+    setTimeout(() => onDelete?.(), 200);
   }
 
   function closeSwipe() {

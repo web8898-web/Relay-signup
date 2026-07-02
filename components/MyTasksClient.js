@@ -75,6 +75,12 @@ export default function MyTasksClient() {
   }, [profile]);
 
   async function handleDelete(taskId) {
+    // Optimistic removal: the swipe-to-delete gesture in TaskListCard
+    // already plays its own exit animation, so we take the card out of the
+    // list right away instead of waiting on the network — waiting here is
+    // what made the swipe feel like it was hanging on the red background.
+    const removedTask = tasks.find((t) => t.id === taskId);
+    setTasks((prev) => prev.filter((t) => t.id !== taskId));
     try {
       const res = await fetch(`/api/tasks/${taskId}`, {
         method: "DELETE",
@@ -82,9 +88,15 @@ export default function MyTasksClient() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setTasks((prev) => prev.filter((t) => t.id !== taskId));
       showToast("已移除任務");
     } catch (e) {
+      // The delete didn't actually go through on the server — put the
+      // task back so the list stays correct.
+      if (removedTask) {
+        setTasks((prev) =>
+          [...prev, removedTask].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        );
+      }
       showToast(e.message || "移除失敗");
     }
   }
