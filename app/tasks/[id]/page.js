@@ -23,7 +23,7 @@ export default function TaskDetailPage() {
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
   const listRef = useRef(null);
-  const [catScrollRef, catSentinelRef, catCanScrollRight] = useScrollFadeRight(task?.categories?.length > 0);
+  const [catScrollRef, catSentinelRef, catCanScrollRight] = useScrollFadeRight(!loading && task?.categories?.length > 0);
 
   function showToast(msg) {
     setToast(msg);
