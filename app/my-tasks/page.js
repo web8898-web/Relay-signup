@@ -103,7 +103,7 @@ export default function MyTasksPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col relative">
+    <div className="flex-1 flex flex-col relative min-w-0">
       <TopBar title="任務清單" backHref="/" />
       <OrganizerTabs current="tasks" />
       <div className="px-6 pt-2 pb-2 flex items-center gap-2 text-xs text-gray-400">
