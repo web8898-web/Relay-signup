@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2, Edit2, Trash2, Share2, Users, AlertTriangle, LogIn, MessageCircle, Download, FileSpreadsheet, FileText } from "lucide-react";
+import { Edit2, Trash2, Share2, Users, AlertTriangle, LogIn, MessageCircle, Download, FileSpreadsheet, FileText } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import TaskAnnouncement from "@/components/TaskAnnouncement";
 import ThreadList from "@/components/ThreadList";
+import LoadingBubble from "@/components/LoadingBubble";
 import { useLineProfile } from "@/lib/useLineProfile";
 import { supabase } from "@/lib/supabaseClient";
 import { getMySignupIds } from "@/lib/ownerToken";
@@ -84,8 +85,8 @@ export default function MyTaskDetailPage() {
     return (
       <div className="flex-1 flex flex-col">
         <TopBar title="任務詳情" backHref="/my-tasks" />
-        <div className="flex-1 flex items-center justify-center text-emerald-500">
-          <Loader2 className="animate-spin" size={28} />
+        <div className="flex-1 flex items-center justify-center">
+          <LoadingBubble />
         </div>
       </div>
     );
