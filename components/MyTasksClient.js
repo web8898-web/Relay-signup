@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ClipboardList, LogIn, MessageCircle, Plus, Bell, X } from "lucide-react";
+import { ClipboardList, LogIn, MessageCircle, Plus, Bell, ChevronUp, ChevronDown } from "lucide-react";
 import { TopBar, EmptyState } from "@/components/TopBar";
 import OrganizerTabs from "@/components/OrganizerTabs";
 import LoadingBubble from "@/components/LoadingBubble";
@@ -163,15 +163,16 @@ export default function MyTasksClient() {
               className="text-emerald-400 hover:text-emerald-600 shrink-0"
               aria-label="收合提示"
             >
-              <X size={16} />
+              <ChevronUp size={16} />
             </button>
           </div>
         ) : (
           <button
             onClick={() => setBannerExpanded(true)}
             className="flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-3 py-1.5 self-start hover:bg-emerald-100 transition"
+            aria-label="展開提示"
           >
-            <Bell size={12} /> 加好友才能收到報名通知
+            <Bell size={12} /> 加好友才能收到報名通知 <ChevronDown size={12} />
           </button>
         )}
 
