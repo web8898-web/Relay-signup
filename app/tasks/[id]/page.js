@@ -151,7 +151,7 @@ export default function TaskDetailPage() {
         </div>
       </div>
 
-      <div ref={listRef} className="flex-1 px-6 pb-3 overflow-y-auto scroll-smooth">
+      <div ref={listRef} className="flex-1 px-6 pb-3 overflow-y-auto scroll-smooth min-w-0">
         <ThreadList
           signups={signups}
           myIds={myIds}
@@ -166,7 +166,7 @@ export default function TaskDetailPage() {
           此任務已截止，無法再接龍
         </div>
       ) : (
-        <div className="px-6 pb-6 pt-3 border-t-2 border-emerald-100 bg-emerald-50/40">
+        <div className="px-6 pb-6 pt-3 border-t-2 border-emerald-100 bg-emerald-50/40 min-w-0">
           {error && <p className="text-xs text-rose-500 mb-2">{error}</p>}
           {task.categories?.length > 0 && (
             <>
@@ -177,8 +177,8 @@ export default function TaskDetailPage() {
                     onClick={() => setCategory("")}
                     className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition ${
                       category === ""
-                        ? "bg-gray-700 text-white border-gray-700"
-                        : "bg-white text-gray-400 border-gray-200 border-dashed"
+                        ? "bg-emerald-700 text-white border-emerald-700"
+                        : "bg-white text-emerald-600/70 border-emerald-200 border-dashed"
                     }`}
                   >
                     不選類別
