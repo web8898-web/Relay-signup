@@ -196,7 +196,7 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
           <AutoGrowTextarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            minRows={3}
+            minRows={2}
             className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
           />
         </Field>
@@ -233,7 +233,7 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
           <AutoGrowTextarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            minRows={2}
+            minRows={3}
             className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
           />
         </Field>
