@@ -15,7 +15,7 @@ export async function POST(request) {
 
     const { data: task, error: taskErr } = await supabase
       .from("tasks")
-      .select("id, title, categories, end_date, creator_id")
+      .select("id, title, categories, end_date, creator_id, notify_enabled")
       .eq("id", task_id)
       .single();
     if (taskErr || !task) {
@@ -42,7 +42,7 @@ export async function POST(request) {
     // Notify the organizer via a LINE push message. This is fire-and-forget
     // — if it fails (e.g. the organizer hasn't added the notification
     // Official Account as a friend yet), the signup itself still succeeds.
-    if (task.creator_id) {
+    if (task.creator_id && task.notify_enabled !== false) {
       const { count } = await supabase
         .from("signups")
         .select("id", { count: "exact", head: true })
