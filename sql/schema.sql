@@ -15,6 +15,7 @@ create table if not exists tasks (
   creator_name text not null,
   short_code text unique,
   notify_enabled boolean not null default true,
+  max_signups integer,
   created_at timestamptz not null default now()
 );
 
