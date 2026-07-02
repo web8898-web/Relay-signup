@@ -145,17 +145,11 @@ export default function TaskDetailPage() {
         <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
           <TaskGoneIllustration />
           <p className="font-semibold text-gray-700 mt-4 mb-2">找不到這個任務</p>
-          <p className="text-sm text-gray-400 leading-relaxed mb-8">
+          <p className="text-sm text-gray-400 leading-relaxed">
             這個任務可能已經被主辦人刪除，
             <br />
             或分享連結已經失效。
           </p>
-          <button
-            onClick={() => router.push("/")}
-            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-3 font-semibold transition"
-          >
-            回到首頁
-          </button>
         </div>
       </div>
     );
