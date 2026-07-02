@@ -25,6 +25,7 @@ export default function TaskDetailPage() {
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
   const listRef = useRef(null);
+  const nameInputRef = useRef(null);
   const [catScrollRef, catSentinelRef, catCanScrollRight] = useScrollFadeRight(!loading && task?.categories?.length > 0);
 
   function showToast(msg) {
@@ -54,7 +55,12 @@ export default function TaskDetailPage() {
   const closed = task ? taskStatus(task).label === "已截止" : false;
 
   async function handleSend() {
-    if (!name.trim() || !task) return;
+    if (!task) return;
+    if (!name.trim()) {
+      setError("請先填寫您的姓名");
+      nameInputRef.current?.focus();
+      return;
+    }
     setSending(true);
     setError("");
     try {
@@ -214,10 +220,16 @@ export default function TaskDetailPage() {
           )}
           <div className="flex flex-col gap-2">
             <input
+              ref={nameInputRef}
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (error) setError("");
+              }}
               placeholder="你的姓名"
-              className="w-full border border-gray-200 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              className={`w-full border rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition ${
+                error ? "border-rose-300 focus:ring-rose-200" : "border-gray-200 focus:ring-emerald-300"
+              }`}
             />
             <input
               value={note}
@@ -227,7 +239,7 @@ export default function TaskDetailPage() {
             />
             <button
               onClick={handleSend}
-              disabled={!name.trim() || sending}
+              disabled={sending}
               className="w-full bg-emerald-500 disabled:bg-gray-200 disabled:text-gray-400 text-white rounded-full py-3.5 font-semibold flex items-center justify-center gap-2 hover:bg-emerald-600 shadow-md shadow-emerald-200 transition"
             >
               {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
