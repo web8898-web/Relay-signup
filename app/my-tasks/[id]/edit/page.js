@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Loader2, CheckCircle2, X, LogIn, MessageCircle, AlertTriangle } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
+import LoadingBubble from "@/components/LoadingBubble";
 import { useLineProfile } from "@/lib/useLineProfile";
 import { chipClass } from "@/lib/utils";
 import { supabase } from "@/lib/supabaseClient";
@@ -27,8 +28,8 @@ export default function EditTaskPage() {
     return (
       <div className="flex-1 flex flex-col">
         <TopBar title="編輯任務" backHref="/my-tasks" />
-        <div className="flex-1 flex items-center justify-center text-emerald-500">
-          <Loader2 className="animate-spin" size={28} />
+        <div className="flex-1 flex items-center justify-center">
+          <LoadingBubble />
         </div>
       </div>
     );
