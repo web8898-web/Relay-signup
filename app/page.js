@@ -3,6 +3,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { ClipboardList, PenLine, ChevronRight, MessageCircle, Send } from "lucide-react";
 import ImageModal from "@/components/ImageModal";
+import { useLineProfile } from "@/lib/useLineProfile";
+import { avatarClass } from "@/lib/utils";
 
 const GUIDES = [
   { key: "create", title: "如何建立任務？", src: "/how-to-create-task.png", icon: PenLine },
@@ -11,6 +13,7 @@ const GUIDES = [
 
 export default function HomePage() {
   const [modal, setModal] = useState(null);
+  const { profile } = useLineProfile();
 
   return (
     <div className="flex-1 flex flex-col min-w-0">
@@ -25,6 +28,15 @@ export default function HomePage() {
       </div>
 
       <div className="flex-1 px-6 py-8 flex flex-col gap-4">
+        {profile && (
+          <div className="flex items-center gap-2 text-xs text-gray-400 -mb-1 px-1">
+            <div className={`w-6 h-6 rounded-full ${avatarClass(profile.displayName)} text-white flex items-center justify-center text-[11px] font-bold`}>
+              {profile.displayName?.[0] || "?"}
+            </div>
+            以 <span className="font-medium text-gray-600">{profile.displayName}</span> 身分登入
+          </div>
+        )}
+
         <Link
           href="/my-tasks"
           className="group w-full bg-white border border-emerald-200 rounded-3xl p-5 flex items-center gap-4 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition"
@@ -34,7 +46,7 @@ export default function HomePage() {
           </div>
           <div className="flex-1">
             <p className="font-semibold text-gray-800">任務清單</p>
-            <p className="text-xs text-gray-400 mt-0.5">使用 LINE 登入，管理你建立的任務</p>
+            <p className="text-xs text-gray-400 mt-0.5">{profile ? "管理你建立的任務" : "使用 LINE 登入，管理你建立的任務"}</p>
           </div>
           <ChevronRight size={18} className="text-gray-300 group-hover:text-emerald-400" />
         </Link>
@@ -48,7 +60,7 @@ export default function HomePage() {
           </div>
           <div className="flex-1">
             <p className="font-semibold text-gray-800">建立任務</p>
-            <p className="text-xs text-gray-400 mt-0.5">使用 LINE 登入，建立任務並分享到群組</p>
+            <p className="text-xs text-gray-400 mt-0.5">{profile ? "建立任務並分享到群組" : "使用 LINE 登入，建立任務並分享到群組"}</p>
           </div>
           <ChevronRight size={18} className="text-gray-300 group-hover:text-emerald-400" />
         </Link>
