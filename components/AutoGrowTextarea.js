@@ -1,6 +1,23 @@
 "use client";
 import { useLayoutEffect, useRef } from "react";
 
+// Finds the nearest scrollable ancestor so we can pin its scroll position
+// while we resize — without this, growing/shrinking the textarea's height
+// can trigger the browser's native "scroll the focused element into view"
+// behavior, which fights with our own height changes and makes the whole
+// page appear to jump around while typing.
+function getScrollParent(node) {
+  let el = node?.parentElement;
+  while (el) {
+    const style = window.getComputedStyle(el);
+    if ((style.overflowY === "auto" || style.overflowY === "scroll") && el.scrollHeight > el.clientHeight) {
+      return el;
+    }
+    el = el.parentElement;
+  }
+  return document.scrollingElement || document.documentElement;
+}
+
 // A textarea that grows taller as the person types, instead of staying a
 // fixed small box that makes long notes hard to read/edit. Grows up to
 // maxHeight, then becomes internally scrollable beyond that.
@@ -17,15 +34,19 @@ export default function AutoGrowTextarea({
   function resize() {
     const el = ref.current;
     if (!el) return;
+    const scrollParent = getScrollParent(el);
+    const prevScrollTop = scrollParent.scrollTop;
+
     el.style.height = "auto";
     el.style.height = Math.min(el.scrollHeight, maxHeight) + "px";
+
+    // Restore the scroll position immediately, before the browser paints,
+    // so any native "scroll into view" nudge gets cancelled out.
+    scrollParent.scrollTop = prevScrollTop;
   }
 
   useLayoutEffect(() => {
     resize();
-    // Re-measure one more time on the next frame — covers cases where this
-    // field is pre-filled with existing content (editing a task) and the
-    // very first measurement happens before layout has fully settled.
     const raf = requestAnimationFrame(resize);
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
