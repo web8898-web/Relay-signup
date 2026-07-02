@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { MessageCircle, ChevronDown, ChevronRight, MoreVertical, Edit2, Share2, Calendar, Users, Download, FileSpreadsheet, FileText, Bell, BellOff } from "lucide-react";
+import { MessageCircle, ChevronRight, MoreVertical, Edit2, Share2, Calendar, Users, Download, FileSpreadsheet, FileText, Bell, BellOff } from "lucide-react";
 import { taskStatus, chipClass, avatarClass, relTime } from "@/lib/utils";
 import { useScrollFadeRight } from "@/lib/useScrollFadeRight";
 import { liff } from "@/lib/liff";
@@ -99,7 +99,6 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
               </p>
             )}
           </div>
-          <ChevronDown size={16} className={`text-gray-300 shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`} />
         </div>
 
         <button
