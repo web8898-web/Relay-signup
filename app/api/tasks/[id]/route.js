@@ -8,6 +8,16 @@ async function assertOwnership(supabase, taskId, userId) {
   if (data.creator_id !== userId) throw new Error("你不是這個任務的建立者");
 }
 
+// Parses the optional "報名人數上限" field. Empty/blank/zero/invalid all
+// mean "no cap" (null), since the field is optional and a 0 or negative
+// limit wouldn't make sense.
+function parseMaxSignups(value) {
+  if (value === undefined || value === null || value === "") return null;
+  const n = parseInt(value, 10);
+  if (Number.isNaN(n) || n <= 0) return null;
+  return n;
+}
+
 export async function PUT(request, { params }) {
   try {
     const token = getBearerToken(request);
@@ -24,6 +34,7 @@ export async function PUT(request, { params }) {
     if (body.end_date !== undefined) update.end_date = body.end_date;
     if (body.note !== undefined) update.note = String(body.note || "").slice(0, 1000);
     if (body.notify_enabled !== undefined) update.notify_enabled = !!body.notify_enabled;
+    if (body.max_signups !== undefined) update.max_signups = parseMaxSignups(body.max_signups);
 
     const { data, error } = await supabase
       .from("tasks")
