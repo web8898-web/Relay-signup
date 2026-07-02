@@ -257,7 +257,7 @@ export default function TaskListCard({ task, signups = [], onEdit, onDelete, onS
             </button>
             <button
               onClick={onEdit}
-              className="flex-1 border border-emerald-200 text-emerald-600 rounded-full py-2.5 font-semibold flex items-center justify-center gap-2 hover:bg-emerald-50 transition"
+              className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-2.5 font-semibold flex items-center justify-center gap-2 transition"
             >
               <Edit2 size={15} /> 編輯任務
             </button>
