@@ -177,7 +177,7 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="簡單說明這個任務在做什麼"
-            minRows={3}
+            minRows={2}
             className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
           />
         </Field>
@@ -230,7 +230,7 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="其他提醒事項"
-            minRows={2}
+            minRows={3}
             className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
           />
         </Field>
