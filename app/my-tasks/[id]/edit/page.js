@@ -107,6 +107,7 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
   const [catInput, setCatInput] = useState("");
   const [startDate, setStartDate] = useState(task.start_date);
   const [endDate, setEndDate] = useState(task.end_date);
+  const [maxSignups, setMaxSignups] = useState(task.max_signups != null ? String(task.max_signups) : "");
   const [note, setNote] = useState(task.note || "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -119,6 +120,7 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
     start_date: task.start_date,
     end_date: task.end_date,
     note: task.note || "",
+    max_signups: task.max_signups != null ? String(task.max_signups) : "",
   });
 
   const dirty =
@@ -127,6 +129,7 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
     JSON.stringify(categories) !== JSON.stringify(original.current.categories) ||
     startDate !== original.current.start_date ||
     endDate !== original.current.end_date ||
+    maxSignups !== original.current.max_signups ||
     note !== original.current.note;
 
   // Warn on actual browser/tab close or refresh while there are unsaved changes.
@@ -185,6 +188,7 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
           categories,
           start_date: startDate,
           end_date: endDate,
+          max_signups: maxSignups,
           note: note.trim(),
         }),
       });
@@ -253,6 +257,17 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
               className="flex-1 border border-gray-200 rounded-2xl px-3 py-2.5 text-sm"
             />
           </div>
+        </Field>
+        <Field label="報名人數上限（選填，不填代表不限人數）">
+          <input
+            type="number"
+            min="1"
+            inputMode="numeric"
+            value={maxSignups}
+            onChange={(e) => setMaxSignups(e.target.value)}
+            placeholder="例如：20"
+            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+          />
         </Field>
         <Field label="備註">
           <AutoGrowTextarea
