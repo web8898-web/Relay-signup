@@ -160,7 +160,7 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="例如：週五團購水果"
+            placeholder="例如：週日爬山健行、週五團購水果"
             className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
           />
         </Field>
@@ -181,7 +181,7 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
               value={catInput}
               onChange={(e) => setCatInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCategory())}
-              placeholder="例如：蘋果"
+              placeholder="例如：領隊、美食組、開車"
               className="flex-1 border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
             />
             <button onClick={addCategory} className="px-4 rounded-2xl bg-gray-100 text-gray-600 text-sm font-medium hover:bg-gray-200">
