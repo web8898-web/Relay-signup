@@ -8,6 +8,7 @@ import ThreadList from "@/components/ThreadList";
 import { useLineProfile } from "@/lib/useLineProfile";
 import { supabase } from "@/lib/supabaseClient";
 import { getMySignupIds } from "@/lib/ownerToken";
+import { liff } from "@/lib/liff";
 
 export default function MyTaskDetailPage() {
   const { id } = useParams();
@@ -20,66 +21,29 @@ export default function MyTaskDetailPage() {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
 
-  function fmtTime(iso) {
+  // LINE's in-app browser often silently fails to download client-generated
+  // blob files, so we hit a real server URL instead and force it open in
+  // the phone's default browser (via LIFF's external window), which
+  // handles downloads normally.
+  function openExportUrl(format) {
+    const url = `${window.location.origin}/api/tasks/${id}/export?format=${format}`;
     try {
-      return new Date(iso).toLocaleString("zh-TW", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      });
-    } catch {
-      return "";
+      if (liff.isInClient && liff.isInClient()) {
+        liff.openWindow({ url, external: true });
+        return;
+      }
+    } catch (e) {
+      // fall through to plain navigation
     }
-  }
-
-  function safeFilename(s) {
-    return (s || "任務").replace(/[\\/:*?"<>|]/g, "_").slice(0, 60);
-  }
-
-  function downloadFile(filename, content, mime) {
-    // Prefix with a UTF-8 BOM so Chinese text doesn't turn into garbled
-    // characters when the file is opened in Excel on Windows.
-    const blob = new Blob(["\uFEFF" + content], { type: mime });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
-  function csvEscape(value) {
-    const str = String(value ?? "");
-    if (/[",\n]/.test(str)) return `"${str.replace(/"/g, '""')}"`;
-    return str;
+    window.open(url, "_blank", "noopener,noreferrer");
   }
 
   function handleExportCsv() {
-    const headers = ["姓名", "分類", "備註", "報名時間"];
-    const rows = signups.map((s) => [s.name, s.category || "", s.note || "", fmtTime(s.created_at)]);
-    const lines = [headers, ...rows].map((r) => r.map(csvEscape).join(","));
-    downloadFile(`${safeFilename(task.title)}-報名名單.csv`, lines.join("\r\n"), "text/csv;charset=utf-8");
+    openExportUrl("csv");
   }
 
   function handleExportTxt() {
-    const lines = [];
-    lines.push(`任務：${task.title}`);
-    lines.push(`匯出時間：${fmtTime(new Date().toISOString())}`);
-    lines.push(`總計：${signups.length} 人報名`);
-    lines.push("");
-    signups.forEach((s, i) => {
-      const parts = [`${i + 1}. ${s.name}`];
-      if (s.category) parts.push(`分類：${s.category}`);
-      parts.push(`備註：${s.note || "無"}`);
-      parts.push(`報名時間：${fmtTime(s.created_at)}`);
-      lines.push(parts.join("　"));
-    });
-    downloadFile(`${safeFilename(task.title)}-報名名單.txt`, lines.join("\n"), "text/plain;charset=utf-8");
+    openExportUrl("txt");
   }
 
   useEffect(() => {
