@@ -9,6 +9,9 @@ import AutoGrowTextarea from "@/components/AutoGrowTextarea";
 import { useLineProfile } from "@/lib/useLineProfile";
 import { avatarClass, chipClass, todayStr } from "@/lib/utils";
 
+const fieldClass =
+  "w-full bg-gray-50 border-none rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 transition focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-white";
+
 export default function CreateTaskPage() {
   const router = useRouter();
   const { profile, loading, error, login } = useLineProfile();
@@ -67,9 +70,13 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [titleTouched, setTitleTouched] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const titleRef = useRef(null);
 
   const defaults = useRef({ start_date: todayStr(), end_date: todayStr() });
+
+  const titleMissing = titleTouched && !title.trim();
 
   const dirty =
     title.trim() !== "" ||
@@ -117,7 +124,11 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
   }
 
   async function handleSave() {
-    if (!title.trim()) return;
+    if (!title.trim()) {
+      setTitleTouched(true);
+      titleRef.current?.focus();
+      return;
+    }
     setSaving(true);
     setError("");
     try {
@@ -163,12 +174,17 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
 
       <div className="flex-1 px-6 py-4 flex flex-col gap-5 overflow-y-auto">
         {error && <p className="text-xs text-rose-500">{error}</p>}
-        <Field label="任務標題">
+        <Field label="任務標題" required error={titleMissing ? "請填寫任務標題" : ""}>
           <input
+            ref={titleRef}
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (titleTouched) setTitleTouched(false);
+            }}
+            onBlur={() => setTitleTouched(true)}
             placeholder="例如：週日爬山健行、週五團購水果"
-            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+            className={`${fieldClass} ${titleMissing ? "ring-2 ring-rose-300 bg-rose-50/60 focus:ring-rose-400" : ""}`}
           />
         </Field>
 
@@ -178,7 +194,7 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="簡單說明這個任務在做什麼"
             minRows={2}
-            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+            className={fieldClass}
           />
         </Field>
 
@@ -189,9 +205,12 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
               onChange={(e) => setCatInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCategory())}
               placeholder="例如：領隊、美食組、開車"
-              className="flex-1 border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              className={`flex-1 ${fieldClass} py-2.5`}
             />
-            <button onClick={addCategory} className="px-4 rounded-2xl bg-gray-100 text-gray-600 text-sm font-medium hover:bg-gray-200">
+            <button
+              onClick={addCategory}
+              className="px-4 rounded-2xl bg-white border border-emerald-200 text-emerald-600 text-sm font-medium hover:bg-emerald-50 transition"
+            >
               新增
             </button>
           </div>
@@ -213,14 +232,14 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="flex-1 border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              className={`flex-1 [color-scheme:light] ${fieldClass} py-2.5`}
             />
             <span className="text-gray-300">~</span>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="flex-1 border border-gray-200 rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              className={`flex-1 [color-scheme:light] ${fieldClass} py-2.5`}
             />
           </div>
         </Field>
@@ -231,7 +250,7 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
             onChange={(e) => setNote(e.target.value)}
             placeholder="其他提醒事項"
             minRows={3}
-            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+            className={fieldClass}
           />
         </Field>
       </div>
@@ -239,8 +258,8 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
       <div className="px-6 pb-6 pt-2">
         <button
           onClick={handleSave}
-          disabled={!title.trim() || saving}
-          className="w-full bg-emerald-500 disabled:bg-gray-200 disabled:text-gray-400 text-white rounded-full py-3 font-semibold hover:bg-emerald-600 flex items-center justify-center gap-2"
+          disabled={saving}
+          className="w-full bg-emerald-500 disabled:opacity-60 text-white rounded-full py-3 font-semibold hover:bg-emerald-600 flex items-center justify-center gap-2 transition"
         >
           {saving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
           儲存任務
@@ -287,11 +306,15 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
   );
 }
 
-function Field({ label, children }) {
+function Field({ label, children, required, error }) {
   return (
     <div>
-      <p className="text-xs text-gray-400 mb-1.5">{label}</p>
+      <p className="text-xs text-gray-500 font-medium mb-1.5">
+        {label}
+        {required && <span className="text-rose-400 ml-0.5">*</span>}
+      </p>
       {children}
+      {error && <p className="text-xs text-rose-500 mt-1.5">{error}</p>}
     </div>
   );
 }
