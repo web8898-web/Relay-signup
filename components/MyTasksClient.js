@@ -149,14 +149,16 @@ export default function MyTasksClient() {
               <p className="text-[11px] text-emerald-700 mt-0.5 leading-relaxed">
                 加入官方帳號好友，有人報名時 LINE 就會直接通知你。可以在每個任務旁的鈴鐺圖示，個別開關要不要收通知。
               </p>
-              <a
-                href={FRIEND_ADD_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block mt-2 bg-emerald-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-emerald-600 transition"
-              >
-                加官方帳號好友
-              </a>
+              <div className="flex justify-end">
+                <a
+                  href={FRIEND_ADD_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block mt-2 bg-emerald-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-emerald-600 transition"
+                >
+                  加官方帳號好友
+                </a>
+              </div>
             </div>
             <button
               onClick={() => setBannerExpanded(false)}
@@ -210,7 +212,7 @@ export default function MyTasksClient() {
       </div>
 
       {toast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-rose-800 text-white text-sm px-4 py-2 rounded-full shadow-lg z-50 whitespace-nowrap">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-sm px-4 py-2 rounded-full shadow-lg z-50 whitespace-nowrap">
           {toast}
         </div>
       )}
