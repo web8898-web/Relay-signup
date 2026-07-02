@@ -80,7 +80,7 @@ export default function DatePickerField({ value, onChange, className = "", place
               >
                 <ChevronLeft size={16} />
               </button>
-              <p className="text-xl font-bold text-gray-800">
+              <p className="text-xl font-semibold text-gray-800">
                 {year}年{month + 1}月
               </p>
               <button
