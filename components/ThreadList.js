@@ -12,7 +12,7 @@ export default function ThreadList({ signups, myIds, categories, onUpdate, onDel
   const [editNote, setEditNote] = useState("");
   const [editCategory, setEditCategory] = useState("");
   const [busy, setBusy] = useState(false);
-  const [filterScrollRef, filterCanScrollRight] = useScrollFadeRight((categories?.length || 0) + 2);
+  const [filterScrollRef, filterSentinelRef, filterCanScrollRight] = useScrollFadeRight(categories?.length > 0);
 
   const NO_CATEGORY = "__no_category__";
   const filtered =
@@ -77,6 +77,7 @@ export default function ThreadList({ signups, myIds, categories, onUpdate, onDel
                   <span className={`ml-1 ${filter === c ? "text-white/70" : "text-gray-400"}`}>{categoryCounts[c] || 0}</span>
                 </button>
               ))}
+              <span ref={filterSentinelRef} aria-hidden="true" className="shrink-0 w-px h-1" />
             </div>
             {filterCanScrollRight && (
               <div className="pointer-events-none absolute right-0 top-0 bottom-3 w-10 flex items-center justify-end bg-gradient-to-l from-white to-transparent">

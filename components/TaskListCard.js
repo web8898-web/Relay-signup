@@ -9,7 +9,7 @@ export default function TaskListCard({ task, signups = [], onEdit, onDelete, onS
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [filter, setFilter] = useState("全部");
-  const [filterScrollRef, filterCanScrollRight] = useScrollFadeRight((task.categories?.length || 0) + 2);
+  const [filterScrollRef, filterSentinelRef, filterCanScrollRight] = useScrollFadeRight(task.categories?.length > 0);
   const st = taskStatus(task);
   const signupCount = signups.length;
 
@@ -161,6 +161,7 @@ export default function TaskListCard({ task, signups = [], onEdit, onDelete, onS
                       <span className={`ml-1 ${filter === c ? "text-white/70" : "opacity-60"}`}>{categoryCounts[c] || 0}</span>
                     </button>
                   ))}
+                  <span ref={filterSentinelRef} aria-hidden="true" className="shrink-0 w-px h-1" />
                 </div>
                 {filterCanScrollRight && (
                   <div className="pointer-events-none absolute right-0 top-0 bottom-2 w-10 flex items-center justify-end bg-gradient-to-l from-white to-transparent">
