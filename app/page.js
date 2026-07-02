@@ -17,7 +17,15 @@ export default function HomePage() {
 
   return (
     <div className="flex-1 flex flex-col min-w-0">
-      <div className="bg-emerald-500 text-white px-6 pt-12 pb-10 rounded-b-[2.5rem] shadow-md">
+      <div className="relative bg-emerald-500 text-white px-6 pt-12 pb-10 rounded-b-[2.5rem] shadow-md">
+        {profile && (
+          <div className="absolute top-5 right-5 flex items-center gap-1.5 bg-white/15 rounded-full pl-1 pr-2.5 py-1">
+            <div className={`w-5 h-5 rounded-full ${avatarClass(profile.displayName)} text-white flex items-center justify-center text-[10px] font-bold shrink-0`}>
+              {profile.displayName?.[0] || "?"}
+            </div>
+            <span className="text-xs text-white/90 font-medium max-w-[80px] truncate">{profile.displayName}</span>
+          </div>
+        )}
         <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mb-4">
           <MessageCircle size={28} />
         </div>
@@ -28,15 +36,6 @@ export default function HomePage() {
       </div>
 
       <div className="flex-1 px-6 py-8 flex flex-col gap-4">
-        {profile && (
-          <div className="flex items-center gap-2 text-xs text-gray-400 -mb-1 px-1">
-            <div className={`w-6 h-6 rounded-full ${avatarClass(profile.displayName)} text-white flex items-center justify-center text-[11px] font-bold`}>
-              {profile.displayName?.[0] || "?"}
-            </div>
-            以 <span className="font-medium text-gray-600">{profile.displayName}</span> 身分登入
-          </div>
-        )}
-
         <Link
           href="/my-tasks"
           className="group w-full bg-white border border-emerald-200 rounded-3xl p-5 flex items-center gap-4 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition"
