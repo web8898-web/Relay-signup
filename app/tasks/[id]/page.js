@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
-import { Loader2, Send, Users, CheckCircle2, ChevronRight } from "lucide-react";
+import { Loader2, Send, Users, CheckCircle2, ChevronRight, AlertCircle } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import TaskAnnouncement from "@/components/TaskAnnouncement";
 import ThreadList from "@/components/ThreadList";
@@ -57,7 +57,7 @@ export default function TaskDetailPage() {
   async function handleSend() {
     if (!task) return;
     if (!name.trim()) {
-      setError("請先填寫您的姓名");
+      setError("請先填寫您的姓名！");
       nameInputRef.current?.focus();
       return;
     }
@@ -181,7 +181,6 @@ export default function TaskDetailPage() {
         </div>
       ) : (
         <div className="px-6 pb-6 pt-3 border-t-2 border-emerald-100 bg-emerald-50/40 min-w-0 overflow-hidden">
-          {error && <p className="text-xs text-rose-500 mb-2">{error}</p>}
           {task.categories?.length > 0 && (
             <>
               <p className="text-[11px] font-semibold text-emerald-700 mb-1.5 px-0.5">👉 選擇您要報名的類別</p>
@@ -231,6 +230,11 @@ export default function TaskDetailPage() {
                 error ? "border-rose-300 focus:ring-rose-200" : "border-gray-200 focus:ring-emerald-300"
               }`}
             />
+            {error && (
+              <p className="text-xs text-rose-500 flex items-center gap-1 px-2 -mt-1">
+                <AlertCircle size={12} className="shrink-0" /> {error}
+              </p>
+            )}
             <input
               value={note}
               onChange={(e) => setNote(e.target.value)}
