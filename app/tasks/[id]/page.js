@@ -5,6 +5,7 @@ import { Loader2, Send, Users, CheckCircle2, ChevronRight } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import TaskAnnouncement from "@/components/TaskAnnouncement";
 import ThreadList from "@/components/ThreadList";
+import TaskGoneIllustration from "@/components/TaskGoneIllustration";
 import { supabase } from "@/lib/supabaseClient";
 import { taskStatus } from "@/lib/utils";
 import { getOwnerToken, getMySignupIds, rememberMySignup, forgetMySignup } from "@/lib/ownerToken";
@@ -133,8 +134,12 @@ export default function TaskDetailPage() {
     return (
       <div className="flex-1 flex flex-col">
         <TopBar title="找不到任務" />
-        <div className="flex-1 flex items-center justify-center text-sm text-gray-400">
-          這個任務可能已經被刪除。
+        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
+          <TaskGoneIllustration />
+          <p className="font-semibold text-gray-700 mt-4 mb-2">找不到這個任務</p>
+          <p className="text-sm text-gray-400 leading-relaxed">
+            這個任務可能已經被主辦人刪除，或分享連結已經失效。
+          </p>
         </div>
       </div>
     );
@@ -230,7 +235,7 @@ export default function TaskDetailPage() {
       )}
 
       {toast && (
-        <div className="fixed bottom-28 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm px-4 py-2 rounded-full shadow-lg flex items-center gap-2 z-50 whitespace-nowrap">
+        <div className="fixed bottom-28 left-1/2 -translate-x-1/2 bg-rose-800 text-white text-sm px-4 py-2 rounded-full shadow-lg flex items-center gap-2 z-50 whitespace-nowrap">
           <CheckCircle2 size={16} className="text-emerald-400" />
           {toast}
         </div>
