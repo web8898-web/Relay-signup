@@ -8,6 +8,7 @@ import ThreadList from "@/components/ThreadList";
 import { supabase } from "@/lib/supabaseClient";
 import { taskStatus } from "@/lib/utils";
 import { getOwnerToken, getMySignupIds, rememberMySignup, forgetMySignup } from "@/lib/ownerToken";
+import { useScrollFadeRight } from "@/lib/useScrollFadeRight";
 
 export default function TaskDetailPage() {
   const { id } = useParams();
@@ -22,6 +23,7 @@ export default function TaskDetailPage() {
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
   const listRef = useRef(null);
+  const [catScrollRef, catCanScrollRight] = useScrollFadeRight(task?.categories?.length);
 
   function showToast(msg) {
     setToast(msg);
@@ -170,7 +172,7 @@ export default function TaskDetailPage() {
             <>
               <p className="text-[11px] font-semibold text-emerald-700 mb-1.5 px-0.5">👉 選擇您要報名的類別</p>
               <div className="relative -mx-1">
-                <div className="flex gap-1.5 overflow-x-auto pb-2 mb-1 px-1">
+                <div ref={catScrollRef} className="flex gap-1.5 overflow-x-auto pb-2 mb-1 px-1">
                   <button
                     onClick={() => setCategory("")}
                     className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition ${
@@ -193,7 +195,7 @@ export default function TaskDetailPage() {
                     </button>
                   ))}
                 </div>
-                {task.categories.length > 3 && (
+                {catCanScrollRight && (
                   <div className="pointer-events-none absolute right-0 top-0 bottom-2 w-10 flex items-center justify-end bg-gradient-to-l from-emerald-50 to-transparent">
                     <ChevronRight size={14} className="text-emerald-400" />
                   </div>
