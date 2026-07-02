@@ -12,11 +12,19 @@ export default function ThreadList({ signups, myIds, categories, onUpdate, onDel
   const [editCategory, setEditCategory] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const filtered = filter === "全部" ? signups : signups.filter((s) => s.category === filter);
+  const NO_CATEGORY = "__no_category__";
+  const filtered =
+    filter === "全部"
+      ? signups
+      : filter === NO_CATEGORY
+      ? signups.filter((s) => !s.category)
+      : signups.filter((s) => s.category === filter);
 
   const categoryCounts = {};
+  let noCategoryCount = 0;
   for (const s of signups) {
     if (s.category) categoryCounts[s.category] = (categoryCounts[s.category] || 0) + 1;
+    else noCategoryCount += 1;
   }
 
   function startEdit(s) {
@@ -46,6 +54,15 @@ export default function ThreadList({ signups, myIds, categories, onUpdate, onDel
             >
               全部
               <span className={`ml-1 ${filter === "全部" ? "text-white/70" : "text-gray-400"}`}>{signups.length}</span>
+            </button>
+            <button
+              onClick={() => setFilter(NO_CATEGORY)}
+              className={`shrink-0 text-xs px-3 py-1 rounded-full border ${
+                filter === NO_CATEGORY ? "bg-gray-800 text-white border-gray-800" : "bg-gray-50 text-gray-400 border-gray-200 border-dashed"
+              }`}
+            >
+              沒選類別
+              <span className={`ml-1 ${filter === NO_CATEGORY ? "text-white/70" : "text-gray-400"}`}>{noCategoryCount}</span>
             </button>
             {categories.map((c) => (
               <button
@@ -90,6 +107,14 @@ export default function ThreadList({ signups, myIds, categories, onUpdate, onDel
                     <div className="bg-gray-50 border border-gray-200 rounded-2xl rounded-tl-sm p-3 flex flex-col gap-2">
                       {categories?.length > 0 && (
                         <div className="flex flex-wrap gap-1.5">
+                          <button
+                            onClick={() => setEditCategory("")}
+                            className={`text-[10px] px-2 py-1 rounded-full border ${
+                              editCategory === "" ? "bg-gray-700 text-white border-gray-700" : "bg-white text-gray-400 border-gray-200 border-dashed"
+                            }`}
+                          >
+                            不選類別
+                          </button>
                           {categories.map((c) => (
                             <button
                               key={c}
