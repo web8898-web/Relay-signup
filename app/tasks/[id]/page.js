@@ -166,7 +166,7 @@ export default function TaskDetailPage() {
           此任務已截止，無法再接龍
         </div>
       ) : (
-        <div className="px-6 pb-6 pt-3 border-t-2 border-emerald-100 bg-emerald-50/40 min-w-0">
+        <div className="px-6 pb-6 pt-3 border-t-2 border-emerald-100 bg-emerald-50/40 min-w-0 overflow-hidden">
           {error && <p className="text-xs text-rose-500 mb-2">{error}</p>}
           {task.categories?.length > 0 && (
             <>
