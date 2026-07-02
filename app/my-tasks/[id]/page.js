@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Edit2, Trash2, Share2, Users, AlertTriangle, LogIn, MessageCircle, Download, FileSpreadsheet, FileText } from "lucide-react";
+import { Users, LogIn, MessageCircle, Download, FileSpreadsheet, FileText } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import TaskAnnouncement from "@/components/TaskAnnouncement";
 import ThreadList from "@/components/ThreadList";
@@ -19,8 +19,6 @@ export default function MyTaskDetailPage() {
   const [task, setTask] = useState(null);
   const [signups, setSignups] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
 
   // LINE's in-app browser often silently fails to download client-generated
@@ -64,28 +62,10 @@ export default function MyTaskDetailPage() {
     })();
   }, [id]);
 
-  async function handleDelete() {
-    if (!profile) return;
-    setDeleting(true);
-    setError("");
-    try {
-      const res = await fetch(`/api/tasks/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${profile.accessToken}` },
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      router.push("/my-tasks");
-    } catch (e) {
-      setError(e.message || "刪除失敗");
-    }
-    setDeleting(false);
-  }
-
   if (authLoading || loading) {
     return (
       <div className="flex-1 flex flex-col">
-        <TopBar title="任務詳情" backHref="/my-tasks" />
+        <TopBar title="任務詳情" />
         <div className="flex-1 flex items-center justify-center">
           <LoadingBubble />
         </div>
@@ -114,21 +94,15 @@ export default function MyTaskDetailPage() {
   if (!task) {
     return (
       <div className="flex-1 flex flex-col">
-        <TopBar title="找不到任務" backHref="/my-tasks" />
+        <TopBar title="找不到任務" />
         <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
           <TaskGoneIllustration />
           <p className="font-semibold text-gray-700 mt-4 mb-2">找不到這個任務</p>
-          <p className="text-sm text-gray-400 leading-relaxed mb-8">
+          <p className="text-sm text-gray-400 leading-relaxed">
             這個任務可能已經被移除，
             <br />
             或連結已經失效。
           </p>
-          <button
-            onClick={() => router.push("/")}
-            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-3 font-semibold transition"
-          >
-            回到首頁
-          </button>
         </div>
       </div>
     );
@@ -138,19 +112,7 @@ export default function MyTaskDetailPage() {
 
   return (
     <div className="flex-1 flex flex-col">
-      <TopBar
-        title="任務詳情"
-        backHref="/my-tasks"
-        right={
-          isOwner && (
-            <div className="flex items-center gap-3">
-              <button onClick={() => router.push(`/create/share/${id}`)} title="分享"><Share2 size={17} className="text-white/90 hover:text-white" /></button>
-              <button onClick={() => router.push(`/my-tasks/${id}/edit`)} title="編輯"><Edit2 size={17} className="text-white/90 hover:text-white" /></button>
-              <button onClick={() => setConfirmDelete(true)} title="刪除"><Trash2 size={17} className="text-white/90 hover:text-white" /></button>
-            </div>
-          )
-        }
-      />
+      <TopBar title="任務詳情" />
 
       <div className="px-6 pt-4">
         <TaskAnnouncement task={task} />
@@ -184,17 +146,6 @@ export default function MyTaskDetailPage() {
               <FileText size={14} /> 文字檔
             </button>
           </div>
-        </div>
-      )}
-
-      {confirmDelete && (
-        <div className="mx-6 mb-2 bg-rose-50 border border-rose-200 rounded-2xl p-3 flex items-center gap-2 text-sm text-rose-700">
-          <AlertTriangle size={16} className="shrink-0" />
-          <span className="flex-1">確定要刪除這個任務與所有報名資料嗎？</span>
-          <button onClick={() => setConfirmDelete(false)} className="text-gray-400 px-2">取消</button>
-          <button disabled={deleting} onClick={handleDelete} className="bg-rose-500 text-white px-3 py-1 rounded-full disabled:opacity-50">
-            {deleting ? "刪除中…" : "刪除"}
-          </button>
         </div>
       )}
 
