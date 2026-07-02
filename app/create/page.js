@@ -6,6 +6,7 @@ import { TopBar } from "@/components/TopBar";
 import OrganizerTabs from "@/components/OrganizerTabs";
 import LoadingBubble from "@/components/LoadingBubble";
 import AutoGrowTextarea from "@/components/AutoGrowTextarea";
+import DatePickerField from "@/components/DatePickerField";
 import { useLineProfile } from "@/lib/useLineProfile";
 import { avatarClass, chipClass, todayStr } from "@/lib/utils";
 
@@ -228,19 +229,9 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
 
         <Field label="日期">
           <div className="flex items-center gap-2">
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className={`flex-1 [color-scheme:light] ${fieldClass} py-2.5`}
-            />
+            <DatePickerField value={startDate} onChange={setStartDate} className={`flex-1 ${fieldClass} py-2.5`} />
             <span className="text-gray-300">~</span>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className={`flex-1 [color-scheme:light] ${fieldClass} py-2.5`}
-            />
+            <DatePickerField value={endDate} onChange={setEndDate} className={`flex-1 ${fieldClass} py-2.5`} />
           </div>
         </Field>
 
