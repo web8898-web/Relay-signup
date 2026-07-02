@@ -32,36 +32,44 @@ export default function AutoGrowTextarea({
   const ref = useRef(null);
   const prevLengthRef = useRef((value || "").length);
 
-  function resize(mayHaveShrunk) {
+  useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
     const scrollParent = getScrollParent(el);
-    const prevScrollTop = scrollParent.scrollTop;
+    // Remember where the view was *before* this update, and keep pinning
+    // it back to that spot — including a delayed re-check, since fields
+    // close to the on-screen keyboard (like a note field at the bottom of
+    // a form) can get nudged by the phone's own "keep the caret visible
+    // above the keyboard" behavior, which often fires a beat *after* our
+    // own height adjustment, not in the same tick.
+    const target = scrollParent.scrollTop;
+
+    const newLength = (value || "").length;
+    const mayHaveShrunk = newLength < prevLengthRef.current;
+    prevLengthRef.current = newLength;
 
     // scrollHeight already reflects the full content height even without
     // resetting to "auto" first — that reset is only needed to correctly
-    // detect when the content got *shorter* (e.g. deleting text). Skipping
-    // it for the common "typing more, including pressing Enter" case
-    // avoids a brief shrink-then-grow flash that was triggering the
-    // browser's own "keep the caret visible" auto-scroll, which is what
-    // caused the jumpy page position while typing.
-    if (mayHaveShrunk) {
-      el.style.height = "auto";
-    }
+    // detect when the content got *shorter* (e.g. deleting text).
+    if (mayHaveShrunk) el.style.height = "auto";
     el.style.height = Math.min(el.scrollHeight, maxHeight) + "px";
 
-    // Restore the scroll position immediately, before the browser paints,
-    // so any native "scroll into view" nudge gets cancelled out.
-    scrollParent.scrollTop = prevScrollTop;
-  }
+    function pin() {
+      scrollParent.scrollTop = target;
+    }
 
-  useLayoutEffect(() => {
-    const newLength = (value || "").length;
-    const mayHaveShrunk = newLength < prevLengthRef.current;
-    resize(mayHaveShrunk);
-    prevLengthRef.current = newLength;
-    const raf = requestAnimationFrame(() => resize(false));
-    return () => cancelAnimationFrame(raf);
+    pin();
+    const raf1 = requestAnimationFrame(pin);
+    const raf2 = requestAnimationFrame(() => requestAnimationFrame(pin));
+    const t1 = setTimeout(pin, 80);
+    const t2 = setTimeout(pin, 200);
+
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, maxHeight]);
 
