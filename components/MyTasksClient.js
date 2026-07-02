@@ -12,7 +12,7 @@ import { supabase } from "@/lib/supabaseClient";
 
 // LINE's official "add friend" deep link format for a given Basic ID.
 const FRIEND_ADD_URL = "https://line.me/R/ti/p/%40085uqqfg";
-const FRIEND_BANNER_KEY = "hideFriendBanner";
+const FRIEND_BANNER_KEY = "friendBannerExpanded";
 
 export default function MyTasksClient() {
   const router = useRouter();
@@ -21,17 +21,21 @@ export default function MyTasksClient() {
   const [signupsByTask, setSignupsByTask] = useState({});
   const [tasksLoading, setTasksLoading] = useState(true);
   const [toast, setToast] = useState("");
-  const [showFriendBanner, setShowFriendBanner] = useState(false);
+  // Defaults to expanded (big banner) the very first time. After that, the
+  // person's collapse/expand choice is remembered — but collapsing never
+  // makes it disappear entirely, since someone who dismisses it *before*
+  // actually adding the friend would otherwise lose the only entry point
+  // to do so later.
+  const [friendBannerExpanded, setFriendBannerExpanded] = useState(true);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && !localStorage.getItem(FRIEND_BANNER_KEY)) {
-      setShowFriendBanner(true);
-    }
+    const saved = typeof window !== "undefined" ? localStorage.getItem(FRIEND_BANNER_KEY) : null;
+    if (saved !== null) setFriendBannerExpanded(saved === "1");
   }, []);
 
-  function dismissFriendBanner() {
-    setShowFriendBanner(false);
-    localStorage.setItem(FRIEND_BANNER_KEY, "1");
+  function setBannerExpanded(expanded) {
+    setFriendBannerExpanded(expanded);
+    localStorage.setItem(FRIEND_BANNER_KEY, expanded ? "1" : "0");
   }
 
   function showToast(msg) {
@@ -135,7 +139,7 @@ export default function MyTasksClient() {
       />
       <OrganizerTabs current="tasks" />
       <div className="flex-1 px-6 py-3 flex flex-col gap-3 overflow-y-auto">
-        {showFriendBanner && (
+        {friendBannerExpanded ? (
           <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 flex items-start gap-2.5">
             <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
               <Bell size={15} />
@@ -155,13 +159,20 @@ export default function MyTasksClient() {
               </a>
             </div>
             <button
-              onClick={dismissFriendBanner}
+              onClick={() => setBannerExpanded(false)}
               className="text-emerald-400 hover:text-emerald-600 shrink-0"
-              aria-label="關閉提示"
+              aria-label="收合提示"
             >
               <X size={16} />
             </button>
           </div>
+        ) : (
+          <button
+            onClick={() => setBannerExpanded(true)}
+            className="flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-3 py-1.5 self-start hover:bg-emerald-100 transition"
+          >
+            <Bell size={12} /> 加好友才能收到報名通知
+          </button>
         )}
 
         {tasksLoading && (
