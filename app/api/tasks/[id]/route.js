@@ -16,18 +16,18 @@ export async function PUT(request, { params }) {
     await assertOwnership(supabase, params.id, profile.userId);
 
     const body = await request.json();
-    const { title, description, categories, start_date, end_date, note } = body;
+    const update = {};
+    if (body.title !== undefined) update.title = String(body.title).slice(0, 200);
+    if (body.description !== undefined) update.description = String(body.description || "").slice(0, 2000);
+    if (body.categories !== undefined) update.categories = Array.isArray(body.categories) ? body.categories.slice(0, 30) : [];
+    if (body.start_date !== undefined) update.start_date = body.start_date;
+    if (body.end_date !== undefined) update.end_date = body.end_date;
+    if (body.note !== undefined) update.note = String(body.note || "").slice(0, 1000);
+    if (body.notify_enabled !== undefined) update.notify_enabled = !!body.notify_enabled;
 
     const { data, error } = await supabase
       .from("tasks")
-      .update({
-        title: String(title).slice(0, 200),
-        description: String(description || "").slice(0, 2000),
-        categories: Array.isArray(categories) ? categories.slice(0, 30) : [],
-        start_date,
-        end_date,
-        note: String(note || "").slice(0, 1000),
-      })
+      .update(update)
       .eq("id", params.id)
       .select()
       .single();
