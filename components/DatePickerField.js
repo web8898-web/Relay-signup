@@ -80,7 +80,7 @@ export default function DatePickerField({ value, onChange, className = "", place
               >
                 <ChevronLeft size={16} />
               </button>
-              <p className="text-sm font-semibold text-gray-700">
+              <p className="text-xl font-bold text-gray-800">
                 {year}年{month + 1}月
               </p>
               <button
@@ -112,11 +112,12 @@ export default function DatePickerField({ value, onChange, className = "", place
                     type="button"
                     key={i}
                     onClick={() => setSelected(cellDate)}
-                    className={`w-9 h-9 mx-auto flex items-center justify-center rounded-full text-sm transition ${
+                    style={{ WebkitTapHighlightColor: "transparent" }}
+                    className={`w-9 h-9 mx-auto flex items-center justify-center rounded-full text-sm font-medium transition-colors ${
                       isSelected
-                        ? "bg-emerald-500 text-white font-semibold"
+                        ? "bg-emerald-500 text-white"
                         : isToday
-                        ? "text-emerald-600 font-semibold border border-emerald-300"
+                        ? "text-emerald-600 border border-emerald-300"
                         : "text-gray-600 hover:bg-emerald-50"
                     }`}
                   >
