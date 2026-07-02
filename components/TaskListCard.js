@@ -86,7 +86,7 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
 
   return (
     <div className="relative rounded-2xl border border-gray-100 bg-white shadow-sm overflow-visible">
-      <div className="w-full px-4 py-3 flex items-center gap-2">
+      <div className="w-full px-4 py-3 flex items-center gap-1.5">
         <div onClick={toggleExpand} className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
           <div className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
             <MessageCircle size={16} />
@@ -94,21 +94,22 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-gray-800 truncate">{task.title}</p>
             {!expanded && (
-              <p className="text-[11px] text-gray-400 mt-0.5">
+              <p className="text-[11px] text-gray-400 mt-0.5 truncate">
                 {st.label} · {signupCount} 人已報名
               </p>
             )}
           </div>
+          <ChevronDown size={16} className={`text-gray-300 shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`} />
         </div>
 
         <button
           onClick={toggleNotify}
-          className={`w-8 h-8 flex items-center justify-center shrink-0 transition ${
+          className={`w-7 h-7 flex items-center justify-center shrink-0 transition ${
             notifyEnabled ? "text-emerald-500" : "text-gray-300"
           }`}
           title={notifyEnabled ? "已開啟報名通知" : "已關閉報名通知"}
         >
-          {notifyEnabled ? <Bell size={17} /> : <BellOff size={17} />}
+          {notifyEnabled ? <Bell size={16} /> : <BellOff size={16} />}
         </button>
 
         <button
@@ -116,10 +117,10 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
             e.stopPropagation();
             onShare?.();
           }}
-          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-emerald-500 shrink-0"
+          className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-emerald-500 shrink-0"
           title="分享"
         >
-          <Share2 size={17} />
+          <Share2 size={16} />
         </button>
 
         <div className="relative shrink-0">
@@ -129,9 +130,9 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
               setMenuOpen((v) => !v);
               setConfirmDelete(false);
             }}
-            className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600"
+            className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-gray-600"
           >
-            <MoreVertical size={18} />
+            <MoreVertical size={17} />
           </button>
           {menuOpen && (
             <div className="absolute right-0 top-9 bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-20 w-44">
@@ -167,10 +168,6 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
             </div>
           )}
         </div>
-
-        <button onClick={toggleExpand} className="w-8 h-8 flex items-center justify-center text-gray-300 shrink-0">
-          <ChevronDown size={18} className={`transition-transform ${expanded ? "rotate-180" : ""}`} />
-        </button>
       </div>
 
       {expanded && (
