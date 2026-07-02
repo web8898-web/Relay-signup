@@ -23,7 +23,7 @@ export default function TaskDetailPage() {
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
   const listRef = useRef(null);
-  const [catScrollRef, catCanScrollRight] = useScrollFadeRight((task?.categories?.length || 0) + 1);
+  const [catScrollRef, catSentinelRef, catCanScrollRight] = useScrollFadeRight(task?.categories?.length > 0);
 
   function showToast(msg) {
     setToast(msg);
@@ -194,6 +194,7 @@ export default function TaskDetailPage() {
                       {c}
                     </button>
                   ))}
+                  <span ref={catSentinelRef} aria-hidden="true" className="shrink-0 w-px h-1" />
                 </div>
                 {catCanScrollRight && (
                   <div className="pointer-events-none absolute right-0 top-0 bottom-2 w-10 flex items-center justify-end bg-gradient-to-l from-emerald-50 to-transparent">
