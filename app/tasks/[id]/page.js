@@ -289,7 +289,14 @@ export default function TaskDetailPage() {
                   </span>
                 </>
               ) : cooldown > 0 ? (
-                `30 秒後可再次報名（${cooldown}）`
+                <>
+                  {cooldown} 秒後可再次報名
+                  <span className="flex gap-1 ml-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-bounce [animation-delay:-0.3s]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-bounce [animation-delay:-0.15s]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-bounce" />
+                  </span>
+                </>
               ) : (
                 <>
                   <Send size={18} />
