@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Loader2, CheckCircle2, X, LogIn, MessageCircle, AlertTriangle } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import LoadingBubble from "@/components/LoadingBubble";
+import AutoGrowTextarea from "@/components/AutoGrowTextarea";
 import { useLineProfile } from "@/lib/useLineProfile";
 import { chipClass } from "@/lib/utils";
 import { supabase } from "@/lib/supabaseClient";
@@ -192,11 +193,11 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
           />
         </Field>
         <Field label="簡介">
-          <textarea
+          <AutoGrowTextarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-300"
+            minRows={3}
+            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
           />
         </Field>
         <Field label="分類（自訂，選填）">
@@ -229,11 +230,11 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
           </div>
         </Field>
         <Field label="備註">
-          <textarea
+          <AutoGrowTextarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            rows={2}
-            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-300"
+            minRows={2}
+            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
           />
         </Field>
       </div>
