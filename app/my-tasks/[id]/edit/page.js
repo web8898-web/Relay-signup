@@ -5,6 +5,7 @@ import { Loader2, CheckCircle2, X, LogIn, MessageCircle, AlertTriangle } from "l
 import { TopBar } from "@/components/TopBar";
 import LoadingBubble from "@/components/LoadingBubble";
 import AutoGrowTextarea from "@/components/AutoGrowTextarea";
+import TaskGoneIllustration from "@/components/TaskGoneIllustration";
 import { useLineProfile } from "@/lib/useLineProfile";
 import { chipClass } from "@/lib/utils";
 import { supabase } from "@/lib/supabaseClient";
@@ -58,6 +59,15 @@ export default function EditTaskPage() {
     return (
       <div className="flex-1 flex flex-col">
         <TopBar title="找不到任務" backHref="/my-tasks" />
+        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
+          <TaskGoneIllustration />
+          <p className="font-semibold text-gray-700 mt-4 mb-2">找不到這個任務</p>
+          <p className="text-sm text-gray-400 leading-relaxed">
+            這個任務可能已經被移除，
+            <br />
+            或連結已經失效。
+          </p>
+        </div>
       </div>
     );
   }
