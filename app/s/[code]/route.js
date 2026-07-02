@@ -14,7 +14,7 @@ export async function GET(request, { params }) {
     .single();
 
   if (!data) {
-    return NextResponse.redirect(new URL("/tasks", request.url));
+    return NextResponse.redirect(new URL("/tasks/removed", request.url));
   }
 
   return NextResponse.redirect(new URL(`/tasks/${data.id}`, request.url));
