@@ -1,8 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Edit2, Trash2, ChevronRight } from "lucide-react";
 import { avatarClass, chipClass, relTime } from "@/lib/utils";
 import { useScrollFadeRight } from "@/lib/useScrollFadeRight";
+import LoadingBubble from "@/components/LoadingBubble";
+
+const PAGE_SIZE = 30;
 
 export default function ThreadList({ signups, myIds, categories, onUpdate, onDelete }) {
   const [filter, setFilter] = useState("全部");
@@ -13,6 +16,9 @@ export default function ThreadList({ signups, myIds, categories, onUpdate, onDel
   const [editCategory, setEditCategory] = useState("");
   const [busy, setBusy] = useState(false);
   const [filterScrollRef, filterSentinelRef, filterCanScrollRight] = useScrollFadeRight(categories?.length > 0);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const loadMoreRef = useRef(null);
 
   const NO_CATEGORY = "__no_category__";
   const filtered =
@@ -21,6 +27,39 @@ export default function ThreadList({ signups, myIds, categories, onUpdate, onDel
       : filter === NO_CATEGORY
       ? signups.filter((s) => !s.category)
       : signups.filter((s) => s.category === filter);
+
+  // Reset back to the first page whenever the person switches filters, so
+  // switching categories doesn't keep an inflated count from before.
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [filter]);
+
+  const visibleSignups = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < filtered.length;
+
+  // Only render a bounded window of rows at a time — with a task that has
+  // hundreds of signups, mounting every row up front is what makes the
+  // list feel sluggish. Reveal more automatically as the person scrolls
+  // near the bottom.
+  useEffect(() => {
+    if (!hasMore) return;
+    const el = loadMoreRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setLoadingMore(true);
+          setTimeout(() => {
+            setVisibleCount((c) => c + PAGE_SIZE);
+            setLoadingMore(false);
+          }, 200);
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, visibleCount]);
 
   const categoryCounts = {};
   let noCategoryCount = 0;
@@ -99,7 +138,7 @@ export default function ThreadList({ signups, myIds, categories, onUpdate, onDel
           <div className="absolute left-[15px] top-2 bottom-2 w-px border-l border-dashed border-gray-200" />
         )}
         <div className="flex flex-col gap-4">
-          {filtered.map((s) => {
+          {visibleSignups.map((s) => {
             const mine = myIds.includes(s.id);
             const isEditing = editingId === s.id;
             return (
@@ -185,6 +224,11 @@ export default function ThreadList({ signups, myIds, categories, onUpdate, onDel
             );
           })}
         </div>
+        {hasMore && (
+          <div ref={loadMoreRef}>
+            {loadingMore && <LoadingBubble size={20} label="載入更多名單…" />}
+          </div>
+        )}
       </div>
     </div>
   );
