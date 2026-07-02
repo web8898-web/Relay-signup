@@ -179,7 +179,7 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
   }
 
   return (
-    <div className="flex-1 flex flex-col relative">
+    <div className="flex-1 flex flex-col relative min-w-0">
       <TopBar title="編輯任務" onBack={handleBackClick} />
       <div className="flex-1 px-6 py-5 flex flex-col gap-5 overflow-y-auto">
         {error && <p className="text-xs text-rose-500">{error}</p>}
