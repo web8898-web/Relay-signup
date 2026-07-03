@@ -35,6 +35,10 @@ export async function PUT(request, { params }) {
     if (body.note !== undefined) update.note = String(body.note || "").slice(0, 1000);
     if (body.notify_enabled !== undefined) update.notify_enabled = !!body.notify_enabled;
     if (body.max_signups !== undefined) update.max_signups = parseMaxSignups(body.max_signups);
+    if (body.quantity_unit !== undefined) {
+      const trimmed = String(body.quantity_unit || "").trim().slice(0, 20);
+      update.quantity_unit = trimmed || null;
+    }
 
     const { data, error } = await supabase
       .from("tasks")
