@@ -41,6 +41,21 @@ export default function TaskDetailClient() {
   const [cooldown, setCooldown] = useState(0);
   const cooldownIntervalRef = useRef(null);
   const listRef = useRef(null);
+  const formSectionRef = useRef(null);
+  const prevViewOnlyRef = useRef(viewOnly);
+
+  // When someone reveals the form from "查看名單" mode (viewOnly true ->
+  // false), scroll it into view automatically — otherwise the form
+  // appears below the fold and they'd have to notice it and scroll down
+  // themselves.
+  useEffect(() => {
+    if (prevViewOnlyRef.current && !viewOnly) {
+      requestAnimationFrame(() => {
+        formSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+    prevViewOnlyRef.current = viewOnly;
+  }, [viewOnly]);
   const nameInputRef = useRef(null);
   const [catScrollRef, catSentinelRef, catCanScrollRight] = useScrollFadeRight(!loading && task?.categories?.length > 0);
 
@@ -273,15 +288,15 @@ export default function TaskDetailClient() {
           </button>
         </div>
       ) : closed ? (
-        <div className="px-6 pb-6 pt-2 text-center text-xs text-gray-400 border-t border-gray-100">
+        <div ref={formSectionRef} className="px-6 pb-6 pt-2 text-center text-xs text-gray-400 border-t border-gray-100">
           此任務已截止，無法再接龍
         </div>
       ) : full ? (
-        <div className="px-6 pb-6 pt-2 text-center text-xs text-gray-400 border-t border-gray-100">
+        <div ref={formSectionRef} className="px-6 pb-6 pt-2 text-center text-xs text-gray-400 border-t border-gray-100">
           這個任務已經額滿，無法再接龍
         </div>
       ) : (
-        <div className="px-6 pb-6 pt-3 border-t-2 border-emerald-100 bg-emerald-50/40 min-w-0 overflow-hidden">
+        <div ref={formSectionRef} className="px-6 pb-6 pt-3 border-t-2 border-emerald-100 bg-emerald-50/40 min-w-0 overflow-hidden">
           {task.categories?.length > 0 && (
             <>
               <p className="text-[11px] font-semibold text-emerald-700 mb-1.5 px-0.5">👉 選擇您要報名的類別（可複選）</p>
