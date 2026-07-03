@@ -69,6 +69,7 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
   const [startDate, setStartDate] = useState(todayStr());
   const [endDate, setEndDate] = useState(todayStr());
   const [maxSignups, setMaxSignups] = useState("");
+  const [quantityUnit, setQuantityUnit] = useState("");
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -147,6 +148,7 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
           start_date: startDate,
           end_date: endDate,
           max_signups: maxSignups,
+          quantity_unit: quantityUnit,
           note: note.trim(),
         }),
       });
@@ -245,6 +247,15 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
             value={maxSignups}
             onChange={(e) => setMaxSignups(e.target.value)}
             placeholder="例如：20"
+            className={fieldClass}
+          />
+        </Field>
+
+        <Field label="數量單位（選填，例如：份、斤、個——填了報名的人才會看到數量欄位）">
+          <input
+            value={quantityUnit}
+            onChange={(e) => setQuantityUnit(e.target.value)}
+            placeholder="例如：份"
             className={fieldClass}
           />
         </Field>
