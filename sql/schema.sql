@@ -16,6 +16,7 @@ create table if not exists tasks (
   short_code text unique,
   notify_enabled boolean not null default true,
   max_signups integer,
+  quantity_unit text,
   created_at timestamptz not null default now()
 );
 
@@ -25,6 +26,7 @@ create table if not exists signups (
   category text default '',
   name text not null,
   note text default '',
+  quantity integer,
   owner_token text not null,
   created_at timestamptz not null default now()
 );
