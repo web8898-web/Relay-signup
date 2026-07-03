@@ -190,7 +190,7 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
         className={`relative rounded-2xl border border-gray-100 bg-white shadow-sm overflow-visible ${
           dragging ? "" : "transition-transform duration-200 ease-out"
         } ${removing ? "opacity-0 transition-opacity duration-200" : ""}`}
-        style={{ transform: `translateX(${dragX}px)` }}
+        style={dragX !== 0 ? { transform: `translateX(${dragX}px)` } : undefined}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
