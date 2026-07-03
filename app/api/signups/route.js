@@ -7,7 +7,7 @@ const DUPLICATE_WINDOW_MS = 30_000;
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { task_id, category, name, note, quantity, owner_token } = body;
+    const { task_id, categories, name, note, quantity, category_quantities, owner_token } = body;
 
     if (!task_id || !name || !owner_token) {
       return NextResponse.json({ error: "缺少必要欄位" }, { status: 400 });
@@ -23,21 +23,38 @@ export async function POST(request) {
     if (taskErr || !task) {
       return NextResponse.json({ error: "找不到這個任務" }, { status: 404 });
     }
-    if (category && task.categories?.length > 0 && !task.categories.includes(category)) {
-      return NextResponse.json({ error: "請選擇有效的分類" }, { status: 400 });
-    }
+    const selectedCategories =
+      task.categories?.length > 0 && Array.isArray(categories)
+        ? categories.filter((c) => task.categories.includes(c))
+        : [];
 
     // When the organizer has set a quantity unit (e.g. a group-buy relay),
-    // a quantity is mandatory — that's the whole point of turning the
-    // feature on, and an optional number would make the exported total
-    // unreliable.
+    // a quantity is mandatory. If they've also set up tags AND the person
+    // picked at least one, quantity is tracked per tag (e.g. 雞排 x2,
+    // 珍奶 x3) instead of one lump number — that's the whole point of
+    // combining the two features. Falls back to a single quantity when
+    // there are no tags selected to attach a per-item quantity to.
     let quantityValue = null;
+    let categoryQuantitiesValue = {};
     if (task.quantity_unit) {
-      const n = parseInt(quantity, 10);
-      if (!Number.isFinite(n) || n <= 0 || String(quantity).trim() === "") {
-        return NextResponse.json({ error: `請填寫數量（${task.quantity_unit}）` }, { status: 400 });
+      if (selectedCategories.length > 0) {
+        let total = 0;
+        for (const cat of selectedCategories) {
+          const n = parseInt(category_quantities?.[cat], 10);
+          if (!Number.isFinite(n) || n <= 0) {
+            return NextResponse.json({ error: `請填寫「${cat}」的數量（${task.quantity_unit}）` }, { status: 400 });
+          }
+          categoryQuantitiesValue[cat] = n;
+          total += n;
+        }
+        quantityValue = total;
+      } else {
+        const n = parseInt(quantity, 10);
+        if (!Number.isFinite(n) || n <= 0) {
+          return NextResponse.json({ error: `請填寫數量（${task.quantity_unit}）` }, { status: 400 });
+        }
+        quantityValue = n;
       }
-      quantityValue = n;
     }
 
     // Enforce the optional headcount cap. Counting immediately before the
@@ -88,10 +105,11 @@ export async function POST(request) {
       .from("signups")
       .insert({
         task_id,
-        category: task.categories?.length > 0 ? category : "",
+        categories: selectedCategories,
         name: String(name).slice(0, 60),
         note: String(note || "").slice(0, 500),
         quantity: quantityValue,
+        category_quantities: categoryQuantitiesValue,
         owner_token,
       })
       .select()
@@ -109,8 +127,17 @@ export async function POST(request) {
         .eq("task_id", task_id);
 
       const lines = [`📋 ${task.title} 有新的接龍報名！`, "", `👤 姓名：${data.name}`];
-      if (data.category) lines.push(`🏷 分類：${data.category}`);
-      if (data.quantity != null) lines.push(`🔢 數量：${data.quantity} ${task.quantity_unit}`);
+      if (data.categories?.length > 0) {
+        const hasBreakdown = data.category_quantities && Object.keys(data.category_quantities).length > 0;
+        const catText = hasBreakdown
+          ? data.categories.map((c) => `${c}（${data.category_quantities[c]} ${task.quantity_unit}）`).join("、")
+          : data.categories.join("、");
+        lines.push(`🏷 分類：${catText}`);
+        if (hasBreakdown) lines.push(`🔢 合計數量：${data.quantity} ${task.quantity_unit}`);
+      }
+      if (data.quantity != null && !(data.categories?.length > 0)) {
+        lines.push(`🔢 數量：${data.quantity} ${task.quantity_unit}`);
+      }
       if (data.note) lines.push(`📝 備註：${data.note}`);
       lines.push("", `目前共 ${count ?? "?"} 人報名`);
 
