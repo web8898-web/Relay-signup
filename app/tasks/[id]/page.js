@@ -23,6 +23,8 @@ export default function TaskDetailPage() {
   const [category, setCategory] = useState("");
   const [name, setName] = useState("");
   const [note, setNote] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [quantityError, setQuantityError] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
@@ -86,8 +88,16 @@ export default function TaskDetailPage() {
       nameInputRef.current?.focus();
       return;
     }
+    if (task.quantity_unit) {
+      const n = parseInt(quantity, 10);
+      if (!Number.isFinite(n) || n <= 0 || String(quantity).trim() === "") {
+        setQuantityError(`請填寫數量（${task.quantity_unit}）`);
+        return;
+      }
+    }
     setSending(true);
     setError("");
+    setQuantityError("");
     try {
       const res = await fetch("/api/signups", {
         method: "POST",
@@ -97,6 +107,7 @@ export default function TaskDetailPage() {
           category: task.categories?.length > 0 ? category : "",
           name: name.trim(),
           note: note.trim(),
+          quantity: task.quantity_unit ? quantity : undefined,
           owner_token: getOwnerToken(),
         }),
       });
@@ -109,6 +120,7 @@ export default function TaskDetailPage() {
       setMyIds(getMySignupIds());
       setName("");
       setNote("");
+      setQuantity("");
       showToast("已成功接龍！");
       startCooldown(30);
       // Re-fetch from the database instead of only patching local state, so
@@ -200,6 +212,7 @@ export default function TaskDetailPage() {
           signups={signups}
           myIds={myIds}
           categories={task.categories}
+          quantityUnit={task.quantity_unit}
           onUpdate={handleUpdate}
           onDelete={handleDelete}
         />
@@ -267,6 +280,30 @@ export default function TaskDetailPage() {
             {error && (
               <p className="text-xs text-rose-500 flex items-center gap-1 px-2 -mt-1">
                 <AlertCircle size={12} className="shrink-0" /> {error}
+              </p>
+            )}
+            {task.quantity_unit && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  inputMode="numeric"
+                  value={quantity}
+                  onChange={(e) => {
+                    setQuantity(e.target.value);
+                    if (quantityError) setQuantityError("");
+                  }}
+                  placeholder="數量"
+                  className={`flex-1 border rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition ${
+                    quantityError ? "border-rose-300 focus:ring-rose-200" : "border-gray-200 focus:ring-emerald-300"
+                  }`}
+                />
+                <span className="text-sm text-gray-500 shrink-0">{task.quantity_unit}</span>
+              </div>
+            )}
+            {quantityError && (
+              <p className="text-xs text-rose-500 flex items-center gap-1 px-2 -mt-1">
+                <AlertCircle size={12} className="shrink-0" /> {quantityError}
               </p>
             )}
             <input
