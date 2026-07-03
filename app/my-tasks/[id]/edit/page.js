@@ -7,6 +7,7 @@ import LoadingBubble from "@/components/LoadingBubble";
 import AutoGrowTextarea from "@/components/AutoGrowTextarea";
 import DatePickerField from "@/components/DatePickerField";
 import TaskGoneIllustration from "@/components/TaskGoneIllustration";
+import FadeIn from "@/components/FadeIn";
 import { useLineProfile } from "@/lib/useLineProfile";
 import { chipClass } from "@/lib/utils";
 import { supabase } from "@/lib/supabaseClient";
@@ -60,7 +61,7 @@ export default function EditTaskPage() {
     return (
       <div className="flex-1 flex flex-col">
         <TopBar title="找不到任務" backHref="/my-tasks" />
-        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
+        <FadeIn className="flex-1 flex flex-col items-center justify-center px-8 text-center">
           <TaskGoneIllustration />
           <p className="font-semibold text-gray-700 mt-4 mb-2">找不到這個任務</p>
           <p className="text-sm text-gray-400 leading-relaxed mb-8">
@@ -74,7 +75,7 @@ export default function EditTaskPage() {
           >
             回到首頁
           </button>
-        </div>
+        </FadeIn>
       </div>
     );
   }
