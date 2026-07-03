@@ -92,7 +92,7 @@ export default function HomePage() {
             href="https://www.wiweb.com.tw"
             target="_blank"
             rel="noopener noreferrer"
-            className="underline underline-offset-2 hover:text-gray-400 transition"
+            className="hover:text-gray-400 transition"
           >
             豐碩企業有限公司
           </a>{" "}
