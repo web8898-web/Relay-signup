@@ -63,6 +63,7 @@ export default function TaskDetailClient() {
 
   async function load() {
     setLoading(true);
+    const startedAt = Date.now();
     const { data: taskData } = await supabase.from("tasks").select("*").eq("id", id).single();
     setTask(taskData || null);
 
@@ -73,6 +74,18 @@ export default function TaskDetailClient() {
       .order("created_at", { ascending: true });
     setSignups(signupData || []);
     setMyIds(getMySignupIds());
+
+    // Guarantee the transition screen is actually visible for a beat —
+    // without this, a fast network response can resolve in a few tens of
+    // milliseconds, making the loading state flash past unnoticed and the
+    // final screen (found or not-found) feel like it just jump-cut in
+    // rather than eased in after a proper transition.
+    const MIN_TRANSITION_MS = 500;
+    const elapsed = Date.now() - startedAt;
+    if (elapsed < MIN_TRANSITION_MS) {
+      await new Promise((resolve) => setTimeout(resolve, MIN_TRANSITION_MS - elapsed));
+    }
+
     setLoading(false);
   }
 
