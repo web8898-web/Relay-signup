@@ -49,9 +49,21 @@ export async function GET(request, { params }) {
 
   let content, mime, ext;
 
+  const hasQuantity = !!task.quantity_unit;
+  const totalQuantity = hasQuantity ? list.reduce((sum, s) => sum + (s.quantity || 0), 0) : 0;
+
   if (format === "csv") {
-    const headers = ["編號", "姓名", "分類", "備註", "報名時間"];
-    const rows = list.map((s, i) => [i + 1, s.name, s.category || "", s.note || "", fmtTime(s.created_at)]);
+    const headers = hasQuantity
+      ? ["編號", "姓名", "分類", `數量（${task.quantity_unit}）`, "備註", "報名時間"]
+      : ["編號", "姓名", "分類", "備註", "報名時間"];
+    const rows = list.map((s, i) =>
+      hasQuantity
+        ? [i + 1, s.name, s.category || "", s.quantity ?? "", s.note || "", fmtTime(s.created_at)]
+        : [i + 1, s.name, s.category || "", s.note || "", fmtTime(s.created_at)]
+    );
+    if (hasQuantity) {
+      rows.push(["", "", "", `合計：${totalQuantity} ${task.quantity_unit}`, "", ""]);
+    }
     content = "\uFEFF" + [headers, ...rows].map((r) => r.map(csvEscape).join(",")).join("\r\n");
     mime = "text/csv;charset=utf-8";
     ext = "csv";
@@ -60,10 +72,12 @@ export async function GET(request, { params }) {
     lines.push(`任務：${task.title}`);
     lines.push(`匯出時間：${fmtTime(new Date().toISOString())}`);
     lines.push(`總計：${list.length} 人報名`);
+    if (hasQuantity) lines.push(`合計數量：${totalQuantity} ${task.quantity_unit}`);
     lines.push("");
     list.forEach((s, i) => {
       const parts = [`${i + 1}. ${s.name}`];
       if (s.category) parts.push(`分類：${s.category}`);
+      if (hasQuantity) parts.push(`數量：${s.quantity ?? "-"} ${task.quantity_unit}`);
       parts.push(`備註：${s.note || "無"}`);
       parts.push(`報名時間：${fmtTime(s.created_at)}`);
       lines.push(parts.join("　"));
