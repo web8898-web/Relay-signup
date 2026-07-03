@@ -23,10 +23,11 @@ create table if not exists tasks (
 create table if not exists signups (
   id uuid primary key default gen_random_uuid(),
   task_id uuid not null references tasks(id) on delete cascade,
-  category text default '',
+  categories jsonb not null default '[]',
   name text not null,
   note text default '',
   quantity integer,
+  category_quantities jsonb not null default '{}',
   owner_token text not null,
   created_at timestamptz not null default now()
 );
