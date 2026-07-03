@@ -232,11 +232,12 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
               value={catInput}
               onChange={(e) => setCatInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCategory())}
-              placeholder="例如：領隊、餐食"
+              placeholder="例如：職位分類、組別分類、產品分類"
               className="flex-1 border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
             />
-            <button onClick={addCategory} className="px-4 rounded-2xl bg-gray-100 text-gray-600 text-sm font-medium hover:bg-gray-200">新增</button>
+            <button onClick={addCategory} className="px-4 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold transition shrink-0">新增</button>
           </div>
+          <p className="text-[11px] text-gray-400 mt-1.5 px-0.5">輸入文字後，按「新增」或按 Enter 加入一個分類</p>
           {categories.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-3">
               {categories.map((c) => (
