@@ -256,6 +256,7 @@ export default function TaskDetailClient() {
           myIds={myIds}
           categories={task.categories}
           quantityUnit={task.quantity_unit}
+          nameOnly={viewOnly}
           onUpdate={handleUpdate}
           onDelete={handleDelete}
         />

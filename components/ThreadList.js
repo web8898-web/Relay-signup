@@ -7,7 +7,7 @@ import LoadingBubble from "@/components/LoadingBubble";
 
 const PAGE_SIZE = 30;
 
-export default function ThreadList({ signups, myIds, categories, quantityUnit, onUpdate, onDelete }) {
+export default function ThreadList({ signups, myIds, categories, quantityUnit, nameOnly, onUpdate, onDelete }) {
   const [filter, setFilter] = useState("全部");
   const [editingId, setEditingId] = useState(null);
   const [confirmId, setConfirmId] = useState(null);
@@ -94,7 +94,7 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, o
 
   return (
     <div>
-      {categories?.length > 0 && (
+      {categories?.length > 0 && !nameOnly && (
         <>
           <p className="text-[11px] text-gray-400 mb-1.5 px-0.5">瀏覽名單（點分類篩選）</p>
           <div className="relative -mx-1">
@@ -193,7 +193,7 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, o
                         <button disabled={busy} onClick={() => saveEdit(s)} className="text-xs bg-emerald-500 text-white px-3 py-1 rounded-full disabled:opacity-50">儲存</button>
                       </div>
                     </div>
-                  ) : (s.categories?.length > 0 || s.note || s.quantity != null) ? (
+                  ) : !nameOnly && (s.categories?.length > 0 || s.note || s.quantity != null) ? (
                     <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-sm px-3.5 py-2.5 shadow-sm max-w-full">
                       {(s.categories?.length > 0 || s.quantity != null) && (
                         <div className="flex flex-wrap gap-1.5 mb-1">
@@ -214,7 +214,7 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, o
                     </div>
                   ) : null}
 
-                  {mine && !isEditing && (
+                  {mine && !isEditing && !nameOnly && (
                     <div className="flex gap-3 mt-1 ml-1">
                       <button onClick={() => startEdit(s)} className="text-[11px] text-gray-400 hover:text-emerald-500 flex items-center gap-0.5">
                         <Edit2 size={11} /> 編輯
