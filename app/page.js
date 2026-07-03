@@ -87,7 +87,16 @@ export default function HomePage() {
         </div>
 
         <div className="mt-auto text-center text-[11px] text-gray-300 pt-8">
-          豐碩企業有限公司 版權所有
+          © 2026{" "}
+          <a
+            href="https://www.wiweb.com.tw"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-gray-400 transition"
+          >
+            豐碩企業有限公司
+          </a>{" "}
+          版權所有
         </div>
       </div>
 
