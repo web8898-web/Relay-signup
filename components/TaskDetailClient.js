@@ -82,7 +82,13 @@ export default function TaskDetailClient() {
 
   const closed = task ? taskStatus(task).label === "已截止" : false;
   const full = task?.max_signups ? signups.length >= task.max_signups : false;
-  const perCategoryQuantity = !!task?.quantity_unit && categories.length > 0;
+  const taskHasCategories = task?.categories?.length > 0;
+  // Per-category quantity mode is determined by whether the TASK itself
+  // defines categories (not by whether the visitor has picked one yet).
+  // That's what keeps the quantity field hidden entirely until a tag is
+  // selected, instead of falling back to a generic "數量" field the
+  // moment the page loads.
+  const usesPerCategoryQuantity = !!task?.quantity_unit && taskHasCategories;
 
   function toggleCategory(c) {
     setCategories((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
@@ -104,7 +110,7 @@ export default function TaskDetailClient() {
       nameInputRef.current?.focus();
       return;
     }
-    if (task.quantity_unit && task.categories?.length > 0 && categories.length === 0) {
+    if (task.quantity_unit && taskHasCategories && categories.length === 0) {
       setCategoryError("請至少選擇一個分類");
       return;
     }
@@ -120,8 +126,8 @@ export default function TaskDetailClient() {
           categories: task.categories?.length > 0 ? categories : [],
           name: name.trim(),
           note: note.trim(),
-          quantity: task.quantity_unit && !perCategoryQuantity ? quantity : undefined,
-          category_quantities: perCategoryQuantity ? categoryQuantities : undefined,
+          quantity: task.quantity_unit && !usesPerCategoryQuantity ? quantity : undefined,
+          category_quantities: usesPerCategoryQuantity ? categoryQuantities : undefined,
           owner_token: getOwnerToken(),
         }),
       });
@@ -294,24 +300,26 @@ export default function TaskDetailClient() {
               </p>
             )}
             {task.quantity_unit && (
-              <div className="flex flex-col gap-2">
-                {perCategoryQuantity
-                  ? categories.map((c) => (
+              usesPerCategoryQuantity ? (
+                categories.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    {categories.map((c) => (
                       <QuantityStepper
                         key={c}
                         label={`${c}（${task.quantity_unit}）`}
                         value={categoryQuantities[c] ?? 1}
                         onChange={(v) => setCategoryQuantities((prev) => ({ ...prev, [c]: v }))}
                       />
-                    ))
-                  : (
-                      <QuantityStepper
-                        label={`數量（${task.quantity_unit}）`}
-                        value={quantity}
-                        onChange={setQuantity}
-                      />
-                    )}
-              </div>
+                    ))}
+                  </div>
+                )
+              ) : (
+                <QuantityStepper
+                  label={`數量（${task.quantity_unit}）`}
+                  value={quantity}
+                  onChange={setQuantity}
+                />
+              )
             )}
             <input
               value={note}
