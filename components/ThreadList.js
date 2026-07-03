@@ -7,7 +7,7 @@ import LoadingBubble from "@/components/LoadingBubble";
 
 const PAGE_SIZE = 30;
 
-export default function ThreadList({ signups, myIds, categories, onUpdate, onDelete }) {
+export default function ThreadList({ signups, myIds, categories, quantityUnit, onUpdate, onDelete }) {
   const [filter, setFilter] = useState("全部");
   const [editingId, setEditingId] = useState(null);
   const [confirmId, setConfirmId] = useState(null);
@@ -192,10 +192,15 @@ export default function ThreadList({ signups, myIds, categories, onUpdate, onDel
                         <button disabled={busy} onClick={() => saveEdit(s)} className="text-xs bg-emerald-500 text-white px-3 py-1 rounded-full disabled:opacity-50">儲存</button>
                       </div>
                     </div>
-                  ) : (s.category || s.note) ? (
+                  ) : (s.category || s.note || s.quantity != null) ? (
                     <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-sm px-3.5 py-2.5 shadow-sm inline-block max-w-full">
                       {s.category && (
                         <span className={`text-[10px] px-2 py-0.5 rounded-full border mr-1.5 ${chipClass(s.category)}`}>{s.category}</span>
+                      )}
+                      {s.quantity != null && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 mr-1.5">
+                          {s.quantity} {quantityUnit || ""}
+                        </span>
                       )}
                       {s.note && <span className="text-sm text-gray-600 break-words">{s.note}</span>}
                     </div>
