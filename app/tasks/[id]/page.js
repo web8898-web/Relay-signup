@@ -8,6 +8,7 @@ import ThreadList from "@/components/ThreadList";
 import LoadingBubble from "@/components/LoadingBubble";
 import TaskGoneIllustration from "@/components/TaskGoneIllustration";
 import FadeIn from "@/components/FadeIn";
+import QuantityStepper from "@/components/QuantityStepper";
 import { supabase } from "@/lib/supabaseClient";
 import { taskStatus } from "@/lib/utils";
 import { getOwnerToken, getMySignupIds, rememberMySignup, forgetMySignup } from "@/lib/ownerToken";
@@ -20,11 +21,11 @@ export default function TaskDetailPage() {
   const [task, setTask] = useState(null);
   const [signups, setSignups] = useState([]);
   const [myIds, setMyIds] = useState([]);
-  const [category, setCategory] = useState("");
+  const [categories, setCategories] = useState([]);
   const [name, setName] = useState("");
   const [note, setNote] = useState("");
-  const [quantity, setQuantity] = useState("");
-  const [quantityError, setQuantityError] = useState("");
+  const [quantity, setQuantity] = useState(1);
+  const [categoryQuantities, setCategoryQuantities] = useState({});
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
@@ -80,6 +81,19 @@ export default function TaskDetailPage() {
 
   const closed = task ? taskStatus(task).label === "已截止" : false;
   const full = task?.max_signups ? signups.length >= task.max_signups : false;
+  const perCategoryQuantity = !!task?.quantity_unit && categories.length > 0;
+
+  function toggleCategory(c) {
+    setCategories((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
+    setCategoryQuantities((prev) => {
+      if (prev[c] != null) {
+        const next = { ...prev };
+        delete next[c];
+        return next;
+      }
+      return { ...prev, [c]: 1 };
+    });
+  }
 
   async function handleSend() {
     if (!task) return;
@@ -88,26 +102,19 @@ export default function TaskDetailPage() {
       nameInputRef.current?.focus();
       return;
     }
-    if (task.quantity_unit) {
-      const n = parseInt(quantity, 10);
-      if (!Number.isFinite(n) || n <= 0 || String(quantity).trim() === "") {
-        setQuantityError(`請填寫數量（${task.quantity_unit}）`);
-        return;
-      }
-    }
     setSending(true);
     setError("");
-    setQuantityError("");
     try {
       const res = await fetch("/api/signups", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           task_id: task.id,
-          category: task.categories?.length > 0 ? category : "",
+          categories: task.categories?.length > 0 ? categories : [],
           name: name.trim(),
           note: note.trim(),
-          quantity: task.quantity_unit ? quantity : undefined,
+          quantity: task.quantity_unit && !perCategoryQuantity ? quantity : undefined,
+          category_quantities: perCategoryQuantity ? categoryQuantities : undefined,
           owner_token: getOwnerToken(),
         }),
       });
@@ -120,7 +127,9 @@ export default function TaskDetailPage() {
       setMyIds(getMySignupIds());
       setName("");
       setNote("");
-      setQuantity("");
+      setQuantity(1);
+      setCategoryQuantities({});
+      setCategories([]);
       showToast("已成功接龍！");
       startCooldown(30);
       // Re-fetch from the database instead of only patching local state, so
@@ -230,25 +239,15 @@ export default function TaskDetailPage() {
         <div className="px-6 pb-6 pt-3 border-t-2 border-emerald-100 bg-emerald-50/40 min-w-0 overflow-hidden">
           {task.categories?.length > 0 && (
             <>
-              <p className="text-[11px] font-semibold text-emerald-700 mb-1.5 px-0.5">👉 選擇您要報名的類別</p>
+              <p className="text-[11px] font-semibold text-emerald-700 mb-1.5 px-0.5">👉 選擇您要報名的類別（可複選）</p>
               <div className="relative -mx-1">
                 <div ref={catScrollRef} className="flex gap-1.5 overflow-x-auto pb-2 mb-1 px-1">
-                  <button
-                    onClick={() => setCategory("")}
-                    className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition ${
-                      category === ""
-                        ? "bg-emerald-700 text-white border-emerald-700"
-                        : "bg-white text-emerald-600/70 border-emerald-200 border-dashed"
-                    }`}
-                  >
-                    不選類別
-                  </button>
                   {task.categories.map((c) => (
                     <button
                       key={c}
-                      onClick={() => setCategory(c)}
+                      onClick={() => toggleCategory(c)}
                       className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition ${
-                        category === c ? "bg-emerald-500 text-white border-emerald-500" : "bg-white text-gray-500 border-gray-200"
+                        categories.includes(c) ? "bg-emerald-500 text-white border-emerald-500" : "bg-white text-gray-500 border-gray-200"
                       }`}
                     >
                       {c}
@@ -283,28 +282,24 @@ export default function TaskDetailPage() {
               </p>
             )}
             {task.quantity_unit && (
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min="1"
-                  inputMode="numeric"
-                  value={quantity}
-                  onChange={(e) => {
-                    setQuantity(e.target.value);
-                    if (quantityError) setQuantityError("");
-                  }}
-                  placeholder="數量"
-                  className={`flex-1 border rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition ${
-                    quantityError ? "border-rose-300 focus:ring-rose-200" : "border-gray-200 focus:ring-emerald-300"
-                  }`}
-                />
-                <span className="text-sm text-gray-500 shrink-0">{task.quantity_unit}</span>
+              <div className="flex flex-col gap-2">
+                {perCategoryQuantity
+                  ? categories.map((c) => (
+                      <QuantityStepper
+                        key={c}
+                        label={`${c}（${task.quantity_unit}）`}
+                        value={categoryQuantities[c] ?? 1}
+                        onChange={(v) => setCategoryQuantities((prev) => ({ ...prev, [c]: v }))}
+                      />
+                    ))
+                  : (
+                      <QuantityStepper
+                        label={`數量（${task.quantity_unit}）`}
+                        value={quantity}
+                        onChange={setQuantity}
+                      />
+                    )}
               </div>
-            )}
-            {quantityError && (
-              <p className="text-xs text-rose-500 flex items-center gap-1 px-2 -mt-1">
-                <AlertCircle size={12} className="shrink-0" /> {quantityError}
-              </p>
             )}
             <input
               value={note}
