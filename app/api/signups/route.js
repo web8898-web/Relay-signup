@@ -7,7 +7,7 @@ const DUPLICATE_WINDOW_MS = 30_000;
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { task_id, category, name, note, owner_token } = body;
+    const { task_id, category, name, note, quantity, owner_token } = body;
 
     if (!task_id || !name || !owner_token) {
       return NextResponse.json({ error: "缺少必要欄位" }, { status: 400 });
@@ -17,7 +17,7 @@ export async function POST(request) {
 
     const { data: task, error: taskErr } = await supabase
       .from("tasks")
-      .select("id, title, categories, end_date, creator_id, notify_enabled, max_signups")
+      .select("id, title, categories, end_date, creator_id, notify_enabled, max_signups, quantity_unit")
       .eq("id", task_id)
       .single();
     if (taskErr || !task) {
@@ -25,6 +25,19 @@ export async function POST(request) {
     }
     if (category && task.categories?.length > 0 && !task.categories.includes(category)) {
       return NextResponse.json({ error: "請選擇有效的分類" }, { status: 400 });
+    }
+
+    // When the organizer has set a quantity unit (e.g. a group-buy relay),
+    // a quantity is mandatory — that's the whole point of turning the
+    // feature on, and an optional number would make the exported total
+    // unreliable.
+    let quantityValue = null;
+    if (task.quantity_unit) {
+      const n = parseInt(quantity, 10);
+      if (!Number.isFinite(n) || n <= 0 || String(quantity).trim() === "") {
+        return NextResponse.json({ error: `請填寫數量（${task.quantity_unit}）` }, { status: 400 });
+      }
+      quantityValue = n;
     }
 
     // Enforce the optional headcount cap. Counting immediately before the
@@ -78,6 +91,7 @@ export async function POST(request) {
         category: task.categories?.length > 0 ? category : "",
         name: String(name).slice(0, 60),
         note: String(note || "").slice(0, 500),
+        quantity: quantityValue,
         owner_token,
       })
       .select()
@@ -96,6 +110,7 @@ export async function POST(request) {
 
       const lines = [`📋 ${task.title} 有新的接龍報名！`, "", `👤 姓名：${data.name}`];
       if (data.category) lines.push(`🏷 分類：${data.category}`);
+      if (data.quantity != null) lines.push(`🔢 數量：${data.quantity} ${task.quantity_unit}`);
       if (data.note) lines.push(`📝 備註：${data.note}`);
       lines.push("", `目前共 ${count ?? "?"} 人報名`);
 
