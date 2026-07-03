@@ -51,13 +51,19 @@ export default function ShareTaskPage() {
   async function handleLineShare() {
     if (!task) return;
     const url = shareUrl();
+    // This is purely a short tap-feedback state, not tied to when the LINE
+    // share sheet's own promise actually resolves — that timing is
+    // unreliable (the browser tab can be suspended while the native share
+    // UI is open, so the promise sometimes only resolves well after the
+    // person has already come back to this page), which is what caused
+    // "開啟中" to flash again on return.
     setSharing(true);
+    setTimeout(() => setSharing(false), 800);
     try {
       if (liff.isApiAvailable && liff.isApiAvailable("shareTargetPicker")) {
         const flexMessage = buildFlexMessage(task, url);
         await liff.shareTargetPicker([flexMessage]);
         showToast("已開啟分享選單");
-        setSharing(false);
         return;
       }
     } catch (e) {
@@ -65,7 +71,6 @@ export default function ShareTaskPage() {
     }
     const text = buildShareText(task, url);
     window.open(lineShareUrl(text), "_blank", "noopener,noreferrer");
-    setSharing(false);
   }
 
   async function handleCopy() {
