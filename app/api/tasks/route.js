@@ -19,12 +19,14 @@ export async function POST(request) {
     const profile = await verifyLineAccessToken(token);
     const body = await request.json();
 
-    const { title, description, categories, start_date, end_date, note, max_signups } = body;
+    const { title, description, categories, start_date, end_date, note, max_signups, quantity_unit } = body;
     if (!title || !start_date || !end_date) {
       return NextResponse.json({ error: "缺少必要欄位" }, { status: 400 });
     }
 
     const supabase = getSupabaseAdmin();
+
+    const trimmedUnit = String(quantity_unit || "").trim().slice(0, 20) || null;
 
     // short_code has a unique constraint; on the (very unlikely) chance of
     // a collision, generate a new one and retry a few times before giving up.
@@ -43,6 +45,7 @@ export async function POST(request) {
           creator_name: profile.displayName,
           short_code: generateShortCode(),
           max_signups: parseMaxSignups(max_signups),
+          quantity_unit: trimmedUnit,
         })
         .select()
         .single());
