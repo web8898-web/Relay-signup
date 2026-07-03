@@ -10,7 +10,7 @@ async function assertOwnership(supabase, signupId, ownerToken) {
 export async function PUT(request, { params }) {
   try {
     const body = await request.json();
-    const { name, note, category, owner_token } = body;
+    const { name, note, categories, owner_token } = body;
     if (!owner_token) return NextResponse.json({ error: "缺少驗證資訊" }, { status: 400 });
 
     const supabase = getSupabaseAdmin();
@@ -21,7 +21,7 @@ export async function PUT(request, { params }) {
       .update({
         name: String(name).slice(0, 60),
         note: String(note || "").slice(0, 500),
-        category: category || "",
+        categories: Array.isArray(categories) ? categories.slice(0, 30).map((c) => String(c).slice(0, 60)) : [],
       })
       .eq("id", params.id)
       .select()
