@@ -359,6 +359,11 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
                           {s.category && (
                             <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${chipClass(s.category)}`}>{s.category}</span>
                           )}
+                          {s.quantity != null && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700">
+                              {s.quantity} {task.quantity_unit || ""}
+                            </span>
+                          )}
                           <span className="text-[10px] text-gray-300 ml-auto shrink-0">{relTime(s.created_at)}</span>
                         </div>
                         {s.note && <p className="text-xs text-gray-500 mt-0.5 break-words">{s.note}</p>}
