@@ -35,7 +35,7 @@ const antiFlashScript = `
       '<span style="width:8px;height:8px;border-radius:9999px;background:#34d399;"></span>' +
       '<span style="width:8px;height:8px;border-radius:9999px;background:#34d399;"></span>' +
       "</div>";
-    document.body.appendChild(el);
+    document.documentElement.appendChild(el);
   } catch (e) {}
 })();
 `;
