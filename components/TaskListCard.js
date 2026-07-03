@@ -31,7 +31,7 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
   const touchStateRef = useRef(null); // { startX, startY, cardWidth, locked, horizontal }
 
   function handleTouchStart(e) {
-    if (removing) return;
+    if (removing || expanded) return;
     const t = e.touches[0];
     touchStateRef.current = {
       startX: t.clientX,
