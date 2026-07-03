@@ -109,6 +109,7 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
   const [startDate, setStartDate] = useState(task.start_date);
   const [endDate, setEndDate] = useState(task.end_date);
   const [maxSignups, setMaxSignups] = useState(task.max_signups != null ? String(task.max_signups) : "");
+  const [quantityUnit, setQuantityUnit] = useState(task.quantity_unit || "");
   const [note, setNote] = useState(task.note || "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -122,6 +123,7 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
     end_date: task.end_date,
     note: task.note || "",
     max_signups: task.max_signups != null ? String(task.max_signups) : "",
+    quantity_unit: task.quantity_unit || "",
   });
 
   const dirty =
@@ -131,6 +133,7 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
     startDate !== original.current.start_date ||
     endDate !== original.current.end_date ||
     maxSignups !== original.current.max_signups ||
+    quantityUnit !== original.current.quantity_unit ||
     note !== original.current.note;
 
   // Warn on actual browser/tab close or refresh while there are unsaved changes.
@@ -190,6 +193,7 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
           start_date: startDate,
           end_date: endDate,
           max_signups: maxSignups,
+          quantity_unit: quantityUnit,
           note: note.trim(),
         }),
       });
@@ -267,6 +271,14 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
             value={maxSignups}
             onChange={(e) => setMaxSignups(e.target.value)}
             placeholder="例如：20"
+            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+          />
+        </Field>
+        <Field label="數量單位（選填，例如：份、斤、個——填了報名的人才會看到數量欄位）">
+          <input
+            value={quantityUnit}
+            onChange={(e) => setQuantityUnit(e.target.value)}
+            placeholder="例如：份"
             className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
           />
         </Field>
