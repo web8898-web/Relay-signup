@@ -235,7 +235,7 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
               placeholder="例如：職位分類、組別分類、產品分類"
               className="flex-1 border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
             />
-            <button onClick={addCategory} className="px-4 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold transition shrink-0">新增</button>
+            <button onClick={addCategory} className="px-4 rounded-2xl bg-white border-2 border-emerald-500 text-emerald-600 text-sm font-semibold hover:bg-emerald-50 transition shrink-0">新增</button>
           </div>
           <p className="text-[11px] text-gray-400 mt-1.5 px-0.5">輸入文字後，按「新增」或按 Enter 加入一個分類</p>
           {categories.length > 0 && (
