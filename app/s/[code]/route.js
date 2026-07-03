@@ -7,6 +7,12 @@ import { supabase } from "@/lib/supabaseClient";
 export async function GET(request, { params }) {
   const { code } = params;
 
+  // Preserve any query string from the short link (e.g. ?mode=view from
+  // the "查看名單" share-card button) through the redirect — without this,
+  // that param silently gets dropped and both share-card buttons end up
+  // landing on the exact same page.
+  const incomingUrl = new URL(request.url);
+
   const { data } = await supabase
     .from("tasks")
     .select("id")
@@ -14,8 +20,12 @@ export async function GET(request, { params }) {
     .single();
 
   if (!data) {
-    return NextResponse.redirect(new URL("/tasks/removed", request.url));
+    const removedUrl = new URL("/tasks/removed", request.url);
+    removedUrl.search = incomingUrl.search;
+    return NextResponse.redirect(removedUrl);
   }
 
-  return NextResponse.redirect(new URL(`/tasks/${data.id}`, request.url));
+  const targetUrl = new URL(`/tasks/${data.id}`, request.url);
+  targetUrl.search = incomingUrl.search;
+  return NextResponse.redirect(targetUrl);
 }
