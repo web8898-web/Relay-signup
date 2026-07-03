@@ -362,13 +362,13 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-xs font-medium text-gray-700 truncate">{s.name}</span>
                           {s.categories?.map((c) => (
-                            <span key={c} className={`text-[10px] px-1.5 py-0.5 rounded-full border ${chipClass(c)}`}>
+                            <span key={c} className={`text-[10px] px-1.5 py-0.5 rounded-full border whitespace-nowrap ${chipClass(c)}`}>
                               {c}
                               {s.category_quantities?.[c] != null && ` · ${s.category_quantities[c]}${task.quantity_unit || ""}`}
                             </span>
                           ))}
                           {s.quantity != null && !(s.category_quantities && Object.keys(s.category_quantities).length > 0) && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 whitespace-nowrap">
                               {s.quantity} {task.quantity_unit || ""}
                             </span>
                           )}
