@@ -153,15 +153,20 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
   const categoryCounts = {};
   let noCategoryCount = 0;
   for (const s of signups) {
-    if (s.category) categoryCounts[s.category] = (categoryCounts[s.category] || 0) + 1;
-    else noCategoryCount += 1;
+    if (s.categories?.length > 0) {
+      s.categories.forEach((c) => {
+        categoryCounts[c] = (categoryCounts[c] || 0) + 1;
+      });
+    } else {
+      noCategoryCount += 1;
+    }
   }
   const filteredSignups =
     filter === "全部"
       ? signups
       : filter === NO_CATEGORY
-      ? signups.filter((s) => !s.category)
-      : signups.filter((s) => s.category === filter);
+      ? signups.filter((s) => !s.categories || s.categories.length === 0)
+      : signups.filter((s) => s.categories?.includes(filter));
 
   function toggleExpand() {
     if (dragX !== 0) {
@@ -356,10 +361,13 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-xs font-medium text-gray-700 truncate">{s.name}</span>
-                          {s.category && (
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${chipClass(s.category)}`}>{s.category}</span>
-                          )}
-                          {s.quantity != null && (
+                          {s.categories?.map((c) => (
+                            <span key={c} className={`text-[10px] px-1.5 py-0.5 rounded-full border ${chipClass(c)}`}>
+                              {c}
+                              {s.category_quantities?.[c] != null && ` · ${s.category_quantities[c]}${task.quantity_unit || ""}`}
+                            </span>
+                          ))}
+                          {s.quantity != null && !(s.category_quantities && Object.keys(s.category_quantities).length > 0) && (
                             <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700">
                               {s.quantity} {task.quantity_unit || ""}
                             </span>

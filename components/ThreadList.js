@@ -13,7 +13,7 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, o
   const [confirmId, setConfirmId] = useState(null);
   const [editName, setEditName] = useState("");
   const [editNote, setEditNote] = useState("");
-  const [editCategory, setEditCategory] = useState("");
+  const [editCategories, setEditCategories] = useState([]);
   const [busy, setBusy] = useState(false);
   const [filterScrollRef, filterSentinelRef, filterCanScrollRight] = useScrollFadeRight(categories?.length > 0);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -25,8 +25,8 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, o
     filter === "全部"
       ? signups
       : filter === NO_CATEGORY
-      ? signups.filter((s) => !s.category)
-      : signups.filter((s) => s.category === filter);
+      ? signups.filter((s) => !s.categories || s.categories.length === 0)
+      : signups.filter((s) => s.categories?.includes(filter));
 
   // Reset back to the first page whenever the person switches filters, so
   // switching categories doesn't keep an inflated count from before.
@@ -64,21 +64,30 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, o
   const categoryCounts = {};
   let noCategoryCount = 0;
   for (const s of signups) {
-    if (s.category) categoryCounts[s.category] = (categoryCounts[s.category] || 0) + 1;
-    else noCategoryCount += 1;
+    if (s.categories?.length > 0) {
+      s.categories.forEach((c) => {
+        categoryCounts[c] = (categoryCounts[c] || 0) + 1;
+      });
+    } else {
+      noCategoryCount += 1;
+    }
   }
 
   function startEdit(s) {
     setEditingId(s.id);
     setEditName(s.name);
     setEditNote(s.note || "");
-    setEditCategory(s.category || "");
+    setEditCategories(s.categories || []);
+  }
+
+  function toggleEditCategory(c) {
+    setEditCategories((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
   }
 
   async function saveEdit(s) {
     if (!editName.trim()) return;
     setBusy(true);
-    await onUpdate(s.id, { name: editName.trim(), note: editNote.trim(), category: editCategory });
+    await onUpdate(s.id, { name: editName.trim(), note: editNote.trim(), categories: editCategories });
     setBusy(false);
     setEditingId(null);
   }
@@ -156,19 +165,11 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, o
                     <div className="bg-gray-50 border border-gray-200 rounded-2xl rounded-tl-sm p-3 flex flex-col gap-2">
                       {categories?.length > 0 && (
                         <div className="flex flex-wrap gap-1.5">
-                          <button
-                            onClick={() => setEditCategory("")}
-                            className={`text-[10px] px-2 py-1 rounded-full border ${
-                              editCategory === "" ? "bg-emerald-700 text-white border-emerald-700" : "bg-white text-emerald-600/70 border-emerald-200 border-dashed"
-                            }`}
-                          >
-                            不選類別
-                          </button>
                           {categories.map((c) => (
                             <button
                               key={c}
-                              onClick={() => setEditCategory(c)}
-                              className={`text-[10px] px-2 py-1 rounded-full border ${editCategory === c ? "bg-emerald-500 text-white border-emerald-500" : chipClass(c)}`}
+                              onClick={() => toggleEditCategory(c)}
+                              className={`text-[10px] px-2 py-1 rounded-full border ${editCategories.includes(c) ? "bg-emerald-500 text-white border-emerald-500" : chipClass(c)}`}
                             >
                               {c}
                             </button>
@@ -192,12 +193,15 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, o
                         <button disabled={busy} onClick={() => saveEdit(s)} className="text-xs bg-emerald-500 text-white px-3 py-1 rounded-full disabled:opacity-50">儲存</button>
                       </div>
                     </div>
-                  ) : (s.category || s.note || s.quantity != null) ? (
+                  ) : (s.categories?.length > 0 || s.note || s.quantity != null) ? (
                     <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-sm px-3.5 py-2.5 shadow-sm inline-block max-w-full">
-                      {s.category && (
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full border mr-1.5 ${chipClass(s.category)}`}>{s.category}</span>
-                      )}
-                      {s.quantity != null && (
+                      {s.categories?.map((c) => (
+                        <span key={c} className={`text-[10px] px-2 py-0.5 rounded-full border mr-1.5 ${chipClass(c)}`}>
+                          {c}
+                          {s.category_quantities?.[c] != null && ` · ${s.category_quantities[c]}${quantityUnit || ""}`}
+                        </span>
+                      ))}
+                      {s.quantity != null && !(s.category_quantities && Object.keys(s.category_quantities).length > 0) && (
                         <span className="text-[10px] px-2 py-0.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 mr-1.5">
                           {s.quantity} {quantityUnit || ""}
                         </span>
