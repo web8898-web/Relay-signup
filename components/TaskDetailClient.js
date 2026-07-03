@@ -202,9 +202,9 @@ export default function TaskDetailClient() {
 
   if (!task) {
     return (
-      <div className="flex-1 flex flex-col">
+      <FadeIn className="flex-1 flex flex-col">
         <TopBar title="找不到任務" />
-        <FadeIn className="flex-1 flex flex-col items-center justify-center px-8 text-center">
+        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
           <TaskGoneIllustration />
           <p className="font-semibold text-gray-700 mt-4 mb-2">找不到這個任務</p>
           <p className="text-sm text-gray-400 leading-relaxed">
@@ -212,13 +212,13 @@ export default function TaskDetailClient() {
             <br />
             或分享連結已經失效。
           </p>
-        </FadeIn>
-      </div>
+        </div>
+      </FadeIn>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col relative min-w-0">
+    <FadeIn className="flex-1 flex flex-col relative min-w-0">
       <TopBar title={task.title} />
 
       <div className="px-6 pt-4">
@@ -367,6 +367,6 @@ export default function TaskDetailClient() {
           {toast}
         </div>
       )}
-    </div>
+    </FadeIn>
   );
 }
