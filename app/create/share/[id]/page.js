@@ -46,14 +46,18 @@ export default function ShareTaskPage() {
     return taskUrl();
   }
 
+  const [sharing, setSharing] = useState(false);
+
   async function handleLineShare() {
     if (!task) return;
     const url = shareUrl();
+    setSharing(true);
     try {
       if (liff.isApiAvailable && liff.isApiAvailable("shareTargetPicker")) {
         const flexMessage = buildFlexMessage(task, url);
         await liff.shareTargetPicker([flexMessage]);
         showToast("已開啟分享選單");
+        setSharing(false);
         return;
       }
     } catch (e) {
@@ -61,6 +65,7 @@ export default function ShareTaskPage() {
     }
     const text = buildShareText(task, url);
     window.open(lineShareUrl(text), "_blank", "noopener,noreferrer");
+    setSharing(false);
   }
 
   async function handleCopy() {
@@ -103,9 +108,23 @@ export default function ShareTaskPage() {
         <div className="mt-6 flex flex-col gap-3">
           <button
             onClick={handleLineShare}
-            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-3 font-semibold flex items-center justify-center gap-2 shadow-md shadow-emerald-200 transition"
+            disabled={sharing}
+            className="w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 active:scale-[0.97] disabled:opacity-80 text-white rounded-full py-3 font-semibold flex items-center justify-center gap-2 shadow-md shadow-emerald-200 transition"
           >
-            <Share2 size={17} /> 分享到 LINE
+            {sharing ? (
+              <>
+                開啟中
+                <span className="flex gap-1 ml-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-bounce [animation-delay:-0.3s]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-bounce [animation-delay:-0.15s]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-bounce" />
+                </span>
+              </>
+            ) : (
+              <>
+                <Share2 size={17} /> 分享到 LINE
+              </>
+            )}
           </button>
           <button
             onClick={handleCopy}
