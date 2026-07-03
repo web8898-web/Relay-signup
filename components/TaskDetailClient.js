@@ -28,6 +28,7 @@ export default function TaskDetailClient() {
   const [categoryQuantities, setCategoryQuantities] = useState({});
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [categoryError, setCategoryError] = useState("");
   const [toast, setToast] = useState("");
   const [cooldown, setCooldown] = useState(0);
   const cooldownIntervalRef = useRef(null);
@@ -85,6 +86,7 @@ export default function TaskDetailClient() {
 
   function toggleCategory(c) {
     setCategories((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
+    if (categoryError) setCategoryError("");
     setCategoryQuantities((prev) => {
       if (prev[c] != null) {
         const next = { ...prev };
@@ -102,8 +104,13 @@ export default function TaskDetailClient() {
       nameInputRef.current?.focus();
       return;
     }
+    if (task.quantity_unit && task.categories?.length > 0 && categories.length === 0) {
+      setCategoryError("請至少選擇一個分類");
+      return;
+    }
     setSending(true);
     setError("");
+    setCategoryError("");
     try {
       const res = await fetch("/api/signups", {
         method: "POST",
@@ -240,7 +247,7 @@ export default function TaskDetailClient() {
           {task.categories?.length > 0 && (
             <>
               <p className="text-[11px] font-semibold text-emerald-700 mb-1.5 px-0.5">👉 選擇您要報名的類別（可複選）</p>
-              <div className="relative -mx-1">
+              <div className={`relative -mx-1 ${categoryError ? "ring-1 ring-rose-300 rounded-xl" : ""}`}>
                 <div ref={catScrollRef} className="flex gap-1.5 overflow-x-auto pb-2 mb-1 px-1">
                   {task.categories.map((c) => (
                     <button
@@ -261,6 +268,11 @@ export default function TaskDetailClient() {
                   </div>
                 )}
               </div>
+              {categoryError && (
+                <p className="text-xs text-rose-500 flex items-center gap-1 px-0.5 mb-1">
+                  <AlertCircle size={12} className="shrink-0" /> {categoryError}
+                </p>
+              )}
             </>
           )}
           <div className="flex flex-col gap-2">
