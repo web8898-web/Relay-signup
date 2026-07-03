@@ -17,6 +17,14 @@ import { useScrollFadeRight } from "@/lib/useScrollFadeRight";
 export default function TaskDetailClient() {
   const { id } = useParams();
   const router = useRouter();
+  // When someone taps "查看名單" on the share card (instead of "我要報名"),
+  // they land here with the form hidden — just the task info and who's
+  // already joined, no pressure to fill anything in until they choose to.
+  // Read straight from window.location (rather than the useSearchParams
+  // hook) so this component doesn't need a <Suspense> boundary wrapper.
+  const [viewOnly, setViewOnly] = useState(
+    () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("mode") === "view"
+  );
   const [loading, setLoading] = useState(true);
   const [task, setTask] = useState(null);
   const [signups, setSignups] = useState([]);
@@ -253,7 +261,17 @@ export default function TaskDetailClient() {
         />
       </div>
 
-      {closed ? (
+      {viewOnly ? (
+        <div className="px-6 pb-6 pt-3 border-t border-gray-100">
+          <button
+            onClick={() => setViewOnly(false)}
+            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-3.5 font-semibold flex items-center justify-center gap-2 shadow-md shadow-emerald-200 transition"
+          >
+            <Send size={18} />
+            我要報名
+          </button>
+        </div>
+      ) : closed ? (
         <div className="px-6 pb-6 pt-2 text-center text-xs text-gray-400 border-t border-gray-100">
           此任務已截止，無法再接龍
         </div>
