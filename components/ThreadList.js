@@ -21,6 +21,14 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
   const loadMoreRef = useRef(null);
 
   const NO_CATEGORY = "__no_category__";
+  // Numbers people by their actual signup order (1st, 2nd, 3rd...), based
+  // on the full unfiltered list — computed once here so the number for any
+  // given person stays the same no matter which category filter is active
+  // or how far someone has scrolled/paginated.
+  const orderNumber = {};
+  signups.forEach((s, i) => {
+    orderNumber[s.id] = i + 1;
+  });
   const filtered =
     filter === "全部"
       ? signups
@@ -157,7 +165,9 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <p className="text-xs font-medium text-gray-600 truncate">{s.name}</p>
+                    <p className="text-xs font-medium text-gray-600 truncate">
+                      <span className="text-gray-400 font-normal">({orderNumber[s.id]})</span> {s.name}
+                    </p>
                     <span className="text-[10px] text-gray-300">{relTime(s.created_at)}</span>
                   </div>
 
