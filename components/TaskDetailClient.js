@@ -10,7 +10,7 @@ import TaskGoneIllustration from "@/components/TaskGoneIllustration";
 import FadeIn from "@/components/FadeIn";
 import QuantityStepper from "@/components/QuantityStepper";
 import { supabase } from "@/lib/supabaseClient";
-import { taskStatus } from "@/lib/utils";
+import { taskStatus, isHeadcountUnit } from "@/lib/utils";
 import { getOwnerToken, getMySignupIds, rememberMySignup, forgetMySignup } from "@/lib/ownerToken";
 import { useScrollFadeRight } from "@/lib/useScrollFadeRight";
 
@@ -117,7 +117,11 @@ export default function TaskDetailClient() {
   }, [id]);
 
   const closed = task ? taskStatus(task).label === "已截止" : false;
-  const full = task?.max_signups ? signups.length >= task.max_signups : false;
+  const headcountMode = isHeadcountUnit(task?.quantity_unit);
+  const totalHeadcount = headcountMode
+    ? signups.reduce((sum, s) => sum + 1 + (s.quantity || 0), 0)
+    : signups.length;
+  const full = task?.max_signups ? totalHeadcount >= task.max_signups : false;
   const taskHasCategories = task?.categories?.length > 0;
   // Per-category quantity mode is determined by whether the TASK itself
   // defines categories (not by whether the visitor has picked one yet).
@@ -261,7 +265,7 @@ export default function TaskDetailClient() {
         <TaskAnnouncement task={task} />
         <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-4 mb-2">
           <Users size={13} />
-          {task.max_signups ? `${signups.length} / ${task.max_signups} 人已報名` : `${signups.length} 人已接龍`}
+          {task.max_signups ? `${totalHeadcount} / ${task.max_signups} 人已報名` : `${totalHeadcount} 人已接龍`}
         </div>
       </div>
 
