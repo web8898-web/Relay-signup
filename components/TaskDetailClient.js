@@ -262,7 +262,7 @@ export default function TaskDetailClient() {
       <TopBar title={task.title} />
 
       <div className="px-6 pt-4">
-        <TaskAnnouncement task={task} />
+        <TaskAnnouncement task={task} full={full} />
         <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-4 mb-2">
           <Users size={13} />
           {task.max_signups ? `${totalHeadcount} / ${task.max_signups} 人已報名` : `${totalHeadcount} 人已接龍`}
