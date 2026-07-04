@@ -51,13 +51,11 @@ export async function POST(request) {
         }
         quantityValue = total;
       } else {
-        // A headcount unit with no categories represents "how many extra
-        // people you're bringing" — 0 is a perfectly valid answer (nobody
-        // extra). Product-style units (份/斤/包) still require at least 1,
-        // since ordering zero of something doesn't make sense.
+        // Quantity here represents this signup's total party size (e.g. a
+        // headcount unit like 人 defaults to 1 meaning "just me") — always
+        // at least 1, since you're always at least yourself.
         const n = parseInt(quantity, 10);
-        const minValid = headcountMode ? 0 : 1;
-        if (!Number.isFinite(n) || n < minValid) {
+        if (!Number.isFinite(n) || n <= 0) {
           return NextResponse.json({ error: `請填寫數量（${task.quantity_unit}）` }, { status: 400 });
         }
         quantityValue = n;
@@ -72,16 +70,16 @@ export async function POST(request) {
     // acceptable tradeoff against the complexity of a database-level
     // transaction/lock.
     //
-    // When the quantity unit is a "people" word (人/位/名/口), each existing
-    // signup contributes 1 (the signer) + their quantity (people they're
-    // bringing) toward the cap, not just 1 row — e.g. someone signing up
-    // and bringing 5 people counts as 6 toward the limit.
-    const incomingHeadcount = headcountMode ? 1 + (quantityValue || 0) : 1;
+    // When the quantity unit is a "people" word (人/位/名/口), the quantity
+    // itself IS this signup's headcount contribution (e.g. quantity 4 means
+    // a party of 4, not "4 extra plus the signer") — so it's counted
+    // directly, not just 1 row per signup.
+    const incomingHeadcount = headcountMode ? (quantityValue || 1) : 1;
     if (task.max_signups) {
       let currentHeadcount;
       if (headcountMode) {
         const { data: existing } = await supabase.from("signups").select("quantity").eq("task_id", task_id);
-        currentHeadcount = (existing || []).reduce((sum, s) => sum + 1 + (s.quantity || 0), 0);
+        currentHeadcount = (existing || []).reduce((sum, s) => sum + (s.quantity ?? 1), 0);
       } else {
         const { count } = await supabase
           .from("signups")
