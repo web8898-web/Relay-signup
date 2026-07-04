@@ -7,6 +7,7 @@ import OrganizerTabs from "@/components/OrganizerTabs";
 import LoadingBubble from "@/components/LoadingBubble";
 import AutoGrowTextarea from "@/components/AutoGrowTextarea";
 import DatePickerField from "@/components/DatePickerField";
+import FadeIn from "@/components/FadeIn";
 import { useLineProfile } from "@/lib/useLineProfile";
 import { avatarClass, chipClass, todayStr } from "@/lib/utils";
 
@@ -162,7 +163,7 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
   }
 
   return (
-    <div className="flex-1 flex flex-col relative min-w-0">
+    <FadeIn className="flex-1 flex flex-col relative min-w-0">
       <TopBar
         title="建立任務"
         onBack={handleBackClick}
@@ -319,7 +320,7 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
           </div>
         </div>
       )}
-    </div>
+    </FadeIn>
   );
 }
 
