@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { sendLinePush } from "@/lib/linePush";
+import { isHeadcountUnit } from "@/lib/utils";
 
 const DUPLICATE_WINDOW_MS = 30_000;
 
@@ -64,12 +65,26 @@ export async function POST(request) {
     // instant, but for the scale this tool is built for, that's an
     // acceptable tradeoff against the complexity of a database-level
     // transaction/lock.
+    //
+    // When the quantity unit is a "people" word (人/位/名/口), each existing
+    // signup contributes 1 (the signer) + their quantity (people they're
+    // bringing) toward the cap, not just 1 row — e.g. someone signing up
+    // and bringing 5 people counts as 6 toward the limit.
+    const headcountMode = isHeadcountUnit(task.quantity_unit);
+    const incomingHeadcount = headcountMode ? 1 + (quantityValue || 0) : 1;
     if (task.max_signups) {
-      const { count } = await supabase
-        .from("signups")
-        .select("id", { count: "exact", head: true })
-        .eq("task_id", task_id);
-      if ((count ?? 0) >= task.max_signups) {
+      let currentHeadcount;
+      if (headcountMode) {
+        const { data: existing } = await supabase.from("signups").select("quantity").eq("task_id", task_id);
+        currentHeadcount = (existing || []).reduce((sum, s) => sum + 1 + (s.quantity || 0), 0);
+      } else {
+        const { count } = await supabase
+          .from("signups")
+          .select("id", { count: "exact", head: true })
+          .eq("task_id", task_id);
+        currentHeadcount = count ?? 0;
+      }
+      if (currentHeadcount + incomingHeadcount > task.max_signups) {
         return NextResponse.json({ error: "這個任務已經額滿了" }, { status: 400 });
       }
     }
