@@ -35,6 +35,7 @@ export async function POST(request) {
     // 珍奶 x3) instead of one lump number — that's the whole point of
     // combining the two features. Falls back to a single quantity when
     // there are no tags selected to attach a per-item quantity to.
+    const headcountMode = isHeadcountUnit(task.quantity_unit);
     let quantityValue = null;
     let categoryQuantitiesValue = {};
     if (task.quantity_unit) {
@@ -50,8 +51,13 @@ export async function POST(request) {
         }
         quantityValue = total;
       } else {
+        // A headcount unit with no categories represents "how many extra
+        // people you're bringing" — 0 is a perfectly valid answer (nobody
+        // extra). Product-style units (份/斤/包) still require at least 1,
+        // since ordering zero of something doesn't make sense.
         const n = parseInt(quantity, 10);
-        if (!Number.isFinite(n) || n <= 0) {
+        const minValid = headcountMode ? 0 : 1;
+        if (!Number.isFinite(n) || n < minValid) {
           return NextResponse.json({ error: `請填寫數量（${task.quantity_unit}）` }, { status: 400 });
         }
         quantityValue = n;
@@ -70,7 +76,6 @@ export async function POST(request) {
     // signup contributes 1 (the signer) + their quantity (people they're
     // bringing) toward the cap, not just 1 row — e.g. someone signing up
     // and bringing 5 people counts as 6 toward the limit.
-    const headcountMode = isHeadcountUnit(task.quantity_unit);
     const incomingHeadcount = headcountMode ? 1 + (quantityValue || 0) : 1;
     if (task.max_signups) {
       let currentHeadcount;
