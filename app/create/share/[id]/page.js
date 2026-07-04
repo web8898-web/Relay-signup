@@ -5,6 +5,7 @@ import { Share2, Copy } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import TaskShareCard from "@/components/TaskShareCard";
 import LoadingBubble from "@/components/LoadingBubble";
+import FadeIn from "@/components/FadeIn";
 import { supabase } from "@/lib/supabaseClient";
 import { buildShareText, lineShareUrl, buildFlexMessage } from "@/lib/utils";
 import { liff } from "@/lib/liff";
@@ -99,7 +100,7 @@ export default function ShareTaskPage() {
   if (!task) return null;
 
   return (
-    <div className="flex-1 flex flex-col relative min-w-0">
+    <FadeIn className="flex-1 flex flex-col relative min-w-0">
       <TopBar title="分享任務" onBack={() => router.push("/my-tasks")} />
       <div className="flex-1 px-5 py-5 overflow-y-auto">
         <p className="text-xs text-gray-400 mb-3 text-center">這是分享到 LINE 群組時，成員會看到的卡片樣式</p>
@@ -158,6 +159,6 @@ export default function ShareTaskPage() {
           {toast}
         </div>
       )}
-    </div>
+    </FadeIn>
   );
 }
