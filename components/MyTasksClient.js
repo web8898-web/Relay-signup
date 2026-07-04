@@ -5,6 +5,7 @@ import { ClipboardList, LogIn, MessageCircle, Plus, Bell, ChevronUp, ChevronDown
 import { TopBar, EmptyState } from "@/components/TopBar";
 import OrganizerTabs from "@/components/OrganizerTabs";
 import LoadingBubble from "@/components/LoadingBubble";
+import FadeIn from "@/components/FadeIn";
 import TaskListCard from "@/components/TaskListCard";
 import { useLineProfile } from "@/lib/useLineProfile";
 import { avatarClass } from "@/lib/utils";
@@ -136,7 +137,7 @@ export default function MyTasksClient() {
   }
 
   return (
-    <div className="flex-1 flex flex-col relative min-w-0">
+    <FadeIn className="flex-1 flex flex-col relative min-w-0">
       <TopBar
         title="任務清單"
         backHref="/"
@@ -228,6 +229,6 @@ export default function MyTasksClient() {
           {toast}
         </div>
       )}
-    </div>
+    </FadeIn>
   );
 }
