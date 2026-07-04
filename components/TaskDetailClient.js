@@ -89,15 +89,6 @@ export default function TaskDetailClient() {
     const startedAt = Date.now();
     const { data: taskData } = await supabase.from("tasks").select("*").eq("id", id).single();
     setTask(taskData || null);
-    // Default the generic (no-categories) quantity stepper to 0 when the
-    // unit means "people" (人/位/名/口) — that field represents "how many
-    // extra people you're bringing", and defaulting to 0 (nobody extra) is
-    // more intuitive than defaulting to 1. Product-style units (份/斤/包)
-    // keep defaulting to 1, since ordering zero of something doesn't make
-    // sense.
-    if (taskData && !(taskData.categories?.length > 0)) {
-      setQuantity(isHeadcountUnit(taskData.quantity_unit) ? 0 : 1);
-    }
 
     const { data: signupData } = await supabase
       .from("signups")
@@ -128,7 +119,7 @@ export default function TaskDetailClient() {
   const closed = task ? taskStatus(task).label === "已截止" : false;
   const headcountMode = isHeadcountUnit(task?.quantity_unit);
   const totalHeadcount = headcountMode
-    ? signups.reduce((sum, s) => sum + 1 + (s.quantity || 0), 0)
+    ? signups.reduce((sum, s) => sum + (s.quantity ?? 1), 0)
     : signups.length;
   const full = task?.max_signups ? totalHeadcount >= task.max_signups : false;
   const taskHasCategories = task?.categories?.length > 0;
@@ -378,7 +369,6 @@ export default function TaskDetailClient() {
                   label={`數量（${task.quantity_unit}）`}
                   value={quantity}
                   onChange={setQuantity}
-                  min={headcountMode ? 0 : 1}
                 />
               )
             )}
