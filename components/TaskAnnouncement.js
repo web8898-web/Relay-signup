@@ -2,8 +2,11 @@
 import { MessageCircle, Calendar } from "lucide-react";
 import { taskStatus } from "@/lib/utils";
 
-export default function TaskAnnouncement({ task }) {
+export default function TaskAnnouncement({ task, full }) {
   const st = taskStatus(task);
+  // Only override when the task is otherwise "進行中" — if it's already
+  // "已截止" or "尚未開始", that status takes priority over capacity.
+  const label = full && st.label === "進行中" ? "已額滿" : st.label;
   return (
     <div className="flex gap-2 items-start">
       <div className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
@@ -14,7 +17,7 @@ export default function TaskAnnouncement({ task }) {
         <div className="bg-emerald-500 text-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
           <div className="flex items-center justify-between gap-2">
             <p className="font-bold">{task.title}</p>
-            <span className="shrink-0 text-[10px] px-2 py-0.5 rounded-full bg-white/20">{st.label}</span>
+            <span className="shrink-0 text-[10px] px-2 py-0.5 rounded-full bg-white/20">{label}</span>
           </div>
           {task.description && <p className="text-sm text-emerald-50 mt-1.5 leading-relaxed whitespace-pre-wrap">{task.description}</p>}
           <div className="flex items-center gap-1 text-[11px] text-emerald-50 mt-2">
