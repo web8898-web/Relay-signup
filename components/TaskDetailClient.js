@@ -281,8 +281,16 @@ export default function TaskDetailClient() {
         />
       </div>
 
-      {viewOnly ? (
-        <div className="px-6 pb-6 pt-3 border-t border-gray-100">
+      {closed ? (
+        <div ref={formSectionRef} className="px-6 pb-6 pt-2 text-center text-xs text-gray-400 border-t border-gray-100">
+          此任務已截止，無法再接龍
+        </div>
+      ) : full ? (
+        <div ref={formSectionRef} className="px-6 pb-6 pt-2 text-center text-xs text-gray-400 border-t border-gray-100">
+          這個任務已經額滿，無法再接龍
+        </div>
+      ) : viewOnly ? (
+        <div ref={formSectionRef} className="px-6 pb-6 pt-3 border-t border-gray-100">
           <button
             onClick={() => setViewOnly(false)}
             className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-3.5 font-semibold flex items-center justify-center gap-2 shadow-md shadow-emerald-200 transition"
@@ -290,14 +298,6 @@ export default function TaskDetailClient() {
             <Send size={18} />
             我要報名
           </button>
-        </div>
-      ) : closed ? (
-        <div ref={formSectionRef} className="px-6 pb-6 pt-2 text-center text-xs text-gray-400 border-t border-gray-100">
-          此任務已截止，無法再接龍
-        </div>
-      ) : full ? (
-        <div ref={formSectionRef} className="px-6 pb-6 pt-2 text-center text-xs text-gray-400 border-t border-gray-100">
-          這個任務已經額滿，無法再接龍
         </div>
       ) : (
         <div ref={formSectionRef} className="px-6 pb-6 pt-3 border-t-2 border-emerald-100 bg-emerald-50/40 min-w-0 overflow-hidden">
