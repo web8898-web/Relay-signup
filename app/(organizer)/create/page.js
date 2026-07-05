@@ -4,6 +4,10 @@ import { useRouter } from "next/navigation";
 import { Loader2, CheckCircle2, X, AlertTriangle } from "lucide-react";
 import AutoGrowTextarea from "@/components/AutoGrowTextarea";
 import DatePickerField from "@/components/DatePickerField";
+import OnboardingTour, {
+  getOnboardingState,
+  setOnboardingState,
+} from "@/components/OnboardingTour";
 import { useOrganizerProfile } from "@/lib/OrganizerContext";
 import { chipClass, todayStr } from "@/lib/utils";
 
@@ -38,6 +42,39 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
   const [titleTouched, setTitleTouched] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const titleRef = useRef(null);
+
+  // 首次操作教學導覽：本機沒有任何進度標記，代表第一次來到這個
+  // 頁面，稍微等版面穩定後自動開始導覽。看完建立頁的步驟後標記
+  // 為 "pending-share"，等任務建立完成、跳到分享頁時接續最後一步。
+  const [showTour, setShowTour] = useState(false);
+  useEffect(() => {
+    if (getOnboardingState()) return;
+    const t = setTimeout(() => setShowTour(true), 500);
+    return () => clearTimeout(t);
+  }, []);
+
+  const tourSteps = [
+    {
+      target: "title",
+      title: "填寫任務標題",
+      text: "先幫這個任務取個名字，例如「週日爬山健行」「週五團購水果」。標題是唯一必填的欄位。",
+    },
+    {
+      target: "categories",
+      title: "設定分類（選填）",
+      text: "可以加入幾個分類讓報名的人勾選，例如帶小孩、帶朋友，或雞排、珍奶等品項，適合分組或團購的場景。",
+    },
+    {
+      target: "dates",
+      title: "選擇日期",
+      text: "設定任務的起訖日期，點一下就會打開日期選擇器。",
+    },
+    {
+      target: "save",
+      title: "儲存任務",
+      text: "全部填好後，按這顆按鈕就會建立任務，接著會帶你到分享頁，把任務發到 LINE 群組。",
+    },
+  ];
 
   const defaults = useRef({ start_date: todayStr(), end_date: todayStr() });
 
@@ -125,7 +162,7 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
     <div className="flex-1 flex flex-col relative min-w-0">
       <div className="flex-1 px-6 py-4 flex flex-col gap-5 overflow-y-auto">
         {error && <p className="text-xs text-rose-500">{error}</p>}
-        <Field label="任務標題" required error={titleMissing ? "請填寫任務標題" : ""}>
+        <Field label="任務標題" required error={titleMissing ? "請填寫任務標題" : ""} tourId="title">
           <input
             ref={titleRef}
             value={title}
@@ -149,7 +186,7 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
           />
         </Field>
 
-        <Field label="分類（自訂，選填）">
+        <Field label="分類（自訂，選填）" tourId="categories">
           <div className="flex gap-2">
             <input
               value={catInput}
@@ -178,7 +215,7 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
           )}
         </Field>
 
-        <Field label="日期">
+        <Field label="日期" tourId="dates">
           <div className="flex items-center gap-2">
             <DatePickerField
               value={startDate}
@@ -230,7 +267,7 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
         </Field>
       </div>
 
-      <div className="px-6 pb-6 pt-2">
+      <div className="px-6 pb-6 pt-2" data-tour="save">
         <button
           onClick={handleSave}
           disabled={saving}
@@ -277,13 +314,28 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
           </div>
         </div>
       )}
+
+      {showTour && (
+        <OnboardingTour
+          steps={tourSteps}
+          finishLabel="知道了，開始填寫"
+          onFinish={() => {
+            setOnboardingState("pending-share");
+            setShowTour(false);
+          }}
+          onSkip={() => {
+            setOnboardingState("done");
+            setShowTour(false);
+          }}
+        />
+      )}
     </div>
   );
 }
 
-function Field({ label, children, required, error }) {
+function Field({ label, children, required, error, tourId }) {
   return (
-    <div>
+    <div data-tour={tourId || undefined}>
       <p className="text-xs text-gray-500 font-medium mb-1.5">
         {label}
         {required && <span className="text-rose-400 ml-0.5">*</span>}
