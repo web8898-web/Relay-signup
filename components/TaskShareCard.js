@@ -1,5 +1,5 @@
 "use client";
-import { ClipboardCheck, PenLine, Calendar, Users, FileText, ClipboardEdit, Sparkles } from "lucide-react";
+import { MessageCircle, PenLine, Calendar, Users, FileText, ClipboardEdit } from "lucide-react";
 import { taskStatus, chipClass } from "@/lib/utils";
 
 export default function TaskShareCard({ task, signupCount, onOpen, previewOnly, onPreviewTap }) {
@@ -17,20 +17,10 @@ export default function TaskShareCard({ task, signupCount, onOpen, previewOnly, 
     <div className="relative rounded-[1.75rem] overflow-hidden shadow-md border border-emerald-100 bg-white">
       <div className="relative bg-gradient-to-br from-emerald-400 to-emerald-600 px-5 pt-5 pb-6">
         <div className="flex items-start justify-between">
-          <div className="w-12 h-12 rounded-2xl bg-white/95 flex items-center justify-center shadow-sm">
-            <ClipboardCheck size={22} className="text-emerald-600" />
+          <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
+            <MessageCircle size={24} className="text-white" />
           </div>
-          <div className="relative mt-1">
-            <div className="bg-white rounded-2xl rounded-br-sm px-3 py-2 shadow-sm flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            </div>
-            <Sparkles size={13} className="text-white/80 absolute -top-2 -left-3" />
-          </div>
-        </div>
-        <div className="flex justify-end mt-3">
-          <span className="text-[10px] px-2.5 py-1 rounded-full bg-white/25 text-white font-medium">{st.label}</span>
+          <span className="mt-1 text-[10px] px-2.5 py-1 rounded-full bg-white/25 text-white font-medium">{st.label}</span>
         </div>
       </div>
       <svg viewBox="0 0 400 28" preserveAspectRatio="none" className="w-full h-7 block -mt-4">
