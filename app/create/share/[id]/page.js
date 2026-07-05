@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Share2, Copy } from "lucide-react";
+import { Share2, Copy, ArrowLeft } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import TaskShareCard from "@/components/TaskShareCard";
 import LoadingBubble from "@/components/LoadingBubble";
@@ -168,21 +168,16 @@ export default function ShareTaskPage() {
             >
               <Copy size={16} /> 複製訊息文字
             </button>
+            <button
+              onClick={() => router.push("/my-tasks")}
+              className="mx-auto mt-1 flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 active:text-gray-600 py-2 px-3 transition"
+            >
+              <ArrowLeft size={15} /> 回到任務清單
+            </button>
           </div>
 
-          <p className="text-[11px] text-gray-300 text-center mt-4 leading-relaxed px-2 break-all">
-            報名連結：{shareUrl()}
-          </p>
         </div>
 
-        <div className="px-5 pb-6 pt-2">
-          <button
-            onClick={() => router.push("/my-tasks")}
-            className="w-full border border-gray-200 text-gray-600 rounded-full py-3 font-semibold hover:bg-gray-50 transition"
-          >
-            回到任務清單
-          </button>
-        </div>
 
         <Toast className="bottom-24">
           {toast && (
