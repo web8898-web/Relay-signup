@@ -193,8 +193,12 @@ export default function OnboardingTour({ steps, finishLabel = "知道了", onFin
               </span>
             )}
           </div>
-          <p className="font-semibold text-gray-800 mb-1">{step.title}</p>
-          <p className="text-sm text-gray-500 leading-relaxed">{step.text}</p>
+          <p className="font-semibold text-gray-800 mb-1" style={{ textWrap: "balance" }}>
+            {step.title}
+          </p>
+          <p className="text-sm text-gray-500 leading-relaxed" style={{ textWrap: "balance" }}>
+            {step.text}
+          </p>
           <div className="flex items-center justify-between mt-4 gap-3">
             <button
               onClick={() => onSkip?.()}
