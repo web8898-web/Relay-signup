@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ClipboardList, Plus, Bell, ChevronUp, ChevronDown } from "lucide-react";
 import { EmptyState } from "@/components/TopBar";
+import Toast from "@/components/Toast";
 import LoadingBubble from "@/components/LoadingBubble";
 import TaskListCard from "@/components/TaskListCard";
 import { useOrganizerProfile } from "@/lib/OrganizerContext";
@@ -170,9 +171,11 @@ export default function MyTasksListContent() {
       </div>
 
       {toast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-sm px-4 py-2 rounded-full shadow-lg z-50 whitespace-nowrap">
-          {toast}
-        </div>
+        <Toast className="bottom-24">
+          <div className="bg-rose-500 text-white text-sm px-4 py-2 rounded-full shadow-lg whitespace-nowrap">
+            {toast}
+          </div>
+        </Toast>
       )}
     </div>
   );
