@@ -58,6 +58,21 @@ export default function OnboardingTour({ steps, finishLabel = "知道了", onFin
 
   useEffect(() => setMounted(true), []);
 
+  // 導覽期間鎖住瀏覽器的手動捲動（觸控滑動與滾輪），
+  // 元件卸載（教學結束）時自動解鎖。
+  useEffect(() => {
+    if (!mounted) return;
+    function prevent(e) {
+      e.preventDefault();
+    }
+    document.addEventListener("touchmove", prevent, { passive: false });
+    document.addEventListener("wheel", prevent, { passive: false });
+    return () => {
+      document.removeEventListener("touchmove", prevent);
+      document.removeEventListener("wheel", prevent);
+    };
+  }, [mounted]);
+
   const step = steps[index];
   const isLast = index === steps.length - 1;
 
@@ -123,19 +138,19 @@ export default function OnboardingTour({ steps, finishLabel = "知道了", onFin
           造成畫面錯位。用四片透明區塊把亮框以外全部蓋住；亮框本身
           只有在 tapTarget 的步驟才留空讓人點，否則也一併蓋住。 */}
       <div
-        className="fixed left-0 right-0 top-0 pointer-events-auto"
+        className="fixed left-0 right-0 top-0 pointer-events-auto touch-none"
         style={{ height: hole.top }}
       />
       <div
-        className="fixed left-0 right-0 bottom-0 pointer-events-auto"
+        className="fixed left-0 right-0 bottom-0 pointer-events-auto touch-none"
         style={{ top: hole.top + hole.height }}
       />
       <div
-        className="fixed left-0 pointer-events-auto"
+        className="fixed left-0 pointer-events-auto touch-none"
         style={{ top: hole.top, width: hole.left, height: hole.height }}
       />
       <div
-        className="fixed right-0 pointer-events-auto"
+        className="fixed right-0 pointer-events-auto touch-none"
         style={{
           top: hole.top,
           left: hole.left + hole.width,
@@ -144,7 +159,7 @@ export default function OnboardingTour({ steps, finishLabel = "知道了", onFin
       />
       {!step.tapTarget && (
         <div
-          className="fixed pointer-events-auto"
+          className="fixed pointer-events-auto touch-none"
           style={{
             top: hole.top,
             left: hole.left,
