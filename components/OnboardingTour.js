@@ -18,6 +18,24 @@ import { createPortal } from "react-dom";
 
 export const ONBOARDING_KEY = "relay_onboarding_v1";
 
+// 把一段中文說明文字依標點符號切成小段（每段含結尾的標點）。
+// 顯示時每一小段是一個整體，換行只會落在標點後面，
+// 不會把一句話從中間硬生生拆開。
+const PUNCT = "，、。！？；：";
+function splitAtPunctuation(text) {
+  const segs = [];
+  let buf = "";
+  for (const ch of text) {
+    buf += ch;
+    if (PUNCT.includes(ch)) {
+      segs.push(buf);
+      buf = "";
+    }
+  }
+  if (buf) segs.push(buf);
+  return segs;
+}
+
 export function getOnboardingState() {
   try {
     return localStorage.getItem(ONBOARDING_KEY);
@@ -258,8 +276,12 @@ export default function OnboardingTour({ steps, finishLabel = "知道了", onFin
           <p className="font-semibold text-gray-800 mb-1" style={{ textWrap: "balance" }}>
             {step.title}
           </p>
-          <p className="text-sm text-gray-500 leading-relaxed" style={{ textWrap: "balance" }}>
-            {step.text}
+          <p className="text-sm text-gray-500 leading-relaxed">
+            {splitAtPunctuation(step.text).map((seg, i) => (
+              <span key={i} className="inline-block">
+                {seg}
+              </span>
+            ))}
           </p>
           <div className="flex items-center justify-between mt-4 gap-3">
             <button
