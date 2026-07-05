@@ -264,7 +264,7 @@ export default function TaskDetailClient() {
       <div className="px-6 pt-4">
         <TaskAnnouncement task={task} full={full} />
         {task.max_signups ? (
-          <div className="pl-11 mt-3 mb-1">
+          <div className="pl-11 mt-3 mb-4">
             <div
               className={`flex items-center rounded-2xl border px-3.5 py-2.5 ${
                 full ? "bg-rose-50 border-rose-200" : "bg-emerald-50 border-emerald-200"
