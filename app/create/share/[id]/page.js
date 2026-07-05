@@ -197,6 +197,7 @@ export default function ShareTaskPage() {
             steps={[
               {
                 target: "line-share",
+                tapTarget: true,
                 title: "最後一步：分享到 LINE",
                 text: "任務建立好了！按這顆按鈕，把報名卡片分享到你的 LINE 群組或好友，大家點卡片就能直接報名。",
               },
