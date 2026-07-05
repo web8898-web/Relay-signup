@@ -162,7 +162,7 @@ export default function ShareTaskPage() {
       </div>
 
       {toast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-sm px-4 py-2.5 rounded-2xl shadow-lg z-50 max-w-[92%] flex items-center justify-center text-center leading-relaxed">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-sm px-4 py-2.5 rounded-2xl shadow-lg z-50 max-w-[92%] flex flex-col items-center justify-center text-center leading-relaxed">
           {toast}
         </div>
       )}
