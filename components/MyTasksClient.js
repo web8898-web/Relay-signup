@@ -137,6 +137,7 @@ export default function MyTasksClient() {
   }
 
   return (
+    <>
     <FadeIn className="flex-1 flex flex-col relative min-w-0">
       <TopBar
         title="任務清單"
@@ -223,12 +224,13 @@ export default function MyTasksClient() {
           <Plus size={18} /> 新增任務
         </button>
       </div>
-
-      {toast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-sm px-4 py-2 rounded-full shadow-lg z-50 whitespace-nowrap">
-          {toast}
-        </div>
-      )}
     </FadeIn>
+
+    {toast && (
+      <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-sm px-4 py-2 rounded-full shadow-lg z-50 whitespace-nowrap">
+        {toast}
+      </div>
+    )}
+    </>
   );
 }
