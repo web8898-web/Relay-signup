@@ -1,0 +1,169 @@
+"use client";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+
+// ---------------------------------------------------------------------------
+// 首次操作教學導覽（聚光燈式）
+//
+// 跟 Toast.js 一樣用 React Portal 直接掛到 document.body，
+// 而不是掛在元件樹裡原本的位置——因為只要外層有 FadeIn 這類帶
+// CSS transform 的包裝，position: fixed 的定位基準就會被改變、
+// 導致跑位（這個坑之前踩過，詳見 Toast.js 的註解）。
+//
+// 進度狀態存在瀏覽器 localStorage：
+//   （沒有值）        → 還沒看過教學，進「建立任務」頁會自動開始
+//   "pending-share"  → 建立頁的步驟看完了，等分享頁的最後一步
+//   "done"           → 教學已完成（或被略過），不再出現
+// ---------------------------------------------------------------------------
+
+export const ONBOARDING_KEY = "relay_onboarding_v1";
+
+export function getOnboardingState() {
+  try {
+    return localStorage.getItem(ONBOARDING_KEY);
+  } catch (e) {
+    // localStorage 不可用（極少數內嵌瀏覽器）時，一律當作已完成，
+    // 寧可不顯示教學也不要讓頁面掛掉。
+    return "done";
+  }
+}
+
+export function setOnboardingState(value) {
+  try {
+    localStorage.setItem(ONBOARDING_KEY, value);
+  } catch (e) {}
+}
+
+export function resetOnboarding() {
+  try {
+    localStorage.removeItem(ONBOARDING_KEY);
+  } catch (e) {}
+}
+
+// steps: [{ target: "data-tour 屬性值", title: "標題", text: "說明文字" }]
+// finishLabel: 最後一步按鈕的文字（預設「知道了」）
+// onFinish: 按完最後一步的「完成」按鈕時呼叫
+// onSkip:   按「略過教學」時呼叫
+export default function OnboardingTour({ steps, finishLabel = "知道了", onFinish, onSkip }) {
+  const [mounted, setMounted] = useState(false);
+  const [index, setIndex] = useState(0);
+  const [rect, setRect] = useState(null);
+  const [place, setPlace] = useState("below");
+  const rafRef = useRef(0);
+
+  useEffect(() => setMounted(true), []);
+
+  const step = steps[index];
+  const isLast = index === steps.length - 1;
+
+  // 量測目前這一步的目標元素位置：先把它捲到畫面中間，再持續追蹤
+  // 它的實際座標（捲動、轉向、鍵盤彈出都會重新量測）。
+  useEffect(() => {
+    if (!mounted || !step) return;
+
+    const el = document.querySelector(`[data-tour="${step.target}"]`);
+    if (!el) {
+      // 找不到目標（理論上不會發生）就直接跳下一步，避免卡住。
+      setRect(null);
+      if (isLast) onFinish?.();
+      else setIndex((i) => i + 1);
+      return;
+    }
+
+    function measure() {
+      const r = el.getBoundingClientRect();
+      setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+      // 目標下方剩餘空間夠放說明氣泡就放下面，不夠就放上面。
+      setPlace(r.bottom + 230 <= window.innerHeight ? "below" : "above");
+    }
+
+    measure();
+    el.scrollIntoView({ block: "center", behavior: "smooth" });
+    const settle = setTimeout(measure, 420);
+
+    function onMove() {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(measure);
+    }
+    window.addEventListener("resize", onMove);
+    window.addEventListener("scroll", onMove, true);
+    return () => {
+      clearTimeout(settle);
+      cancelAnimationFrame(rafRef.current);
+      window.removeEventListener("resize", onMove);
+      window.removeEventListener("scroll", onMove, true);
+    };
+  }, [mounted, index, step, isLast, onFinish]);
+
+  if (!mounted || !step || !rect) return null;
+
+  function handleNext() {
+    if (isLast) onFinish?.();
+    else setIndex(index + 1);
+  }
+
+  const pad = 6; // 亮框比目標元素四周各外擴一點，看起來比較舒服
+
+  return createPortal(
+    <div className="fixed inset-0 z-[80] pointer-events-none">
+      {/* 聚光燈亮框：用超大 box-shadow 把亮框以外的整個畫面壓暗 */}
+      <div
+        className="fixed rounded-2xl transition-all duration-300 ease-out"
+        style={{
+          top: rect.top - pad,
+          left: rect.left - pad,
+          width: rect.width + pad * 2,
+          height: rect.height + pad * 2,
+          boxShadow: "0 0 0 9999px rgba(15, 23, 42, 0.62)",
+        }}
+      >
+        <div className="absolute inset-0 rounded-2xl ring-2 ring-emerald-400" />
+      </div>
+
+      {/* 說明氣泡 */}
+      <div
+        className="fixed left-1/2 -translate-x-1/2 w-[calc(100%-40px)] max-w-sm pointer-events-auto transition-all duration-300 ease-out"
+        style={
+          place === "below"
+            ? { top: rect.top + rect.height + pad + 14 }
+            : { bottom: window.innerHeight - rect.top + pad + 14 }
+        }
+      >
+        <div className="bg-white rounded-3xl p-5 shadow-2xl">
+          <div className="flex items-center gap-1.5 mb-2">
+            {steps.map((s, i) => (
+              <span
+                key={s.target}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  i === index ? "w-5 bg-emerald-500" : "w-1.5 bg-gray-200"
+                }`}
+              />
+            ))}
+            {steps.length > 1 && (
+              <span className="ml-auto text-[11px] text-gray-400 font-medium">
+                {index + 1} / {steps.length}
+              </span>
+            )}
+          </div>
+          <p className="font-semibold text-gray-800 mb-1">{step.title}</p>
+          <p className="text-sm text-gray-500 leading-relaxed">{step.text}</p>
+          <div className="flex items-center justify-between mt-4 gap-3">
+            <button
+              onClick={() => onSkip?.()}
+              className="text-xs text-gray-400 hover:text-gray-500 py-2 px-1 transition"
+            >
+              略過教學
+            </button>
+            <button
+              onClick={handleNext}
+              className="bg-emerald-500 hover:bg-emerald-600 active:scale-[0.97] text-white text-sm font-semibold rounded-full px-6 py-2.5 transition"
+            >
+              {isLast ? finishLabel : "下一步"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
