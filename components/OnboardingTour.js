@@ -99,6 +99,15 @@ export default function OnboardingTour({ steps, finishLabel = "知道了", onFin
   // 追著捲動座標跑造成畫面跳動。
   const [animate, setAnimate] = useState(true);
 
+  // 聚光燈整層的淡入效果：第一次量到目標位置後，先以全透明
+  // 掛上畫面，下一個影格再淡入，避免突然閃現。
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    if (!rect || shown) return;
+    const raf = requestAnimationFrame(() => setShown(true));
+    return () => cancelAnimationFrame(raf);
+  }, [rect, shown]);
+
   // 量測目前這一步的目標元素位置。捲動採「必要時才動」策略：
   // 目標已經在舒適範圍內（看得到、下方留得出氣泡空間）就完全
   // 不捲動，避免每一步都重新置中造成畫面跳動；只有目標超出
@@ -202,7 +211,11 @@ export default function OnboardingTour({ steps, finishLabel = "知道了", onFin
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[80] pointer-events-none">
+    <div
+      className={`fixed inset-0 z-[80] pointer-events-none transition-opacity duration-500 ease-out ${
+        shown ? "opacity-100" : "opacity-0"
+      }`}
+    >
       {/* 點擊阻擋層：導覽期間鎖住整個畫面，避免誤觸欄位彈出鍵盤
           造成畫面錯位。用四片透明區塊把亮框以外全部蓋住；亮框本身
           只有在 tapTarget 的步驟才留空讓人點，否則也一併蓋住。 */}
