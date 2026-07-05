@@ -49,7 +49,13 @@ export async function POST(request) {
           categoryQuantitiesValue[cat] = n;
           total += n;
         }
-        quantityValue = total;
+        // When the unit means "people" (人/位/名/口), each category's
+        // number represents extra people brought along for that category
+        // (e.g. 帶小孩 2人 = 2 kids) — the signer themselves isn't counted
+        // in any specific category, so they're added once on top of the
+        // category sum. Product-style units (份/斤/包) have no "self" to
+        // add — the total there is just whatever was ordered.
+        quantityValue = headcountMode ? total + 1 : total;
       } else {
         // Quantity here represents this signup's total party size (e.g. a
         // headcount unit like 人 defaults to 1 meaning "just me") — always
