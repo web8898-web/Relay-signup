@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+import { isHeadcountUnit } from "@/lib/utils";
 
 async function assertOwnership(supabase, signupId, ownerToken) {
-  const { data, error } = await supabase.from("signups").select("owner_token").eq("id", signupId).single();
+  const { data, error } = await supabase.from("signups").select("owner_token, task_id").eq("id", signupId).single();
   if (error || !data) throw new Error("找不到這筆報名資料");
   if (data.owner_token !== ownerToken) throw new Error("你沒有權限編輯這筆資料");
+  return data.task_id;
 }
 
 export async function PUT(request, { params }) {
@@ -14,7 +16,7 @@ export async function PUT(request, { params }) {
     if (!owner_token) return NextResponse.json({ error: "缺少驗證資訊" }, { status: 400 });
 
     const supabase = getSupabaseAdmin();
-    await assertOwnership(supabase, params.id, owner_token);
+    const taskId = await assertOwnership(supabase, params.id, owner_token);
 
     const update = {
       name: String(name).slice(0, 60),
@@ -26,6 +28,9 @@ export async function PUT(request, { params }) {
     // (category_quantities is an object of tag -> number) or a single
     // lump quantity — whichever one the client actually sent.
     if (category_quantities && typeof category_quantities === "object") {
+      const { data: task } = await supabase.from("tasks").select("quantity_unit").eq("id", taskId).single();
+      const headcountMode = isHeadcountUnit(task?.quantity_unit);
+
       const cq = {};
       let total = 0;
       for (const [cat, val] of Object.entries(category_quantities)) {
@@ -35,8 +40,11 @@ export async function PUT(request, { params }) {
           total += n;
         }
       }
+      // Same rule as creating a signup: when the unit means "people",
+      // each category's number is extra people beyond the signer, who
+      // gets added once on top of the category sum.
       update.category_quantities = cq;
-      update.quantity = total || null;
+      update.quantity = total > 0 ? (headcountMode ? total + 1 : total) : null;
     } else if (quantity !== undefined) {
       const n = parseInt(quantity, 10);
       update.quantity = Number.isFinite(n) && n > 0 ? n : null;
