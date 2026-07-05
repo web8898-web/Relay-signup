@@ -265,16 +265,12 @@ export default function TaskDetailClient() {
         <TaskAnnouncement task={task} full={full} />
         {task.max_signups ? (
           <div className="pl-11 mt-3 mb-4">
-            <div
-              className={`flex items-center rounded-2xl border px-3.5 py-2.5 ${
-                full ? "bg-rose-50 border-rose-200" : "bg-emerald-50 border-emerald-200"
-              }`}
-            >
+            <div className="flex items-center px-0.5">
               <Users size={15} className={`shrink-0 mr-2.5 ${full ? "text-rose-500" : "text-emerald-500"}`} />
-              <span className={`text-xs font-semibold shrink-0 mr-3.5 ${full ? "text-rose-800" : "text-emerald-800"}`}>
+              <span className={`text-xs font-semibold shrink-0 mr-3.5 ${full ? "text-rose-500" : "text-emerald-700"}`}>
                 {totalHeadcount} / {task.max_signups} 人{full ? " · 已額滿" : ""}
               </span>
-              <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${full ? "bg-rose-200" : "bg-emerald-200"}`}>
+              <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${full ? "bg-rose-100" : "bg-emerald-100"}`}>
                 <div
                   className={`h-full rounded-full ${full ? "bg-rose-500" : "bg-emerald-500"}`}
                   style={{ width: `${Math.min(100, (totalHeadcount / task.max_signups) * 100)}%` }}
