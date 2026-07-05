@@ -61,7 +61,7 @@ export default function TaskShareCard({ task, signupCount, onOpen, previewOnly, 
           <PenLine size={16} /> 我要報名
         </button>
         {previewOnly && (
-          <p className="text-center text-[11px] text-gray-300 mt-2">這是預覽卡片，不會離開此頁</p>
+          <p className="text-center text-[11px] text-gray-300 mt-2">這是卡片預覽畫面，「我要報名」按鈕無法操作</p>
         )}
       </div>
 
