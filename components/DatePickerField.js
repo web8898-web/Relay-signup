@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
 
 const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
 
@@ -26,7 +26,7 @@ function isSameDay(a, b) {
 // elsewhere in this app for confirmation modals — so the "今天" / "確認"
 // buttons always land in a fixed, easy-to-reach spot regardless of where
 // the trigger sits on the page.
-export default function DatePickerField({ value, onChange, className = "", placeholder = "選擇日期" }) {
+export default function DatePickerField({ value, onChange, className = "", placeholder = "選擇日期", minDate, maxDate, rangeErrorMessage }) {
   const [open, setOpen] = useState(false);
   const [viewDate, setViewDate] = useState(() => parseDateStr(value));
   const [selected, setSelected] = useState(() => parseDateStr(value));
@@ -44,6 +44,13 @@ export default function DatePickerField({ value, onChange, className = "", place
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const cells = [...Array(firstDay).fill(null), ...Array(daysInMonth).keys()].map((v) => (v === null ? null : v + 1));
 
+  const selectedStr = toDateStr(selected);
+  // Cross-field validation — e.g. the start-date picker gets passed the
+  // current end date as `maxDate`, so picking something later than that
+  // is flagged here and blocks confirming, instead of silently saving an
+  // invalid range like "7/7 ~ 7/4".
+  const outOfRange = (maxDate && selectedStr > maxDate) || (minDate && selectedStr < minDate);
+
   function goToday() {
     const today = new Date();
     setViewDate(today);
@@ -51,6 +58,7 @@ export default function DatePickerField({ value, onChange, className = "", place
   }
 
   function confirm() {
+    if (outOfRange) return;
     onChange(toDateStr(selected));
     setOpen(false);
   }
@@ -105,8 +113,10 @@ export default function DatePickerField({ value, onChange, className = "", place
               {cells.map((d, i) => {
                 if (d === null) return <div key={i} />;
                 const cellDate = new Date(year, month, d);
+                const cellStr = toDateStr(cellDate);
                 const isSelected = isSameDay(cellDate, selected);
                 const isToday = isSameDay(cellDate, new Date());
+                const cellOutOfRange = (maxDate && cellStr > maxDate) || (minDate && cellStr < minDate);
                 return (
                   <button
                     type="button"
@@ -115,7 +125,11 @@ export default function DatePickerField({ value, onChange, className = "", place
                     style={{ WebkitTapHighlightColor: "transparent" }}
                     className={`w-9 h-9 mx-auto flex items-center justify-center rounded-full text-sm font-medium transition-colors ${
                       isSelected
-                        ? "bg-emerald-500 text-white"
+                        ? outOfRange
+                          ? "bg-rose-100 text-rose-500"
+                          : "bg-emerald-500 text-white"
+                        : cellOutOfRange
+                        ? "text-gray-300 hover:bg-gray-50"
                         : isToday
                         ? "text-emerald-600 border border-emerald-300"
                         : "text-gray-600 hover:bg-emerald-50"
@@ -127,6 +141,13 @@ export default function DatePickerField({ value, onChange, className = "", place
               })}
             </div>
 
+            {outOfRange && (
+              <p className="text-xs text-rose-500 text-center mt-3 flex items-center justify-center gap-1">
+                <AlertCircle size={12} className="shrink-0" />
+                {rangeErrorMessage || "日期範圍不正確"}
+              </p>
+            )}
+
             <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
               <button type="button" onClick={goToday} className="text-sm text-emerald-600 font-semibold hover:text-emerald-700 px-2 py-2">
                 今天
@@ -134,7 +155,12 @@ export default function DatePickerField({ value, onChange, className = "", place
               <button
                 type="button"
                 onClick={confirm}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold px-6 py-2.5 rounded-full transition"
+                disabled={outOfRange}
+                className={`text-sm font-semibold px-6 py-2.5 rounded-full transition ${
+                  outOfRange
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-emerald-500 hover:bg-emerald-600 text-white"
+                }`}
               >
                 確認
               </button>
