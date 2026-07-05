@@ -1,10 +1,8 @@
 "use client";
 import { MessageCircle, PenLine, Calendar, Users, FileText, ClipboardEdit } from "lucide-react";
-import { taskStatus, chipClass } from "@/lib/utils";
+import { chipClass } from "@/lib/utils";
 
 export default function TaskShareCard({ task, signupCount, onOpen, previewOnly, onPreviewTap }) {
-  const st = taskStatus(task);
-
   function handleButtonClick() {
     if (previewOnly) {
       onPreviewTap?.();
@@ -19,9 +17,6 @@ export default function TaskShareCard({ task, signupCount, onOpen, previewOnly, 
         <div className="flex items-center justify-between">
           <p className="text-lg font-bold text-white tracking-wide">接龍報名小助手</p>
           <MessageCircle size={26} className="text-white" strokeWidth={2.2} />
-        </div>
-        <div className="flex justify-end mt-3">
-          <span className="text-[10px] px-2.5 py-1 rounded-full bg-white/25 text-white font-medium">{st.label}</span>
         </div>
       </div>
       <svg viewBox="0 0 400 28" preserveAspectRatio="none" className="w-full h-7 block -mt-4">
