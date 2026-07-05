@@ -12,7 +12,7 @@ import { useLineProfile } from "@/lib/useLineProfile";
 import { avatarClass, chipClass, todayStr } from "@/lib/utils";
 
 const fieldClass =
-  "w-full bg-gray-50 border-none rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-gray-400 transition focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-white";
+  "w-full bg-gray-50 border-none rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-xs placeholder:text-gray-400 transition focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-white";
 
 export default function CreateTaskPage() {
   const router = useRouter();
@@ -235,9 +235,21 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
 
         <Field label="日期">
           <div className="flex items-center gap-2">
-            <DatePickerField value={startDate} onChange={setStartDate} className={`flex-1 ${fieldClass} py-2.5`} />
+            <DatePickerField
+              value={startDate}
+              onChange={setStartDate}
+              className={`flex-1 ${fieldClass} py-2.5`}
+              maxDate={endDate}
+              rangeErrorMessage="起始日期不能晚於結束日期"
+            />
             <span className="text-gray-300">~</span>
-            <DatePickerField value={endDate} onChange={setEndDate} className={`flex-1 ${fieldClass} py-2.5`} />
+            <DatePickerField
+              value={endDate}
+              onChange={setEndDate}
+              className={`flex-1 ${fieldClass} py-2.5`}
+              minDate={startDate}
+              rangeErrorMessage="結束日期不能早於起始日期"
+            />
           </div>
         </Field>
 
