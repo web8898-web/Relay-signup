@@ -72,7 +72,7 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
     {
       target: "dates",
       title: "選擇日期",
-      text: "設定任務的起訖日期，點一下就會打開日期選擇器。",
+      text: "設定任務的起始日和到期日，點一下就會打開日期選擇器。",
     },
     {
       target: "max",
