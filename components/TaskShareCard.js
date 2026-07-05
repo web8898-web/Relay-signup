@@ -16,11 +16,12 @@ export default function TaskShareCard({ task, signupCount, onOpen, previewOnly, 
   return (
     <div className="relative rounded-[1.75rem] overflow-hidden shadow-md border border-emerald-100 bg-white">
       <div className="relative bg-gradient-to-br from-emerald-400 to-emerald-600 px-5 pt-5 pb-6">
-        <div className="flex items-start justify-between">
-          <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
-            <MessageCircle size={24} className="text-white" />
-          </div>
-          <span className="mt-1 text-[10px] px-2.5 py-1 rounded-full bg-white/25 text-white font-medium">{st.label}</span>
+        <div className="flex items-center justify-between">
+          <p className="text-lg font-bold text-white tracking-wide">接龍報名小助手</p>
+          <MessageCircle size={26} className="text-white" strokeWidth={2.2} />
+        </div>
+        <div className="flex justify-end mt-3">
+          <span className="text-[10px] px-2.5 py-1 rounded-full bg-white/25 text-white font-medium">{st.label}</span>
         </div>
       </div>
       <svg viewBox="0 0 400 28" preserveAspectRatio="none" className="w-full h-7 block -mt-4">
