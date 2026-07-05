@@ -263,10 +263,31 @@ export default function TaskDetailClient() {
 
       <div className="px-6 pt-4">
         <TaskAnnouncement task={task} full={full} />
-        <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-4 mb-2">
-          <Users size={13} />
-          {task.max_signups ? `${totalHeadcount} / ${task.max_signups} 人已報名` : `${totalHeadcount} 人已接龍`}
-        </div>
+        {task.max_signups ? (
+          <div className="pl-11 mt-3 mb-1">
+            <div
+              className={`flex items-center rounded-2xl border px-3.5 py-2.5 ${
+                full ? "bg-rose-50 border-rose-200" : "bg-emerald-50 border-emerald-200"
+              }`}
+            >
+              <Users size={15} className={`shrink-0 mr-2.5 ${full ? "text-rose-500" : "text-emerald-500"}`} />
+              <span className={`text-xs font-semibold shrink-0 mr-3.5 ${full ? "text-rose-800" : "text-emerald-800"}`}>
+                {totalHeadcount} / {task.max_signups} 人{full ? " · 已額滿" : ""}
+              </span>
+              <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${full ? "bg-rose-200" : "bg-emerald-200"}`}>
+                <div
+                  className={`h-full rounded-full ${full ? "bg-rose-500" : "bg-emerald-500"}`}
+                  style={{ width: `${Math.min(100, (totalHeadcount / task.max_signups) * 100)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-4 mb-2 pl-11">
+            <Users size={13} />
+            {totalHeadcount} 人已接龍
+          </div>
+        )}
       </div>
 
       <div ref={listRef} className="flex-1 px-6 pb-3 overflow-y-auto scroll-smooth min-w-0">
