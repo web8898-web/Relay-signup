@@ -113,6 +113,7 @@ export default function HomePage() {
           steps={[
             {
               target: "create-entry",
+              tapTarget: true,
               title: "從這裡開始",
               text: "點「建立任務」，我們一步一步帶你建立第一個任務，並分享到 LINE 群組。",
             },
