@@ -108,7 +108,15 @@ export default function ShareTaskPage() {
           task={task}
           signupCount={signupCount}
           previewOnly
-          onPreviewTap={() => showToast("這是預覽卡片，請用下方「分享到 LINE」分享出去")}
+          onPreviewTap={() =>
+            showToast(
+              <>
+                這是預覽卡片，內容確認無誤後，
+                <br />
+                請點擊下方「分享到 LINE」即可分享。
+              </>
+            )
+          }
         />
 
         <div className="mt-6 flex flex-col gap-3">
