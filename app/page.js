@@ -1,22 +1,29 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ClipboardList, PenLine, ChevronRight, MessageCircle, Send, RotateCcw } from "lucide-react";
-import ImageModal from "@/components/ImageModal";
+import { ClipboardList, PenLine, ChevronRight, MessageCircle, RotateCcw } from "lucide-react";
+import OnboardingTour, {
+  getOnboardingState,
+  setOnboardingState,
+  resetOnboarding,
+} from "@/components/OnboardingTour";
 import { useLineProfile } from "@/lib/useLineProfile";
-import { resetOnboarding } from "@/components/OnboardingTour";
 import { avatarClass } from "@/lib/utils";
 
-const GUIDES = [
-  { key: "create", title: "如何建立任務？", src: "/how-to-create-task.png", icon: PenLine },
-  { key: "signup", title: "如何接龍報名？", src: "/how-to-signup.png", icon: Send },
-];
-
 export default function HomePage() {
-  const [modal, setModal] = useState(null);
   const { profile } = useLineProfile();
   const router = useRouter();
+
+  // 首次操作教學導覽的起點：本機沒有任何進度標記代表第一次來，
+  // 聚光燈指向「建立任務」按鈕。點進去之後，建立任務頁會接手
+  // 後續步驟（那邊同樣是看到沒有標記就自動開始）。
+  const [showTour, setShowTour] = useState(false);
+  useEffect(() => {
+    if (getOnboardingState()) return;
+    const t = setTimeout(() => setShowTour(true), 600);
+    return () => clearTimeout(t);
+  }, []);
 
   return (
     <div className="flex-1 flex flex-col min-w-0">
@@ -55,6 +62,7 @@ export default function HomePage() {
 
         <Link
           href="/create"
+          data-tour="create-entry"
           className="group w-full bg-white border border-gray-200 rounded-3xl p-5 flex items-center gap-4 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition"
         >
           <div className="w-12 h-12 rounded-2xl bg-gray-100 text-gray-600 flex items-center justify-center shrink-0">
@@ -69,35 +77,17 @@ export default function HomePage() {
 
         <div className="mt-2">
           <p className="text-xs font-semibold text-gray-400 mb-2 px-1">使用教學</p>
-          <div className="grid grid-cols-2 gap-3">
-            {GUIDES.map((g) => {
-              const Icon = g.icon;
-              return (
-                <button
-                  key={g.key}
-                  onClick={() => setModal(g)}
-                  className="group bg-white border border-gray-200 rounded-2xl p-4 flex flex-col gap-1 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <Icon size={15} className="text-emerald-500 shrink-0" />
-                    <p className="text-sm font-semibold text-gray-800 whitespace-nowrap">{g.title}</p>
-                  </div>
-                  <p className="text-[11px] text-gray-400 whitespace-nowrap pl-[21px]">查看圖文步驟</p>
-                </button>
-              );
-            })}
-          </div>
           <button
             onClick={() => {
-              // 清掉本機的教學進度標記，導覽就會在建立任務頁重新開始
+              // 清掉本機的教學進度標記，並立刻從首頁重新開始導覽
               resetOnboarding();
-              router.push("/create");
+              setShowTour(true);
             }}
-            className="group mt-3 w-full bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-3 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition"
+            className="group w-full bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-3 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition"
           >
             <RotateCcw size={15} className="text-emerald-500 shrink-0" />
             <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-800">重新播放導覽教學</p>
+              <p className="text-sm font-semibold text-gray-800">播放導覽教學</p>
               <p className="text-[11px] text-gray-400 mt-0.5">一步一步帶你建立任務並分享到 LINE</p>
             </div>
             <ChevronRight size={16} className="text-gray-300 group-hover:text-emerald-400 shrink-0" />
@@ -118,7 +108,28 @@ export default function HomePage() {
         </div>
       </div>
 
-      <ImageModal src={modal?.src} title={modal?.title} onClose={() => setModal(null)} />
+      {showTour && (
+        <OnboardingTour
+          steps={[
+            {
+              target: "create-entry",
+              title: "從這裡開始",
+              text: "點「建立任務」，我們一步一步帶你建立第一個任務，並分享到 LINE 群組。",
+            },
+          ]}
+          finishLabel="好，前往建立任務"
+          onFinish={() => {
+            // 不寫入任何標記，維持「還沒看過」的狀態，
+            // 建立任務頁載入時就會自動接續後面的導覽步驟。
+            setShowTour(false);
+            router.push("/create");
+          }}
+          onSkip={() => {
+            setOnboardingState("done");
+            setShowTour(false);
+          }}
+        />
+      )}
     </div>
   );
 }
