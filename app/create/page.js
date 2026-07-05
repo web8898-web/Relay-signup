@@ -215,7 +215,7 @@ function TaskForm({ profile, accessToken, onCreated, onLeave }) {
             />
             <button
               onClick={addCategory}
-              className="px-4 rounded-2xl bg-white border-2 border-emerald-500 text-emerald-500 text-sm font-semibold hover:bg-emerald-50 transition shrink-0"
+              className="px-4 rounded-2xl bg-white border border-emerald-500 text-emerald-500 text-sm font-medium hover:bg-emerald-50 transition shrink-0"
             >
               新增
             </button>
