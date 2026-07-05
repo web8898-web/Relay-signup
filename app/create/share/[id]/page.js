@@ -132,10 +132,7 @@ export default function ShareTaskPage() {
             previewOnly
             onPreviewTap={() =>
               showToast(
-                <>
-                  <span className="block whitespace-nowrap">這是預覽卡片，內容確認無誤後，</span>
-                  <span className="block whitespace-nowrap">請點擊下方「分享到 LINE」即可分享。</span>
-                </>
+                <span className="whitespace-nowrap">這是卡片預覽畫面，「我要報名」按鈕無法操作！</span>
               )
             }
           />
@@ -179,7 +176,7 @@ export default function ShareTaskPage() {
         </div>
 
 
-        <Toast className="bottom-24">
+        <Toast className="bottom-4">
           {toast && (
             <div className="bg-rose-500 text-white text-sm px-4 py-2.5 rounded-2xl shadow-lg max-w-[92%] flex flex-col items-center text-center leading-relaxed">
               {toast}
