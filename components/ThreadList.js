@@ -233,10 +233,10 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
                         <Edit2 size={11} /> 編輯
                       </button>
                       {confirmId === s.id ? (
-                        <span className="text-[11px] flex items-center gap-1.5">
-                          <span className="text-rose-400">確定刪除？</span>
-                          <button onClick={() => { onDelete(s.id); setConfirmId(null); }} className="text-rose-500 font-medium">是</button>
-                          <button onClick={() => setConfirmId(null)} className="text-gray-400">否</button>
+                        <span className="text-[11px] flex items-center gap-1">
+                          <span className="text-rose-400 mr-1">確定刪除？</span>
+                          <button onClick={() => { onDelete(s.id); setConfirmId(null); }} className="text-rose-500 font-medium px-2 py-1">是</button>
+                          <button onClick={() => setConfirmId(null)} className="text-gray-400 px-2 py-1">否</button>
                         </span>
                       ) : (
                         <button onClick={() => setConfirmId(s.id)} className="text-[11px] text-gray-400 hover:text-rose-500 flex items-center gap-0.5">
