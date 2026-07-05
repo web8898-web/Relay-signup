@@ -54,7 +54,7 @@ export default function ShareTaskPage() {
 
   function showToast(msg) {
     setToast(msg);
-    setTimeout(() => setToast(""), 2600);
+    setTimeout(() => setToast(""), 5200);
   }
 
   function taskUrl() {
