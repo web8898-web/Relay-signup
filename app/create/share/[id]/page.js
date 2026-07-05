@@ -6,6 +6,11 @@ import { TopBar } from "@/components/TopBar";
 import TaskShareCard from "@/components/TaskShareCard";
 import LoadingBubble from "@/components/LoadingBubble";
 import FadeIn from "@/components/FadeIn";
+import Toast from "@/components/Toast";
+import OnboardingTour, {
+  getOnboardingState,
+  setOnboardingState,
+} from "@/components/OnboardingTour";
 import { supabase } from "@/lib/supabaseClient";
 import { buildShareText, lineShareUrl, buildFlexMessage } from "@/lib/utils";
 import { liff } from "@/lib/liff";
@@ -17,6 +22,22 @@ export default function ShareTaskPage() {
   const [signupCount, setSignupCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
+
+  // 首次操作教學導覽的最後一步：建立頁的步驟看完後標記是
+  // "pending-share"，任務資料載入完成後，聚光燈指向「分享到 LINE」
+  // 按鈕。實際按下分享（或按「完成教學」）就把教學標記為完成。
+  const [showTour, setShowTour] = useState(false);
+  useEffect(() => {
+    if (loading || !task) return;
+    if (getOnboardingState() !== "pending-share") return;
+    const t = setTimeout(() => setShowTour(true), 500);
+    return () => clearTimeout(t);
+  }, [loading, task]);
+
+  function finishTour() {
+    setOnboardingState("done");
+    setShowTour(false);
+  }
 
   useEffect(() => {
     (async () => {
@@ -51,6 +72,7 @@ export default function ShareTaskPage() {
 
   async function handleLineShare() {
     if (!task) return;
+    if (showTour) finishTour();
     const url = shareUrl();
     // This is purely a short tap-feedback state, not tied to when the LINE
     // share sheet's own promise actually resolves — that timing is
@@ -100,8 +122,7 @@ export default function ShareTaskPage() {
   if (!task) return null;
 
   return (
-    <>
-      <FadeIn className="flex-1 flex flex-col relative min-w-0">
+    <FadeIn className="flex-1 flex flex-col relative min-w-0">
         <TopBar title="分享任務" onBack={() => router.push("/my-tasks")} />
         <div className="flex-1 px-5 py-5 overflow-y-auto">
           <p className="text-xs text-gray-400 mb-3 text-center">這是分享到 LINE 群組時，成員會看到的卡片樣式</p>
@@ -121,6 +142,7 @@ export default function ShareTaskPage() {
 
           <div className="mt-6 flex flex-col gap-3">
             <button
+              data-tour="line-share"
               onClick={handleLineShare}
               disabled={sharing}
               className="w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 active:scale-[0.97] disabled:opacity-80 text-white rounded-full py-3 font-semibold flex items-center justify-center gap-2 shadow-md shadow-emerald-200 transition"
@@ -161,13 +183,29 @@ export default function ShareTaskPage() {
             回到任務清單
           </button>
         </div>
-      </FadeIn>
 
-      {toast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-sm px-4 py-2.5 rounded-2xl shadow-lg z-50 max-w-[92%] flex flex-col items-center justify-center text-center leading-relaxed">
-          {toast}
-        </div>
-      )}
-    </>
+        <Toast className="bottom-24">
+          {toast && (
+            <div className="bg-rose-500 text-white text-sm px-4 py-2.5 rounded-2xl shadow-lg max-w-[92%] flex flex-col items-center text-center leading-relaxed">
+              {toast}
+            </div>
+          )}
+        </Toast>
+
+        {showTour && (
+          <OnboardingTour
+            steps={[
+              {
+                target: "line-share",
+                title: "最後一步：分享到 LINE",
+                text: "任務建立好了！按這顆按鈕，把報名卡片分享到你的 LINE 群組或好友，大家點卡片就能直接報名。",
+              },
+            ]}
+            finishLabel="完成教學"
+            onFinish={finishTour}
+            onSkip={finishTour}
+          />
+        )}
+      </FadeIn>
   );
 }
