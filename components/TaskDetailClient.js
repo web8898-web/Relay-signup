@@ -267,7 +267,7 @@ export default function TaskDetailClient() {
           <div className="pl-11 mt-3 mb-4">
             <div className="flex items-center px-0.5">
               <Users size={15} className={`shrink-0 mr-2.5 ${full ? "text-rose-500" : "text-emerald-500"}`} />
-              <span className={`text-xs font-semibold shrink-0 mr-3.5 ${full ? "text-rose-500" : "text-emerald-700"}`}>
+              <span className={`text-xs font-semibold shrink-0 mr-3.5 ${full ? "text-rose-500" : "text-emerald-500"}`}>
                 {totalHeadcount} / {task.max_signups} 人{full ? " · 已額滿" : ""}
               </span>
               <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${full ? "bg-rose-100" : "bg-emerald-100"}`}>
