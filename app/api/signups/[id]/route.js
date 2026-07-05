@@ -10,19 +10,42 @@ async function assertOwnership(supabase, signupId, ownerToken) {
 export async function PUT(request, { params }) {
   try {
     const body = await request.json();
-    const { name, note, categories, owner_token } = body;
+    const { name, note, categories, quantity, category_quantities, owner_token } = body;
     if (!owner_token) return NextResponse.json({ error: "缺少驗證資訊" }, { status: 400 });
 
     const supabase = getSupabaseAdmin();
     await assertOwnership(supabase, params.id, owner_token);
 
+    const update = {
+      name: String(name).slice(0, 60),
+      note: String(note || "").slice(0, 500),
+      categories: Array.isArray(categories) ? categories.slice(0, 30).map((c) => String(c).slice(0, 60)) : [],
+    };
+
+    // Quantity editing mirrors the signup form's two modes: per-category
+    // (category_quantities is an object of tag -> number) or a single
+    // lump quantity — whichever one the client actually sent.
+    if (category_quantities && typeof category_quantities === "object") {
+      const cq = {};
+      let total = 0;
+      for (const [cat, val] of Object.entries(category_quantities)) {
+        const n = parseInt(val, 10);
+        if (Number.isFinite(n) && n > 0) {
+          cq[cat] = n;
+          total += n;
+        }
+      }
+      update.category_quantities = cq;
+      update.quantity = total || null;
+    } else if (quantity !== undefined) {
+      const n = parseInt(quantity, 10);
+      update.quantity = Number.isFinite(n) && n > 0 ? n : null;
+      update.category_quantities = {};
+    }
+
     const { data, error } = await supabase
       .from("signups")
-      .update({
-        name: String(name).slice(0, 60),
-        note: String(note || "").slice(0, 500),
-        categories: Array.isArray(categories) ? categories.slice(0, 30).map((c) => String(c).slice(0, 60)) : [],
-      })
+      .update(update)
       .eq("id", params.id)
       .select()
       .single();
