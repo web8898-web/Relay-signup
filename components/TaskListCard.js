@@ -287,12 +287,17 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
           </div>
         </div>
 
-        {expanded && (
-          <div className="px-4 pb-4">
-            <div className="bg-emerald-50/60 border border-emerald-100 rounded-xl px-3.5 py-3 mb-3">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className={`text-[10px] px-2 py-0.5 rounded-full border ${st.cls}`}>{st.label}</span>
-              </div>
+        <div
+          className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
+            expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+          }`}
+        >
+          <div className="overflow-hidden">
+            <div className="px-4 pb-4">
+              <div className="bg-emerald-50/60 border border-emerald-100 rounded-xl px-3.5 py-3 mb-3">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full border ${st.cls}`}>{st.label}</span>
+                </div>
               {task.description && (
                 <p className="text-sm text-gray-600 leading-relaxed mb-2 whitespace-pre-wrap">{task.description}</p>
               )}
@@ -419,8 +424,9 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
               </button>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
+  </div>
   );
 }
