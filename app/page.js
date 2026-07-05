@@ -1,9 +1,11 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { ClipboardList, PenLine, ChevronRight, MessageCircle, Send } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ClipboardList, PenLine, ChevronRight, MessageCircle, Send, RotateCcw } from "lucide-react";
 import ImageModal from "@/components/ImageModal";
 import { useLineProfile } from "@/lib/useLineProfile";
+import { resetOnboarding } from "@/components/OnboardingTour";
 import { avatarClass } from "@/lib/utils";
 
 const GUIDES = [
@@ -14,6 +16,7 @@ const GUIDES = [
 export default function HomePage() {
   const [modal, setModal] = useState(null);
   const { profile } = useLineProfile();
+  const router = useRouter();
 
   return (
     <div className="flex-1 flex flex-col min-w-0">
@@ -84,6 +87,21 @@ export default function HomePage() {
               );
             })}
           </div>
+          <button
+            onClick={() => {
+              // 清掉本機的教學進度標記，導覽就會在建立任務頁重新開始
+              resetOnboarding();
+              router.push("/create");
+            }}
+            className="group mt-3 w-full bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-3 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition"
+          >
+            <RotateCcw size={15} className="text-emerald-500 shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-gray-800">重新播放導覽教學</p>
+              <p className="text-[11px] text-gray-400 mt-0.5">一步一步帶你建立任務並分享到 LINE</p>
+            </div>
+            <ChevronRight size={16} className="text-gray-300 group-hover:text-emerald-400 shrink-0" />
+          </button>
         </div>
 
         <div className="mt-auto text-center text-[11px] text-gray-300 pt-8">
