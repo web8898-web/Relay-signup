@@ -142,22 +142,26 @@ export default function OnboardingTour({ steps, finishLabel = "知道了", onFin
 
     let settle = null;
     const r0 = el.getBoundingClientRect();
-    const reserve = 260; // 目標下方要預留給說明氣泡的空間
     const sc = scrollParentOf(el);
     if (sc) {
-      const cTop = sc.getBoundingClientRect().top;
-      const outTop = r0.top < cTop + 12;
-      const outBottom = r0.bottom > window.innerHeight - reserve;
-      if (outTop || outBottom) {
-        // 捲到讓目標貼近容器頂端的固定錨點；捲動期間關閉滑動
-        // 動畫（亮框直接跟著座標走），捲完再打開。
+      // 只有目標「真的被畫面切到」才捲動，而且只捲讓它完整露出
+      // 的最小距離。目標下方不必預留氣泡空間——空間不夠時氣泡
+      // 會自動改放到目標上方，所以不需要為了氣泡搬動整個畫面。
+      const cRect = sc.getBoundingClientRect();
+      const viewTop = Math.max(cRect.top, 0);
+      const viewBottom = Math.min(cRect.bottom, window.innerHeight);
+      const margin = 16;
+      let delta = 0;
+      if (r0.top < viewTop + margin) {
+        delta = r0.top - (viewTop + margin); // 被上緣切到：往上捲一點點
+      } else if (r0.bottom > viewBottom - margin) {
+        delta = r0.bottom - (viewBottom - margin); // 被下緣切到：往下捲一點點
+      }
+      if (Math.abs(delta) > 1) {
+        // 捲動期間關閉滑動動畫（亮框直接跟著座標走），捲完再打開。
         setAnimate(false);
-        const anchor = cTop + 20;
         const maxScroll = sc.scrollHeight - sc.clientHeight;
-        const next = Math.max(
-          0,
-          Math.min(sc.scrollTop + (r0.top - anchor), maxScroll)
-        );
+        const next = Math.max(0, Math.min(sc.scrollTop + delta, maxScroll));
         sc.scrollTo({ top: next, behavior: "smooth" });
         settle = setTimeout(() => {
           measure();
