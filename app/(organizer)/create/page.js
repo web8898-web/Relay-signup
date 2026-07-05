@@ -60,6 +60,11 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
       text: "先幫這個任務取個名字，例如「週日爬山健行」「週五團購水果」。標題是唯一必填的欄位。",
     },
     {
+      target: "description",
+      title: "填寫簡介（選填）",
+      text: "簡單說明這個任務在做什麼，例如集合時間地點、團購截止日，報名的人在報名頁就看得到。",
+    },
+    {
       target: "categories",
       title: "設定分類（選填）",
       text: "可以加入幾個分類讓報名的人勾選，例如帶小孩、帶朋友，或雞排、珍奶等品項，適合分組或團購的場景。",
@@ -70,9 +75,24 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
       text: "設定任務的起訖日期，點一下就會打開日期選擇器。",
     },
     {
+      target: "max",
+      title: "報名人數上限（選填）",
+      text: "設定最多幾人可以報名，額滿後就無法再報名。不填代表不限人數。",
+    },
+    {
+      target: "unit",
+      title: "數量單位（選填）",
+      text: "如果報名需要填數量（例如團購幾份），在這裡填單位，像「份」「斤」「個」。填了之後，報名的人才會看到數量欄位。",
+    },
+    {
+      target: "note",
+      title: "備註（選填）",
+      text: "其他想提醒大家的事項，例如集合地點、付款方式。",
+    },
+    {
       target: "save",
       title: "儲存任務",
-      text: "全部填好後，按這顆按鈕就會建立任務，接著會帶你到分享頁，把任務發到 LINE 群組。",
+      text: "全部填好後，按這顆按鈕建立任務。完成後會跳到分享頁，接續最後一步教學。",
     },
   ];
 
@@ -176,7 +196,7 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
           />
         </Field>
 
-        <Field label="簡介">
+        <Field label="簡介" tourId="description">
           <AutoGrowTextarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -235,7 +255,7 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
           </div>
         </Field>
 
-        <Field label="報名人數上限（選填，不填代表不限人數）">
+        <Field label="報名人數上限（選填，不填代表不限人數）" tourId="max">
           <input
             type="number"
             min="1"
@@ -247,7 +267,7 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
           />
         </Field>
 
-        <Field label="數量單位（選填，例如：份、斤、個——填了報名的人才會看到數量欄位）">
+        <Field label="數量單位（選填，例如：份、斤、個——填了報名的人才會看到數量欄位）" tourId="unit">
           <input
             value={quantityUnit}
             onChange={(e) => setQuantityUnit(e.target.value)}
@@ -256,7 +276,7 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
           />
         </Field>
 
-        <Field label="備註">
+        <Field label="備註" tourId="note">
           <AutoGrowTextarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
