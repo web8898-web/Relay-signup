@@ -215,7 +215,7 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-300"
           />
         </Field>
         <Field label="簡介">
@@ -223,7 +223,7 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             minRows={2}
-            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-300"
           />
         </Field>
         <Field label="分類（自訂，選填）">
@@ -233,7 +233,7 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
               onChange={(e) => setCatInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCategory())}
               placeholder="例如：職位分類、組別分類、產品分類"
-              className="flex-1 border border-gray-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              className="flex-1 border border-gray-200 rounded-2xl px-4 py-2.5 text-sm placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-300"
             />
             <button onClick={addCategory} className="px-4 rounded-2xl bg-white border border-emerald-500 text-emerald-500 text-sm font-medium hover:bg-emerald-50 transition shrink-0">新增</button>
           </div>
@@ -255,12 +255,16 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
               value={startDate}
               onChange={setStartDate}
               className="flex-1 border border-gray-200 rounded-2xl px-3 py-2.5 text-sm"
+              maxDate={endDate}
+              rangeErrorMessage="起始日期不能晚於結束日期"
             />
             <span className="text-gray-300">~</span>
             <DatePickerField
               value={endDate}
               onChange={setEndDate}
               className="flex-1 border border-gray-200 rounded-2xl px-3 py-2.5 text-sm"
+              minDate={startDate}
+              rangeErrorMessage="結束日期不能早於起始日期"
             />
           </div>
         </Field>
@@ -272,7 +276,7 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
             value={maxSignups}
             onChange={(e) => setMaxSignups(e.target.value)}
             placeholder="例如：20"
-            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-300"
           />
         </Field>
         <Field label="數量單位（選填，例如：份、斤、個——填了報名的人才會看到數量欄位）">
@@ -280,7 +284,7 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
             value={quantityUnit}
             onChange={(e) => setQuantityUnit(e.target.value)}
             placeholder="例如：份"
-            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-300"
           />
         </Field>
         <Field label="備註">
@@ -288,7 +292,7 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
             value={note}
             onChange={(e) => setNote(e.target.value)}
             minRows={3}
-            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-300"
           />
         </Field>
       </div>
