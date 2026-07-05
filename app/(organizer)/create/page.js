@@ -92,7 +92,7 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
     {
       target: "save",
       title: "儲存任務",
-      text: "全部填好後，按這顆按鈕建立任務。完成後會跳到分享頁，接續最後一步教學。",
+      text: "全部填寫好後，按這個按鈕，建立任務。完成後會跳到分享頁，再接續最後一步教學。",
     },
   ];
 
