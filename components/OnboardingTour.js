@@ -40,7 +40,12 @@ export function resetOnboarding() {
   } catch (e) {}
 }
 
-// steps: [{ target: "data-tour 屬性值", title: "標題", text: "說明文字" }]
+// steps: [{ target, title, text, tapTarget }]
+//   target:    目標元素的 data-tour 屬性值
+//   tapTarget: true 代表這一步要使用者「實際點下」亮框裡的按鈕
+//              （例如首頁的建立任務、分享頁的分享到 LINE），此時
+//              亮框內可以點；預設 false，導覽期間整個畫面都被鎖住、
+//              欄位不能點選，避免誤觸輸入框彈出鍵盤造成畫面錯位。
 // finishLabel: 最後一步按鈕的文字（預設「知道了」）
 // onFinish: 按完最後一步的「完成」按鈕時呼叫
 // onSkip:   按「略過教學」時呼叫
@@ -104,8 +109,51 @@ export default function OnboardingTour({ steps, finishLabel = "知道了", onFin
 
   const pad = 6; // 亮框比目標元素四周各外擴一點，看起來比較舒服
 
+  // 亮框（含外擴留白）的實際範圍，點擊阻擋層以此為界
+  const hole = {
+    top: Math.max(rect.top - pad, 0),
+    left: Math.max(rect.left - pad, 0),
+    width: rect.width + pad * 2,
+    height: rect.height + pad * 2,
+  };
+
   return createPortal(
     <div className="fixed inset-0 z-[80] pointer-events-none">
+      {/* 點擊阻擋層：導覽期間鎖住整個畫面，避免誤觸欄位彈出鍵盤
+          造成畫面錯位。用四片透明區塊把亮框以外全部蓋住；亮框本身
+          只有在 tapTarget 的步驟才留空讓人點，否則也一併蓋住。 */}
+      <div
+        className="fixed left-0 right-0 top-0 pointer-events-auto"
+        style={{ height: hole.top }}
+      />
+      <div
+        className="fixed left-0 right-0 bottom-0 pointer-events-auto"
+        style={{ top: hole.top + hole.height }}
+      />
+      <div
+        className="fixed left-0 pointer-events-auto"
+        style={{ top: hole.top, width: hole.left, height: hole.height }}
+      />
+      <div
+        className="fixed right-0 pointer-events-auto"
+        style={{
+          top: hole.top,
+          left: hole.left + hole.width,
+          height: hole.height,
+        }}
+      />
+      {!step.tapTarget && (
+        <div
+          className="fixed pointer-events-auto"
+          style={{
+            top: hole.top,
+            left: hole.left,
+            width: hole.width,
+            height: hole.height,
+          }}
+        />
+      )}
+
       {/* 聚光燈亮框：用超大 box-shadow 把亮框以外的整個畫面壓暗 */}
       <div
         className="fixed rounded-2xl transition-all duration-300 ease-out"
