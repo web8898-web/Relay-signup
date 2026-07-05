@@ -76,8 +76,15 @@ export default function OnboardingTour({ steps, finishLabel = "知道了", onFin
   const step = steps[index];
   const isLast = index === steps.length - 1;
 
-  // 量測目前這一步的目標元素位置：先把它捲到畫面中間，再持續追蹤
-  // 它的實際座標（捲動、轉向、鍵盤彈出都會重新量測）。
+  // 亮框與氣泡移動時是否套用滑動動畫：平常開著，讓「同畫面換
+  // 步驟」時亮框優雅地滑過去；頁面正在捲動時關掉，避免動畫
+  // 追著捲動座標跑造成畫面跳動。
+  const [animate, setAnimate] = useState(true);
+
+  // 量測目前這一步的目標元素位置。捲動採「必要時才動」策略：
+  // 目標已經在舒適範圍內（看得到、下方留得出氣泡空間）就完全
+  // 不捲動，避免每一步都重新置中造成畫面跳動；只有目標超出
+  // 範圍時，才把它平滑捲到接近頂端的固定錨點。
   useEffect(() => {
     if (!mounted || !step) return;
 
@@ -97,9 +104,49 @@ export default function OnboardingTour({ steps, finishLabel = "知道了", onFin
       setPlace(r.bottom + 230 <= window.innerHeight ? "below" : "above");
     }
 
+    // 往上找到目標實際所在的可捲動容器（表單區是 overflow-y-auto）
+    function scrollParentOf(node) {
+      let p = node.parentElement;
+      while (p) {
+        const cs = window.getComputedStyle(p);
+        if (
+          /(auto|scroll)/.test(cs.overflowY) &&
+          p.scrollHeight > p.clientHeight + 1
+        ) {
+          return p;
+        }
+        p = p.parentElement;
+      }
+      return null;
+    }
+
     measure();
-    el.scrollIntoView({ block: "center", behavior: "smooth" });
-    const settle = setTimeout(measure, 420);
+
+    let settle = null;
+    const r0 = el.getBoundingClientRect();
+    const reserve = 260; // 目標下方要預留給說明氣泡的空間
+    const sc = scrollParentOf(el);
+    if (sc) {
+      const cTop = sc.getBoundingClientRect().top;
+      const outTop = r0.top < cTop + 12;
+      const outBottom = r0.bottom > window.innerHeight - reserve;
+      if (outTop || outBottom) {
+        // 捲到讓目標貼近容器頂端的固定錨點；捲動期間關閉滑動
+        // 動畫（亮框直接跟著座標走），捲完再打開。
+        setAnimate(false);
+        const anchor = cTop + 20;
+        const maxScroll = sc.scrollHeight - sc.clientHeight;
+        const next = Math.max(
+          0,
+          Math.min(sc.scrollTop + (r0.top - anchor), maxScroll)
+        );
+        sc.scrollTo({ top: next, behavior: "smooth" });
+        settle = setTimeout(() => {
+          measure();
+          setAnimate(true);
+        }, 450);
+      }
+    }
 
     function onMove() {
       cancelAnimationFrame(rafRef.current);
@@ -108,7 +155,7 @@ export default function OnboardingTour({ steps, finishLabel = "知道了", onFin
     window.addEventListener("resize", onMove);
     window.addEventListener("scroll", onMove, true);
     return () => {
-      clearTimeout(settle);
+      if (settle) clearTimeout(settle);
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener("resize", onMove);
       window.removeEventListener("scroll", onMove, true);
@@ -171,7 +218,7 @@ export default function OnboardingTour({ steps, finishLabel = "知道了", onFin
 
       {/* 聚光燈亮框：用超大 box-shadow 把亮框以外的整個畫面壓暗 */}
       <div
-        className="fixed rounded-2xl transition-all duration-300 ease-out"
+        className={`fixed rounded-2xl ${animate ? "transition-all duration-300 ease-out" : ""}`}
         style={{
           top: rect.top - pad,
           left: rect.left - pad,
@@ -185,7 +232,7 @@ export default function OnboardingTour({ steps, finishLabel = "知道了", onFin
 
       {/* 說明氣泡 */}
       <div
-        className="fixed left-1/2 -translate-x-1/2 w-[calc(100%-40px)] max-w-sm pointer-events-auto transition-all duration-300 ease-out"
+        className={`fixed left-1/2 -translate-x-1/2 w-[calc(100%-40px)] max-w-sm pointer-events-auto ${animate ? "transition-all duration-300 ease-out" : ""}`}
         style={
           place === "below"
             ? { top: rect.top + rect.height + pad + 14 }
