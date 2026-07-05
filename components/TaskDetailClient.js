@@ -293,6 +293,7 @@ export default function TaskDetailClient() {
           categories={task.categories}
           quantityUnit={task.quantity_unit}
           nameOnly={viewOnly}
+          closed={closed}
           onUpdate={handleUpdate}
           onDelete={handleDelete}
         />
