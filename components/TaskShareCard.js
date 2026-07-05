@@ -13,7 +13,7 @@ export default function TaskShareCard({ task, signupCount, onOpen, previewOnly, 
 
   return (
     <div className="relative rounded-[1.75rem] overflow-hidden shadow-md border border-emerald-100 bg-white">
-      <div className="relative bg-gradient-to-br from-emerald-400 to-emerald-600 px-5 pt-5 pb-6">
+      <div className="relative bg-gradient-to-br from-emerald-400 to-emerald-600 px-5 pt-4 pb-6">
         <div className="flex items-center justify-between">
           <p className="text-base font-bold text-white tracking-wide">接龍報名小助手</p>
           <MessageCircle size={26} className="text-white" strokeWidth={2.2} />
