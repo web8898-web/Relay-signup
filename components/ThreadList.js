@@ -4,16 +4,19 @@ import { Edit2, Trash2, ChevronRight } from "lucide-react";
 import { avatarClass, chipClass, relTime } from "@/lib/utils";
 import { useScrollFadeRight } from "@/lib/useScrollFadeRight";
 import LoadingBubble from "@/components/LoadingBubble";
+import QuantityStepper from "@/components/QuantityStepper";
 
 const PAGE_SIZE = 30;
 
-export default function ThreadList({ signups, myIds, categories, quantityUnit, nameOnly, onUpdate, onDelete }) {
+export default function ThreadList({ signups, myIds, categories, quantityUnit, nameOnly, closed, onUpdate, onDelete }) {
   const [filter, setFilter] = useState("全部");
   const [editingId, setEditingId] = useState(null);
   const [confirmId, setConfirmId] = useState(null);
   const [editName, setEditName] = useState("");
   const [editNote, setEditNote] = useState("");
   const [editCategories, setEditCategories] = useState([]);
+  const [editQuantity, setEditQuantity] = useState(1);
+  const [editCategoryQuantities, setEditCategoryQuantities] = useState({});
   const [busy, setBusy] = useState(false);
   const [filterScrollRef, filterSentinelRef, filterCanScrollRight] = useScrollFadeRight(categories?.length > 0);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -21,10 +24,6 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
   const loadMoreRef = useRef(null);
 
   const NO_CATEGORY = "__no_category__";
-  // Numbers people by their actual signup order (1st, 2nd, 3rd...), based
-  // on the full unfiltered list — computed once here so the number for any
-  // given person stays the same no matter which category filter is active
-  // or how far someone has scrolled/paginated.
   const orderNumber = {};
   signups.forEach((s, i) => {
     orderNumber[s.id] = i + 1;
@@ -36,8 +35,6 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
       ? signups.filter((s) => !s.categories || s.categories.length === 0)
       : signups.filter((s) => s.categories?.includes(filter));
 
-  // Reset back to the first page whenever the person switches filters, so
-  // switching categories doesn't keep an inflated count from before.
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
   }, [filter]);
@@ -45,10 +42,6 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
   const visibleSignups = filtered.slice(0, visibleCount);
   const hasMore = visibleCount < filtered.length;
 
-  // Only render a bounded window of rows at a time — with a task that has
-  // hundreds of signups, mounting every row up front is what makes the
-  // list feel sluggish. Reveal more automatically as the person scrolls
-  // near the bottom.
   useEffect(() => {
     if (!hasMore) return;
     const el = loadMoreRef.current;
@@ -81,21 +74,42 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
     }
   }
 
+  // Same "per-category quantity" mode logic as the signup form itself:
+  // determined by whether the task defines categories at all, not by the
+  // current toggle state.
+  const usesPerCategoryQuantity = !!quantityUnit && categories?.length > 0;
+
   function startEdit(s) {
     setEditingId(s.id);
     setEditName(s.name);
     setEditNote(s.note || "");
     setEditCategories(s.categories || []);
+    setEditQuantity(s.quantity ?? 1);
+    setEditCategoryQuantities(s.category_quantities || {});
   }
 
   function toggleEditCategory(c) {
     setEditCategories((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
+    setEditCategoryQuantities((prev) => {
+      if (prev[c] != null) {
+        const next = { ...prev };
+        delete next[c];
+        return next;
+      }
+      return { ...prev, [c]: 1 };
+    });
   }
 
   async function saveEdit(s) {
     if (!editName.trim()) return;
     setBusy(true);
-    await onUpdate(s.id, { name: editName.trim(), note: editNote.trim(), categories: editCategories });
+    await onUpdate(s.id, {
+      name: editName.trim(),
+      note: editNote.trim(),
+      categories: editCategories,
+      quantity: quantityUnit && !usesPerCategoryQuantity ? editQuantity : undefined,
+      category_quantities: usesPerCategoryQuantity ? editCategoryQuantities : undefined,
+    });
     setBusy(false);
     setEditingId(null);
   }
@@ -189,6 +203,28 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
                           ))}
                         </div>
                       )}
+                      {quantityUnit && (
+                        usesPerCategoryQuantity ? (
+                          editCategories.length > 0 && (
+                            <div className="flex flex-col gap-2">
+                              {editCategories.map((c) => (
+                                <QuantityStepper
+                                  key={c}
+                                  label={`${c}（${quantityUnit}）`}
+                                  value={editCategoryQuantities[c] ?? 1}
+                                  onChange={(v) => setEditCategoryQuantities((prev) => ({ ...prev, [c]: v }))}
+                                />
+                              ))}
+                            </div>
+                          )
+                        ) : (
+                          <QuantityStepper
+                            label={`數量（${quantityUnit}）`}
+                            value={editQuantity}
+                            onChange={setEditQuantity}
+                          />
+                        )
+                      )}
                       <input
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
@@ -227,7 +263,7 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
                     </div>
                   ) : null}
 
-                  {mine && !isEditing && !nameOnly && (
+                  {mine && !isEditing && !nameOnly && !closed && (
                     <div className="flex gap-3 mt-1 ml-1">
                       <button onClick={() => startEdit(s)} className="text-[11px] text-gray-400 hover:text-emerald-500 flex items-center gap-0.5">
                         <Edit2 size={11} /> 編輯
