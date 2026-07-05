@@ -258,6 +258,7 @@ export default function TaskDetailClient() {
   }
 
   return (
+    <>
     <FadeIn className="flex-1 flex flex-col relative min-w-0">
       <TopBar title={task.title} />
 
@@ -429,13 +430,14 @@ export default function TaskDetailClient() {
           </div>
         </div>
       )}
-
-      {toast && (
-        <div className="fixed bottom-28 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-sm px-4 py-2 rounded-full shadow-lg flex items-center gap-2 z-50 whitespace-nowrap">
-          <CheckCircle2 size={16} className="text-emerald-200" />
-          {toast}
-        </div>
-      )}
     </FadeIn>
+
+    {toast && (
+      <div className="fixed bottom-28 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-sm px-4 py-2 rounded-full shadow-lg flex items-center gap-2 z-50 whitespace-nowrap">
+        <CheckCircle2 size={16} className="text-emerald-200" />
+        {toast}
+      </div>
+    )}
+    </>
   );
 }
