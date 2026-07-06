@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { isHeadcountUnit } from "@/lib/utils";
+import { notifySignupActivity } from "@/lib/smartNotify";
 
 async function assertOwnership(supabase, signupId, ownerToken) {
   const { data, error } = await supabase.from("signups").select("owner_token, task_id").eq("id", signupId).single();
@@ -59,6 +60,19 @@ export async function PUT(request, { params }) {
       .single();
 
     if (error) throw error;
+
+    // 智慧通知模式：編輯後重新評估是否跨過通知門檻（額滿／里程碑）。
+    // fire-and-forget，通知失敗不影響編輯本身；已通知過的事件由
+    // notification_log 擋下，不會重複推播。
+    const { data: notifyTask } = await supabase
+      .from("tasks")
+      .select("id, title, creator_id, notify_enabled, max_signups, quantity_unit")
+      .eq("id", taskId)
+      .single();
+    if (notifyTask) {
+      await notifySignupActivity({ supabase, task: notifyTask, signup: null });
+    }
+
     return NextResponse.json({ signup: data });
   } catch (err) {
     return NextResponse.json({ error: err.message || "更新失敗" }, { status: 400 });
