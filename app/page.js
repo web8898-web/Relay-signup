@@ -2,7 +2,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ClipboardList, PenLine, ChevronRight, MessageCircle, RotateCcw } from "lucide-react";
+import { ClipboardList, PenLine, ChevronRight, MessageCircle, RotateCcw, LogIn } from "lucide-react";
+import LoadingBubble from "@/components/LoadingBubble";
 import OnboardingTour, {
   getOnboardingState,
   setOnboardingState,
@@ -12,7 +13,7 @@ import { useLineProfile } from "@/lib/useLineProfile";
 import { avatarClass } from "@/lib/utils";
 
 export default function HomePage() {
-  const { profile } = useLineProfile();
+  const { profile, loading, login, error } = useLineProfile();
   const router = useRouter();
 
   // 首次操作教學導覽的起點：本機沒有任何進度標記代表第一次來，
@@ -47,6 +48,27 @@ export default function HomePage() {
       </div>
 
       <div className="flex-1 px-6 py-8 flex flex-col gap-4">
+        {loading ? (
+          <LoadingBubble label="確認登入狀態中…" className="py-16" />
+        ) : !profile ? (
+          <div className="bg-white border border-gray-200 rounded-3xl p-8 flex flex-col items-center text-center shadow-sm mt-2">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
+              <LogIn size={26} />
+            </div>
+            <p className="font-semibold text-gray-800">使用前，請先用 LINE 登入</p>
+            <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">
+              登入後即可建立任務、分享到群組、管理報名名單
+            </p>
+            <button
+              onClick={login}
+              className="mt-6 w-full bg-[#06C755] hover:opacity-90 active:scale-[0.98] text-white font-semibold rounded-full py-3.5 flex items-center justify-center gap-2 transition"
+            >
+              <MessageCircle size={18} /> 使用 LINE 登入
+            </button>
+            {error && <p className="text-xs text-rose-500 mt-3">{error}</p>}
+          </div>
+        ) : (
+          <>
         <Link
           href="/my-tasks"
           className="group w-full bg-white border border-emerald-200 rounded-3xl p-5 flex items-center gap-4 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition"
@@ -76,7 +98,6 @@ export default function HomePage() {
           <ChevronRight size={18} className="text-gray-300 group-hover:text-emerald-400" />
         </Link>
 
-        {profile && (
         <div className="mt-2">
           <p className="text-xs font-semibold text-gray-400 mb-2 px-1">使用教學</p>
           <button
@@ -95,6 +116,7 @@ export default function HomePage() {
             <ChevronRight size={16} className="text-gray-300 group-hover:text-emerald-400 shrink-0" />
           </button>
         </div>
+          </>
         )}
 
         <div className="mt-auto text-center text-[11px] text-gray-300 pt-8">
