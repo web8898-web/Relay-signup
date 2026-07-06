@@ -18,9 +18,9 @@ export default function HomePage() {
   // 首次操作教學導覽的起點：本機沒有任何進度標記代表第一次來，
   // 聚光燈指向「建立任務」按鈕。點進去之後，建立任務頁會接手
   // 後續步驟（那邊同樣是看到沒有標記就自動開始）。
-  // 「確認登入狀態中」畫面的最短停留時間：未登入的訪客至少看
-  // 3 秒才切換到登入畫面，避免一閃而過；已登入的人不受影響，
-  // 確認完成就直接進入功能畫面。
+  // 「確認登入狀態中」畫面的最短停留時間：不論是否已登入，
+  // 一律至少顯示 3 秒，再進入對應畫面（已登入→功能畫面、
+  // 未登入→登入畫面），讓開場節奏一致、不會一閃而過。
   const [minWaitDone, setMinWaitDone] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setMinWaitDone(true), 3000);
@@ -56,7 +56,7 @@ export default function HomePage() {
       </div>
 
       <div className="flex-1 px-6 py-8 flex flex-col gap-4">
-        {loading || (!profile && !minWaitDone) ? (
+        {loading || !minWaitDone ? (
           <div className="bg-white border border-gray-100 rounded-3xl p-8 flex flex-col items-center text-center shadow-sm mt-2">
             <div className="w-16 h-16 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-200 mb-5">
               <MessageCircle size={24} />
