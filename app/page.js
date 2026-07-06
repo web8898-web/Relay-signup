@@ -74,7 +74,7 @@ export default function HomePage() {
         <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mb-4">
           <MessageCircle size={28} />
         </div>
-        <h1 className="text-3xl font-bold tracking-tight">接龍報名</h1>
+        <h1 className="text-3xl font-bold tracking-tight">接龍報名小助手</h1>
         <p className="text-emerald-50 mt-2 text-sm leading-relaxed">
           像在聊天室接龍一樣，開一個任務，讓大家一則一則回覆完成報名。
         </p>
