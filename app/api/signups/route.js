@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
-import { sendLinePush } from "@/lib/linePush";
+import { notifySignupActivity } from "@/lib/smartNotify";
 import { isHeadcountUnit } from "@/lib/utils";
 
 const DUPLICATE_WINDOW_MS = 30_000;
@@ -141,37 +141,11 @@ export async function POST(request) {
 
     if (error) throw error;
 
-    // Notify the organizer via a LINE push message. This is fire-and-forget
-    // — if it fails (e.g. the organizer hasn't added the notification
-    // Official Account as a friend yet), the signup itself still succeeds.
-    if (task.creator_id && task.notify_enabled !== false) {
-      const { count } = await supabase
-        .from("signups")
-        .select("id", { count: "exact", head: true })
-        .eq("task_id", task_id);
-
-      const lines = [`📋 ${task.title} 有新的接龍報名！`, "", `👤 姓名：${data.name}`];
-      if (data.categories?.length > 0) {
-        const hasBreakdown = data.category_quantities && Object.keys(data.category_quantities).length > 0;
-        const catText = hasBreakdown
-          ? data.categories.map((c) => `${c}（${data.category_quantities[c]} ${task.quantity_unit}）`).join("、")
-          : data.categories.join("、");
-        lines.push(`🏷 分類：${catText}`);
-        if (hasBreakdown) lines.push(`🔢 合計數量：${data.quantity} ${task.quantity_unit}`);
-      }
-      if (data.quantity != null && !(data.categories?.length > 0)) {
-        lines.push(`🔢 數量：${data.quantity} ${task.quantity_unit}`);
-      }
-      if (data.note) lines.push(`📝 備註：${data.note}`);
-      lines.push("", `目前共 ${count ?? "?"} 人報名`);
-
-      const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
-      if (liffId) {
-        lines.push("", "👉 查看完整名單", `https://liff.line.me/${liffId}/my-tasks/${task_id}`);
-      }
-
-      await sendLinePush(task.creator_id, lines.join("\n"));
-    }
+    // 智慧通知模式：不再每一筆報名都推播，改由集中管理的邏輯
+    // 判斷是否符合通知條件（額滿／第一位報名／里程碑／10 分鐘
+    // 摘要），詳見 lib/smartNotify.js。一樣是 fire-and-forget，
+    // 通知失敗不影響報名本身。
+    await notifySignupActivity({ supabase, task, signup: data });
 
     return NextResponse.json({ signup: data });
   } catch (err) {
