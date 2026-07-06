@@ -26,12 +26,16 @@ export default function HomePage() {
   // 柔和淡入功能畫面。
   const SESSION_AUTHED = "relay_session_authed";
   const [minWaitDone, setMinWaitDone] = useState(false);
+  const [sessionAuthed, setSessionAuthed] = useState(false);
   useEffect(() => {
     let authed = false;
     try {
       authed = sessionStorage.getItem(SESSION_AUTHED) === "1";
     } catch (e) {}
     if (authed) {
+      // 本次使用已確認過登入：跳過等待畫面，重新確認登入的短暫
+      // 空檔也不顯示等待卡片，避免返回首頁時閃現
+      setSessionAuthed(true);
       setMinWaitDone(true);
       return;
     }
@@ -77,7 +81,7 @@ export default function HomePage() {
       </div>
 
       <div className="flex-1 px-6 py-8 flex flex-col gap-4">
-        {loading || !minWaitDone ? (
+        {(loading || !minWaitDone) && !sessionAuthed ? (
           <div className="bg-white border border-gray-100 rounded-3xl p-8 flex flex-col items-center text-center shadow-sm mt-2">
             <div className="w-16 h-16 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-200 mb-5">
               <MessageCircle size={24} />
@@ -89,7 +93,7 @@ export default function HomePage() {
             </div>
             <p className="text-xs text-gray-400 mt-3">確認登入狀態中…</p>
           </div>
-        ) : !profile ? (
+        ) : loading ? null : !profile ? (
           <div className="bg-white border border-gray-100 rounded-3xl p-8 flex flex-col items-center text-center shadow-sm mt-2">
             <div className="w-16 h-16 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-200 mb-5">
               <MessageCircle size={24} />
