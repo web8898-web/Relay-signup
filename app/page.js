@@ -8,6 +8,7 @@ import OnboardingTour, {
   setOnboardingState,
   resetOnboarding,
 } from "@/components/OnboardingTour";
+import FadeIn from "@/components/FadeIn";
 import { useLineProfile } from "@/lib/useLineProfile";
 import { avatarClass } from "@/lib/utils";
 
@@ -86,7 +87,7 @@ export default function HomePage() {
             {error && <p className="text-xs text-rose-500 mt-3">{error}</p>}
           </div>
         ) : (
-          <>
+          <FadeIn className="flex flex-col gap-4">
         <Link
           href="/my-tasks"
           className="group w-full bg-white border border-emerald-200 rounded-3xl p-5 flex items-center gap-4 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition"
@@ -134,7 +135,7 @@ export default function HomePage() {
             <ChevronRight size={16} className="text-gray-300 group-hover:text-emerald-400 shrink-0" />
           </button>
         </div>
-          </>
+          </FadeIn>
         )}
 
         <div className="mt-auto text-center text-[11px] text-gray-300 pt-8">
