@@ -56,7 +56,7 @@ export default function HomePage() {
           </div>
           <div className="flex-1">
             <p className="font-semibold text-gray-800">任務清單</p>
-            <p className="text-xs text-gray-400 mt-0.5">{profile ? "管理你建立的任務" : "使用前，請先使用 LINE 登入"}</p>
+            <p className="text-xs text-gray-400 mt-0.5">{profile ? "管理你建立的任務" : "使用前，請先用 LINE 登入"}</p>
           </div>
           <ChevronRight size={18} className="text-gray-300 group-hover:text-emerald-400" />
         </Link>
@@ -71,7 +71,7 @@ export default function HomePage() {
           </div>
           <div className="flex-1">
             <p className="font-semibold text-gray-800">建立任務</p>
-            <p className="text-xs text-gray-400 mt-0.5">{profile ? "建立任務並分享到群組" : "使用前，請先使用 LINE 登入"}</p>
+            <p className="text-xs text-gray-400 mt-0.5">{profile ? "建立任務並分享到群組" : "使用前，請先用 LINE 登入"}</p>
           </div>
           <ChevronRight size={18} className="text-gray-300 group-hover:text-emerald-400" />
         </Link>
