@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ClipboardList, PenLine, ChevronRight, MessageCircle, RotateCcw } from "lucide-react";
-import LoadingBubble from "@/components/LoadingBubble";
 import OnboardingTour, {
   getOnboardingState,
   setOnboardingState,
@@ -19,6 +18,15 @@ export default function HomePage() {
   // 首次操作教學導覽的起點：本機沒有任何進度標記代表第一次來，
   // 聚光燈指向「建立任務」按鈕。點進去之後，建立任務頁會接手
   // 後續步驟（那邊同樣是看到沒有標記就自動開始）。
+  // 「確認登入狀態中」畫面的最短停留時間：未登入的訪客至少看
+  // 3 秒才切換到登入畫面，避免一閃而過；已登入的人不受影響，
+  // 確認完成就直接進入功能畫面。
+  const [minWaitDone, setMinWaitDone] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setMinWaitDone(true), 3000);
+    return () => clearTimeout(t);
+  }, []);
+
   const [showTour, setShowTour] = useState(false);
   useEffect(() => {
     if (!profile) return; // 尚未用 LINE 登入，不顯示首次導覽
@@ -48,8 +56,18 @@ export default function HomePage() {
       </div>
 
       <div className="flex-1 px-6 py-8 flex flex-col gap-4">
-        {loading ? (
-          <LoadingBubble label="確認登入狀態中…" className="py-16" />
+        {loading || (!profile && !minWaitDone) ? (
+          <div className="bg-white border border-gray-100 rounded-3xl p-8 flex flex-col items-center text-center shadow-sm mt-2">
+            <div className="w-16 h-16 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-200 mb-5">
+              <MessageCircle size={24} />
+            </div>
+            <div className="flex gap-1.5 mt-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce [animation-delay:-0.3s]" />
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce [animation-delay:-0.15s]" />
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce" />
+            </div>
+            <p className="text-xs text-gray-400 mt-3">確認登入狀態中…</p>
+          </div>
         ) : !profile ? (
           <div className="bg-white border border-gray-100 rounded-3xl p-8 flex flex-col items-center text-center shadow-sm mt-2">
             <div className="w-16 h-16 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-200 mb-5">
