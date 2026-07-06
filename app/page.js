@@ -19,14 +19,34 @@ export default function HomePage() {
   // 首次操作教學導覽的起點：本機沒有任何進度標記代表第一次來，
   // 聚光燈指向「建立任務」按鈕。點進去之後，建立任務頁會接手
   // 後續步驟（那邊同樣是看到沒有標記就自動開始）。
-  // 「確認登入狀態中」畫面的最短停留時間：不論是否已登入，
-  // 一律至少顯示 3 秒，再進入對應畫面（已登入→功能畫面、
-  // 未登入→登入畫面），讓開場節奏一致、不會一閃而過。
+  // 「確認登入狀態中」畫面的最短停留時間：第一次進站至少顯示
+  // 3 秒再進入對應畫面（已登入→功能畫面、未登入→登入畫面）。
+  // 但如果這個瀏覽分頁在本次使用中已經確認過登入（例如從建立
+  // 任務、任務清單按返回回到首頁），就不再重跑 3 秒等待，直接
+  // 柔和淡入功能畫面。
+  const SESSION_AUTHED = "relay_session_authed";
   const [minWaitDone, setMinWaitDone] = useState(false);
   useEffect(() => {
+    let authed = false;
+    try {
+      authed = sessionStorage.getItem(SESSION_AUTHED) === "1";
+    } catch (e) {}
+    if (authed) {
+      setMinWaitDone(true);
+      return;
+    }
     const t = setTimeout(() => setMinWaitDone(true), 3000);
     return () => clearTimeout(t);
   }, []);
+
+  // 登入確認完成後做個記號（只存在目前的瀏覽分頁，關閉即清除），
+  // 之後在同一次使用中回到首頁就不必重看等待畫面
+  useEffect(() => {
+    if (!profile) return;
+    try {
+      sessionStorage.setItem(SESSION_AUTHED, "1");
+    } catch (e) {}
+  }, [profile]);
 
   const [showTour, setShowTour] = useState(false);
   useEffect(() => {
