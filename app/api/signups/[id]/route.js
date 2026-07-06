@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { isHeadcountUnit } from "@/lib/utils";
-import { notifySignupActivity } from "@/lib/smartNotify";
+import { notifySignupActivity, handleSignupRemoved } from "@/lib/smartNotify";
 
 async function assertOwnership(supabase, signupId, ownerToken) {
   const { data, error } = await supabase.from("signups").select("owner_token, task_id").eq("id", signupId).single();
@@ -86,10 +86,21 @@ export async function DELETE(request, { params }) {
     if (!owner_token) return NextResponse.json({ error: "缺少驗證資訊" }, { status: 400 });
 
     const supabase = getSupabaseAdmin();
-    await assertOwnership(supabase, params.id, owner_token);
+    const taskId = await assertOwnership(supabase, params.id, owner_token);
 
     const { error } = await supabase.from("signups").delete().eq("id", params.id);
     if (error) throw error;
+
+    // 刪除報名一律不發通知（智慧通知規格）。這裡只在「先前已額滿」
+    // 的情況下悄悄記錄名額空出的狀態，之後有人補位、再次額滿時，
+    // 主辦人會收到「名額再次額滿」通知。
+    const { data: task } = await supabase
+      .from("tasks")
+      .select("id, max_signups, quantity_unit")
+      .eq("id", taskId)
+      .single();
+    if (task) await handleSignupRemoved({ supabase, task });
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     return NextResponse.json({ error: err.message || "刪除失敗" }, { status: 400 });
