@@ -5,6 +5,7 @@ import { ClipboardList, Plus, Bell, ChevronUp, ChevronDown } from "lucide-react"
 import { EmptyState } from "@/components/TopBar";
 import Toast from "@/components/Toast";
 import LoadingBubble from "@/components/LoadingBubble";
+import FadeIn from "@/components/FadeIn";
 import TaskListCard from "@/components/TaskListCard";
 import { useOrganizerProfile } from "@/lib/OrganizerContext";
 import { supabase } from "@/lib/supabaseClient";
@@ -95,9 +96,19 @@ export default function MyTasksListContent() {
     }
   }
 
+  if (tasksLoading) {
+    return (
+      <div className="flex-1 flex flex-col relative min-w-0">
+        <div className="flex-1 flex items-center justify-center">
+          <LoadingBubble />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col relative min-w-0">
-      <div className="flex-1 px-6 py-3 flex flex-col gap-3 overflow-y-auto">
+      <FadeIn className="flex-1 px-6 py-3 flex flex-col gap-3 overflow-y-auto">
         {friendBannerExpanded ? (
           <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 flex items-start gap-2.5">
             <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
@@ -140,12 +151,7 @@ export default function MyTasksListContent() {
           </button>
         )}
 
-        {tasksLoading && (
-          <div className="flex justify-center py-6">
-            <LoadingBubble size={18} />
-          </div>
-        )}
-        {!tasksLoading && tasks.length === 0 && (
+        {tasks.length === 0 && (
           <EmptyState icon={<ClipboardList size={30} />} title="還沒有任務" desc="點擊上方「建立任務」開始建立第一個接龍吧。" />
         )}
         {tasks.map((t) => (
@@ -159,16 +165,16 @@ export default function MyTasksListContent() {
             onDelete={() => handleDelete(t.id)}
           />
         ))}
-      </div>
+      </FadeIn>
 
-      <div className="px-6 pb-6 pt-2">
+      <FadeIn className="px-6 pb-6 pt-2">
         <button
           onClick={() => router.push("/create")}
           className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-3 font-semibold flex items-center justify-center gap-2 shadow-md shadow-emerald-200 transition"
         >
           <Plus size={18} /> 新增任務
         </button>
-      </div>
+      </FadeIn>
 
       {toast && (
         <Toast className="bottom-24">
