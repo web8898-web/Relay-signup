@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ClipboardList, PenLine, ChevronRight, MessageCircle, RotateCcw, LogIn } from "lucide-react";
+import { ClipboardList, PenLine, ChevronRight, MessageCircle, RotateCcw } from "lucide-react";
 import LoadingBubble from "@/components/LoadingBubble";
 import OnboardingTour, {
   getOnboardingState,
@@ -51,19 +51,19 @@ export default function HomePage() {
         {loading ? (
           <LoadingBubble label="確認登入狀態中…" className="py-16" />
         ) : !profile ? (
-          <div className="bg-white border border-gray-200 rounded-3xl p-8 flex flex-col items-center text-center shadow-sm mt-2">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
-              <LogIn size={26} />
+          <div className="bg-white border border-gray-100 rounded-3xl p-8 flex flex-col items-center text-center shadow-sm mt-2">
+            <div className="w-16 h-16 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-200 mb-5">
+              <MessageCircle size={24} />
             </div>
             <p className="font-semibold text-gray-800">使用前，請先用 LINE 登入</p>
-            <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">
-              登入後即可建立任務、分享到群組、管理報名名單
+            <p className="text-xs text-gray-400 mt-1.5 whitespace-nowrap">
+              登入後即可建立任務、管理報名名單
             </p>
             <button
               onClick={login}
-              className="mt-6 w-full bg-[#06C755] hover:opacity-90 active:scale-[0.98] text-white font-semibold rounded-full py-3.5 flex items-center justify-center gap-2 transition"
+              className="mt-6 w-full bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white font-semibold rounded-full py-3.5 flex items-center justify-center gap-2 shadow-lg shadow-emerald-200 transition"
             >
-              <MessageCircle size={18} /> 使用 LINE 登入
+              使用 LINE 登入
             </button>
             {error && <p className="text-xs text-rose-500 mt-3">{error}</p>}
           </div>
