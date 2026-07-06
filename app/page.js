@@ -20,10 +20,11 @@ export default function HomePage() {
   // 後續步驟（那邊同樣是看到沒有標記就自動開始）。
   const [showTour, setShowTour] = useState(false);
   useEffect(() => {
+    if (!profile) return; // 尚未用 LINE 登入，不顯示首次導覽
     if (getOnboardingState()) return;
     const t = setTimeout(() => setShowTour(true), 600);
     return () => clearTimeout(t);
-  }, []);
+  }, [profile]);
 
   return (
     <div className="flex-1 flex flex-col min-w-0">
@@ -55,7 +56,7 @@ export default function HomePage() {
           </div>
           <div className="flex-1">
             <p className="font-semibold text-gray-800">任務清單</p>
-            <p className="text-xs text-gray-400 mt-0.5">{profile ? "管理你建立的任務" : "使用 LINE 登入，管理你建立的任務"}</p>
+            <p className="text-xs text-gray-400 mt-0.5">{profile ? "管理你建立的任務" : "使用前，請先使用 LINE 登入"}</p>
           </div>
           <ChevronRight size={18} className="text-gray-300 group-hover:text-emerald-400" />
         </Link>
@@ -70,7 +71,7 @@ export default function HomePage() {
           </div>
           <div className="flex-1">
             <p className="font-semibold text-gray-800">建立任務</p>
-            <p className="text-xs text-gray-400 mt-0.5">{profile ? "建立任務並分享到群組" : "使用 LINE 登入，建立任務並分享到群組"}</p>
+            <p className="text-xs text-gray-400 mt-0.5">{profile ? "建立任務並分享到群組" : "使用前，請先使用 LINE 登入"}</p>
           </div>
           <ChevronRight size={18} className="text-gray-300 group-hover:text-emerald-400" />
         </Link>
