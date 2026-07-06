@@ -76,6 +76,7 @@ export default function HomePage() {
           <ChevronRight size={18} className="text-gray-300 group-hover:text-emerald-400" />
         </Link>
 
+        {profile && (
         <div className="mt-2">
           <p className="text-xs font-semibold text-gray-400 mb-2 px-1">使用教學</p>
           <button
@@ -94,6 +95,7 @@ export default function HomePage() {
             <ChevronRight size={16} className="text-gray-300 group-hover:text-emerald-400 shrink-0" />
           </button>
         </div>
+        )}
 
         <div className="mt-auto text-center text-[11px] text-gray-300 pt-8">
           © 2026{" "}
