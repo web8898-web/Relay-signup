@@ -114,7 +114,7 @@ export default function HomePage() {
           <FadeIn className="flex flex-col gap-4">
         <Link
           href="/my-tasks"
-          className="group w-full bg-white border border-emerald-200 rounded-3xl p-5 flex items-center gap-4 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition"
+          className="group w-full bg-white border border-gray-200 rounded-3xl p-5 flex items-center gap-4 text-left shadow-sm hover:shadow-md hover:border-emerald-300 active:scale-[0.98] active:border-emerald-400 transition"
         >
           <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
             <ClipboardList size={22} />
@@ -129,9 +129,9 @@ export default function HomePage() {
         <Link
           href="/create"
           data-tour="create-entry"
-          className="group w-full bg-white border border-gray-200 rounded-3xl p-5 flex items-center gap-4 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition"
+          className="group w-full bg-white border border-gray-200 rounded-3xl p-5 flex items-center gap-4 text-left shadow-sm hover:shadow-md hover:border-emerald-300 active:scale-[0.98] active:border-emerald-400 transition"
         >
-          <div className="w-12 h-12 rounded-2xl bg-gray-100 text-gray-600 flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
             <PenLine size={22} />
           </div>
           <div className="flex-1">
@@ -149,7 +149,7 @@ export default function HomePage() {
               resetOnboarding();
               setShowTour(true);
             }}
-            className="group w-full bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-3 text-left shadow-sm hover:shadow-md hover:border-emerald-300 transition"
+            className="group w-full bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-3 text-left shadow-sm hover:shadow-md hover:border-emerald-300 active:scale-[0.98] active:border-emerald-400 transition"
           >
             <RotateCcw size={15} className="text-emerald-500 shrink-0" />
             <div className="flex-1">
