@@ -3,7 +3,7 @@ import LiffBootstrap from "@/components/LiffBootstrap";
 import LiffTransitionOverlay from "@/components/LiffTransitionOverlay";
 
 export const metadata = {
-  title: "接龍報名",
+  title: "接龍報名小助手",
   description: "在 LINE 上分享、免登入即可完成報名的接龍小工具",
 };
 
