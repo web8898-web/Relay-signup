@@ -191,12 +191,10 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
               <div key={s.id} className="flex gap-2.5 items-start relative pl-2">
                 {binfo && (
                   <span
-                    className={`absolute left-0 w-1 ${binfo.color} ${
-                      binfo.isFirst ? "top-1 rounded-t-full" : "-top-4"
-                    } ${binfo.isLast ? "bottom-1 rounded-b-full" : "-bottom-4"}`}
+                    className={`absolute left-0 w-[3px] rounded-full opacity-60 ${binfo.color}`}
                     style={{
-                      top: binfo.isFirst ? "0.25rem" : "-1rem",
-                      bottom: binfo.isLast ? "0.25rem" : "-1rem",
+                      top: binfo.isFirst ? "0.375rem" : "-0.75rem",
+                      bottom: binfo.isLast ? "0.375rem" : "-0.75rem",
                     }}
                     aria-hidden="true"
                   />
