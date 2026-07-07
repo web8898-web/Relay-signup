@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { Edit2, Trash2, ChevronRight, Check } from "lucide-react";
-import { avatarClass, chipClass, relTime } from "@/lib/utils";
+import { avatarClass, chipClass, relTime, batchInfoFor } from "@/lib/utils";
 import { useScrollFadeRight } from "@/lib/useScrollFadeRight";
 import LoadingBubble from "@/components/LoadingBubble";
 import QuantityStepper from "@/components/QuantityStepper";
@@ -48,6 +48,12 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
   }, [filter]);
 
   const visibleSignups = filtered.slice(0, visibleCount);
+  // 同批多人報名的側標（依全體報名順序判斷頭尾，才能連續）
+  const batchInfoList = batchInfoFor(signups);
+  const batchById = {};
+  signups.forEach((s, i) => {
+    if (batchInfoList[i]) batchById[s.id] = batchInfoList[i];
+  });
   const hasMore = visibleCount < filtered.length;
 
   useEffect(() => {
@@ -180,8 +186,21 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
           {visibleSignups.map((s) => {
             const mine = myIds.includes(s.id);
             const isEditing = editingId === s.id;
+            const binfo = batchById[s.id];
             return (
-              <div key={s.id} className="flex gap-2.5 items-start relative">
+              <div key={s.id} className="flex gap-2.5 items-start relative pl-2">
+                {binfo && (
+                  <span
+                    className={`absolute left-0 w-1 ${binfo.color} ${
+                      binfo.isFirst ? "top-1 rounded-t-full" : "-top-4"
+                    } ${binfo.isLast ? "bottom-1 rounded-b-full" : "-bottom-4"}`}
+                    style={{
+                      top: binfo.isFirst ? "0.25rem" : "-1rem",
+                      bottom: binfo.isLast ? "0.25rem" : "-1rem",
+                    }}
+                    aria-hidden="true"
+                  />
+                )}
                 {checkinMode ? (
                   <button
                     onClick={() => onToggleCheckin(s)}
