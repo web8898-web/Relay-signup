@@ -463,17 +463,26 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
               ) : (
                 <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto pr-0.5">
                   {filteredSignups.map((s, i) => (
-                    <div key={s.id || i} className="flex items-start gap-2 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2">
+                    <div
+                      key={s.id || i}
+                      onClick={checkinMode ? () => toggleCheckin(s) : undefined}
+                      className={`flex items-start gap-2 border rounded-xl px-3 py-2 transition ${
+                        checkinMode
+                          ? `cursor-pointer select-none active:scale-[0.99] ${
+                              checkedIds.has(s.id) ? "bg-emerald-50 border-emerald-200" : "bg-gray-50 border-gray-100"
+                            }`
+                          : "bg-gray-50 border-gray-100"
+                      }`}
+                    >
                       {checkinMode ? (
-                        <button
-                          onClick={() => toggleCheckin(s)}
-                          className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border-2 transition active:scale-90 ${
+                        <div
+                          className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border-2 transition ${
                             checkedIds.has(s.id) ? "bg-emerald-500 border-emerald-500 text-white" : "bg-white border-gray-300 text-transparent"
                           }`}
-                          aria-label={checkedIds.has(s.id) ? "取消報到" : "標記報到"}
+                          aria-hidden="true"
                         >
                           <Check size={13} strokeWidth={3} />
-                        </button>
+                        </div>
                       ) : (
                         <div className={`w-6 h-6 rounded-full ${avatarClass(s.name)} text-white flex items-center justify-center text-[10px] font-bold shrink-0`}>
                           {s.name?.[0] || "?"}
