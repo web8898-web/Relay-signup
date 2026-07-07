@@ -1,7 +1,8 @@
 "use client";
-import { useRef, useState } from "react";
-import { MessageCircle, ChevronRight, MoreVertical, Edit2, Share2, Calendar, Users, Download, FileSpreadsheet, FileText, Bell, BellOff, Trash2 } from "lucide-react";
+import { useRef, useState, useEffect } from "react";
+import { MessageCircle, ChevronRight, MoreVertical, Edit2, Share2, Calendar, Users, Download, FileSpreadsheet, FileText, Bell, BellOff, Trash2, ClipboardCheck, Check, RotateCcw, Copy, CheckCircle2 } from "lucide-react";
 import { taskStatus, chipClass, avatarClass, relTime } from "@/lib/utils";
+import { getOwnerToken } from "@/lib/ownerToken";
 import { useScrollFadeRight } from "@/lib/useScrollFadeRight";
 import { liff } from "@/lib/liff";
 
@@ -149,8 +150,7 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
   const st = taskStatus(task);
   const signupCount = signups.length;
 
-  // 統一的任務顯示狀態，供圖示配色與排序共用：
-  // 已結束（截止）> 已額滿 > 進行中。額滿＝有設定上限且人頭數達標。
+  // 統一的顯示狀態：已結束 > 已額滿 > 進行中，供圖示配色與狀態標籤共用。
   const headcount = task.quantity_unit
     ? signups.reduce((sum, s) => {
         if (s.category_quantities && Object.keys(s.category_quantities).length > 0) {
@@ -161,8 +161,66 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
     : signups.length;
   const isClosed = st.label === "已截止";
   const isFull = !isClosed && !!task.max_signups && headcount >= task.max_signups;
-  // 圖示樣式：結束＝灰底白氣泡、額滿＝紅底白氣泡、其餘＝綠底白氣泡
   const iconBg = isClosed ? "bg-gray-400" : isFull ? "bg-rose-500" : "bg-emerald-500";
+
+  // ── 點名功能（活動截止後可用）──
+  const [checkinMode, setCheckinMode] = useState(false);
+  const [checkedIds, setCheckedIds] = useState(() => new Set());
+  const [checkinReady, setCheckinReady] = useState(false);
+
+  // 展開後、且已截止時，用 signups 帶進來的 checked_in 初始化勾選狀態
+  useEffect(() => {
+    if (!expanded) return;
+    setCheckedIds(new Set(signups.filter((s) => s.checked_in).map((s) => s.id)));
+    setCheckinReady(true);
+  }, [expanded, signups]);
+
+  function headcountOf(s) {
+    if (s.category_quantities && Object.keys(s.category_quantities).length > 0) {
+      return Object.values(s.category_quantities).reduce((a, b) => a + (b || 0), 0);
+    }
+    return s.quantity ?? 1;
+  }
+
+  async function toggleCheckin(s) {
+    const next = !checkedIds.has(s.id);
+    setCheckedIds((prev) => {
+      const n = new Set(prev);
+      if (next) n.add(s.id);
+      else n.delete(s.id);
+      return n;
+    });
+    try {
+      await fetch(`/api/signups/${s.id}/checkin`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ owner_token: getOwnerToken(), checked_in: next }),
+      });
+    } catch {}
+  }
+
+  async function setAllCheckin(value) {
+    const targets = signups.filter((s) => checkedIds.has(s.id) !== value);
+    setCheckedIds(value ? new Set(signups.map((s) => s.id)) : new Set());
+    await Promise.all(
+      targets.map((s) =>
+        fetch(`/api/signups/${s.id}/checkin`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ owner_token: getOwnerToken(), checked_in: value }),
+        }).catch(() => {})
+      )
+    );
+  }
+
+  function copyAbsentList() {
+    const absent = signups.filter((s) => !checkedIds.has(s.id)).map((s) => s.name);
+    if (absent.length === 0) return;
+    const text = `未報到（${absent.length} 位）：\n` + absent.join("、");
+    navigator.clipboard?.writeText(text);
+  }
+
+  const checkedCount = checkedIds.size;
 
   const NO_CATEGORY = "__no_category__";
   const categoryCounts = {};
@@ -221,7 +279,7 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
 
         <div className="w-full px-4 py-3 flex items-center gap-1.5">
           <div onClick={toggleExpand} className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
-            <div className={`w-9 h-9 rounded-full ${iconBg} text-white flex items-center justify-center shrink-0`}>
+            <div className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
               <MessageCircle size={16} />
             </div>
             <div className="flex-1 min-w-0">
@@ -326,7 +384,39 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
             </div>
 
             <div className="mb-3">
-              <p className="text-[11px] font-medium text-gray-400 mb-1.5 px-0.5">報名名單</p>
+              <div className="flex items-center justify-between mb-1.5 px-0.5">
+                <p className="text-[11px] font-medium text-gray-400">報名名單</p>
+                {isClosed && signups.length > 0 && !checkinMode && (
+                  <button
+                    onClick={() => setCheckinMode(true)}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 active:scale-[0.97] border border-emerald-200 rounded-full px-2.5 py-1 transition"
+                  >
+                    <ClipboardCheck size={12} /> 開始點名
+                  </button>
+                )}
+              </div>
+
+              {isClosed && checkinMode && (
+                <div className="bg-white border border-emerald-200 rounded-xl p-2.5 mb-2 shadow-sm">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[11px] font-semibold text-gray-700">
+                      已報到 <span className="text-emerald-600">{checkedCount}</span> / {signups.length} 位
+                      {signups.length - checkedCount > 0 && (
+                        <span className="text-gray-400 font-normal">（未到 {signups.length - checkedCount}）</span>
+                      )}
+                    </span>
+                    <button onClick={() => setCheckinMode(false)} className="text-[11px] text-gray-400 hover:text-gray-600 px-1">完成</button>
+                  </div>
+                  <div className="h-1.5 rounded-full overflow-hidden bg-emerald-100 mb-2">
+                    <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${signups.length ? (checkedCount / signups.length) * 100 : 0}%` }} />
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button onClick={() => setAllCheckin(true)} className="text-[10px] text-emerald-600 border border-emerald-200 rounded-full px-2 py-0.5 hover:bg-emerald-50 flex items-center gap-1"><CheckCircle2 size={11} /> 全部已到</button>
+                    <button onClick={() => setAllCheckin(false)} className="text-[10px] text-gray-500 border border-gray-200 rounded-full px-2 py-0.5 hover:bg-gray-50 flex items-center gap-1"><RotateCcw size={11} /> 重設</button>
+                    <button onClick={copyAbsentList} className="text-[10px] text-gray-500 border border-gray-200 rounded-full px-2 py-0.5 hover:bg-gray-50 flex items-center gap-1"><Copy size={11} /> 複製未到名單</button>
+                  </div>
+                </div>
+              )}
 
               {task.categories?.length > 0 && (
                 <div className="relative -mx-0.5">
@@ -374,10 +464,22 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
               ) : (
                 <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto pr-0.5">
                   {filteredSignups.map((s, i) => (
-                    <div key={i} className="flex items-start gap-2 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2">
-                      <div className={`w-6 h-6 rounded-full ${avatarClass(s.name)} text-white flex items-center justify-center text-[10px] font-bold shrink-0`}>
-                        {s.name?.[0] || "?"}
-                      </div>
+                    <div key={s.id || i} className="flex items-start gap-2 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2">
+                      {checkinMode ? (
+                        <button
+                          onClick={() => toggleCheckin(s)}
+                          className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border-2 transition active:scale-90 ${
+                            checkedIds.has(s.id) ? "bg-emerald-500 border-emerald-500 text-white" : "bg-white border-gray-300 text-transparent"
+                          }`}
+                          aria-label={checkedIds.has(s.id) ? "取消報到" : "標記報到"}
+                        >
+                          <Check size={13} strokeWidth={3} />
+                        </button>
+                      ) : (
+                        <div className={`w-6 h-6 rounded-full ${avatarClass(s.name)} text-white flex items-center justify-center text-[10px] font-bold shrink-0`}>
+                          {s.name?.[0] || "?"}
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-xs font-medium text-gray-700 truncate">{s.name}</span>
