@@ -160,7 +160,7 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
       }, 0)
     : signups.length;
   const isClosed = st.label === "已截止";
-  const isFull = !isClosed && task.max_signups ? headcount >= task.max_signups : false;
+  const isFull = !isClosed && !!task.max_signups && headcount >= task.max_signups;
   // 圖示樣式：結束＝灰底白氣泡、額滿＝紅底白氣泡、其餘＝綠底白氣泡
   const iconBg = isClosed ? "bg-gray-400" : isFull ? "bg-rose-500" : "bg-emerald-500";
 
