@@ -191,7 +191,9 @@ export default function TaskDetailClient() {
         if (data.cooldown_seconds) startCooldown(data.cooldown_seconds);
         throw new Error(data.error);
       }
-      rememberMySignup(data.signup.id);
+      // 記住這次報名的 id：單人回傳 data.signup、多人回傳 data.signups 陣列
+      const created = data.signups || (data.signup ? [data.signup] : []);
+      created.forEach((sg) => sg?.id && rememberMySignup(sg.id));
       setMyIds(getMySignupIds());
       setName("");
       setNames([""]);
