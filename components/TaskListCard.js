@@ -480,7 +480,7 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
                       key={s.id || i}
                       onClick={checkinMode ? () => toggleCheckin(s) : undefined}
                       className={`relative overflow-hidden flex items-start gap-2 border rounded-xl px-3 py-2 transition ${
-                        batchColorById[s.id] ? "pl-4" : ""
+                        batchColorById[s.id] ? "pl-3.5" : ""
                       } ${
                         checkinMode
                           ? `cursor-pointer select-none active:scale-[0.99] ${
@@ -490,7 +490,7 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
                       }`}
                     >
                       {batchColorById[s.id] && (
-                        <span className={`absolute left-0 top-0 bottom-0 w-1.5 ${batchColorById[s.id]}`} aria-hidden="true" />
+                        <span className={`absolute left-0 top-0 bottom-0 w-1 rounded-r-full opacity-60 ${batchColorById[s.id]}`} aria-hidden="true" />
                       )}
                       {checkinMode ? (
                         <div
