@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Edit2, Trash2, ChevronRight } from "lucide-react";
+import { Edit2, Trash2, ChevronRight, Check } from "lucide-react";
 import { avatarClass, chipClass, relTime } from "@/lib/utils";
 import { useScrollFadeRight } from "@/lib/useScrollFadeRight";
 import LoadingBubble from "@/components/LoadingBubble";
@@ -8,7 +8,15 @@ import QuantityStepper from "@/components/QuantityStepper";
 
 const PAGE_SIZE = 30;
 
-export default function ThreadList({ signups, myIds, categories, quantityUnit, nameOnly, closed, onUpdate, onDelete }) {
+// 一筆報名的人頭數：分類各自數量加總（＋本人），或單一數量，否則 1。
+function headcountOf(s) {
+  if (s.category_quantities && Object.keys(s.category_quantities).length > 0) {
+    return Object.values(s.category_quantities).reduce((a, b) => a + (b || 0), 0);
+  }
+  return s.quantity ?? 1;
+}
+
+export default function ThreadList({ signups, myIds, categories, quantityUnit, nameOnly, closed, onUpdate, onDelete, checkinMode, onToggleCheckin }) {
   const [filter, setFilter] = useState("全部");
   const [editingId, setEditingId] = useState(null);
   const [confirmId, setConfirmId] = useState(null);
@@ -174,9 +182,23 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
             const isEditing = editingId === s.id;
             return (
               <div key={s.id} className="flex gap-2.5 items-start relative">
-                <div className={`w-8 h-8 rounded-full ${avatarClass(s.name)} text-white flex items-center justify-center text-xs font-bold shrink-0 z-10`}>
-                  {s.name?.[0] || "?"}
-                </div>
+                {checkinMode ? (
+                  <button
+                    onClick={() => onToggleCheckin(s)}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 z-10 border-2 transition active:scale-90 ${
+                      s.checked_in
+                        ? "bg-emerald-500 border-emerald-500 text-white"
+                        : "bg-white border-gray-300 text-transparent"
+                    }`}
+                    aria-label={s.checked_in ? "取消報到" : "標記報到"}
+                  >
+                    <Check size={16} strokeWidth={3} />
+                  </button>
+                ) : (
+                  <div className={`w-8 h-8 rounded-full ${avatarClass(s.name)} text-white flex items-center justify-center text-xs font-bold shrink-0 z-10`}>
+                    {s.name?.[0] || "?"}
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-1">
                     <p className="text-xs font-medium text-gray-600 flex items-center gap-1.5 min-w-0">
@@ -185,7 +207,11 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
                       </span>
                       <span className="truncate">{s.name}</span>
                     </p>
-                    <span className="text-[10px] text-gray-300">{relTime(s.created_at)}</span>
+                    {checkinMode && quantityUnit ? (
+                      <span className="text-[10px] text-gray-400 shrink-0">{headcountOf(s)} {quantityUnit}</span>
+                    ) : (
+                      <span className="text-[10px] text-gray-300">{relTime(s.created_at)}</span>
+                    )}
                   </div>
 
                   {isEditing ? (
@@ -263,7 +289,7 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
                     </div>
                   ) : null}
 
-                  {mine && !isEditing && !nameOnly && !closed && (
+                  {mine && !isEditing && !nameOnly && !closed && !checkinMode && (
                     <div className="flex gap-3 mt-1 ml-1">
                       <button onClick={() => startEdit(s)} className="text-[11px] text-gray-400 hover:text-emerald-500 flex items-center gap-0.5">
                         <Edit2 size={11} /> 編輯
