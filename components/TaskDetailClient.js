@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Send, Users, CheckCircle2, ChevronRight, AlertCircle, ClipboardCheck, RotateCcw, Copy } from "lucide-react";
+import { Send, Users, CheckCircle2, ChevronRight, AlertCircle } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import TaskAnnouncement from "@/components/TaskAnnouncement";
 import ThreadList from "@/components/ThreadList";
@@ -32,6 +32,9 @@ export default function TaskDetailClient() {
   const [myIds, setMyIds] = useState([]);
   const [categories, setCategories] = useState([]);
   const [name, setName] = useState("");
+  // 多人報名：names 是「你的名字 + 幫別人報名」的欄位陣列。
+  // 只有任務無分類且無數量單位時啟用（漸進式：填了才長出下一格）。
+  const [names, setNames] = useState([""]);
   const [note, setNote] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [categoryQuantities, setCategoryQuantities] = useState({});
@@ -40,7 +43,6 @@ export default function TaskDetailClient() {
   const [categoryError, setCategoryError] = useState("");
   const [toast, setToast] = useState("");
   const [cooldown, setCooldown] = useState(0);
-  const [checkinMode, setCheckinMode] = useState(false);
   const cooldownIntervalRef = useRef(null);
   const listRef = useRef(null);
   const formSectionRef = useRef(null);
@@ -118,73 +120,16 @@ export default function TaskDetailClient() {
     if (id) load();
   }, [id]);
 
-  // ── 點名功能 ──
-  // 一筆報名的人頭數（整筆一起點名）
-  function headcountOf(s) {
-    if (s.category_quantities && Object.keys(s.category_quantities).length > 0) {
-      return Object.values(s.category_quantities).reduce((a, b) => a + (b || 0), 0);
-    }
-    return s.quantity ?? 1;
-  }
-
-  // 切換某位報名者的報到狀態（樂觀更新，失敗還原）
-  async function toggleCheckin(s) {
-    const next = !s.checked_in;
-    setSignups((prev) => prev.map((x) => (x.id === s.id ? { ...x, checked_in: next } : x)));
-    try {
-      const res = await fetch(`/api/signups/${s.id}/checkin`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ owner_token: getOwnerToken(), checked_in: next }),
-      });
-      if (!res.ok) throw new Error();
-    } catch {
-      setSignups((prev) => prev.map((x) => (x.id === s.id ? { ...x, checked_in: !next } : x)));
-      setToast("點名儲存失敗，請重試");
-    }
-  }
-
-  // 全部標記已到／全部重設
-  async function setAllCheckin(value) {
-    const targets = signups.filter((s) => !!s.checked_in !== value);
-    if (targets.length === 0) return;
-    setSignups((prev) => prev.map((x) => ({ ...x, checked_in: value })));
-    await Promise.all(
-      targets.map((s) =>
-        fetch(`/api/signups/${s.id}/checkin`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ owner_token: getOwnerToken(), checked_in: value }),
-        }).catch(() => {})
-      )
-    );
-  }
-
-  // 複製未到名單，方便貼回 LINE 群組提醒
-  function copyAbsentList() {
-    const absent = signups.filter((s) => !s.checked_in).map((s) => s.name);
-    if (absent.length === 0) {
-      setToast("全員都到齊了 🎉");
-      return;
-    }
-    const text = `未報到（${absent.length} 位）：\n` + absent.join("、");
-    navigator.clipboard?.writeText(text).then(
-      () => setToast("已複製未到名單"),
-      () => setToast("複製失敗，請手動選取")
-    );
-  }
-
-  // 點名統計（用人頭數計算，與名單總數一致）
-  const checkedCount = signups.filter((s) => s.checked_in).length;
-  const totalCount = signups.length;
-  const absentCount = totalCount - checkedCount;
-
   const closed = task ? taskStatus(task).label === "已截止" : false;
   const headcountMode = isHeadcountUnit(task?.quantity_unit);
   const totalHeadcount = headcountMode
     ? signups.reduce((sum, s) => sum + (s.quantity ?? 1), 0)
     : signups.length;
   const full = task?.max_signups ? totalHeadcount >= task.max_signups : false;
+  // 多人報名開放條件：無分類「且」無數量單位
+  const allowMulti = task ? (!task.categories || task.categories.length === 0) && !task.quantity_unit : false;
+  const filledNames = names.map((n) => n.trim()).filter(Boolean);
+  const isMultiActive = allowMulti && filledNames.length >= 2;
   const taskHasCategories = task?.categories?.length > 0;
   // Per-category quantity mode is determined by whether the TASK itself
   // defines categories (not by whether the visitor has picked one yet).
@@ -208,7 +153,13 @@ export default function TaskDetailClient() {
 
   async function handleSend() {
     if (!task) return;
-    if (!name.trim()) {
+    if (allowMulti) {
+      if (!names[0] || !names[0].trim()) {
+        setError("請先填寫您的姓名！");
+        nameInputRef.current?.focus();
+        return;
+      }
+    } else if (!name.trim()) {
       setError("請先填寫您的姓名！");
       nameInputRef.current?.focus();
       return;
@@ -227,8 +178,9 @@ export default function TaskDetailClient() {
         body: JSON.stringify({
           task_id: task.id,
           categories: task.categories?.length > 0 ? categories : [],
-          name: name.trim(),
-          note: note.trim(),
+          name: allowMulti ? names[0].trim() : name.trim(),
+          names: allowMulti && filledNames.length >= 2 ? filledNames : undefined,
+          note: isMultiActive ? "" : note.trim(),
           quantity: task.quantity_unit && !usesPerCategoryQuantity ? quantity : undefined,
           category_quantities: usesPerCategoryQuantity ? categoryQuantities : undefined,
           owner_token: getOwnerToken(),
@@ -242,11 +194,12 @@ export default function TaskDetailClient() {
       rememberMySignup(data.signup.id);
       setMyIds(getMySignupIds());
       setName("");
+      setNames([""]);
       setNote("");
       setQuantity(1);
       setCategoryQuantities({});
       setCategories([]);
-      showToast("已成功接龍！");
+      showToast(data.count && data.count > 1 ? `已幫 ${data.count} 位完成報名！` : "已成功接龍！");
       startCooldown(30);
       // Re-fetch from the database instead of only patching local state, so
       // the list is always guaranteed to match what's actually saved —
@@ -348,51 +301,6 @@ export default function TaskDetailClient() {
             {totalHeadcount} 人已接龍
           </div>
         )}
-
-        {closed && !viewOnly && totalCount > 0 && (
-          <div className="pl-11 mt-1 mb-3">
-            {!checkinMode ? (
-              <button
-                onClick={() => setCheckinMode(true)}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 active:scale-[0.97] border border-emerald-200 rounded-full px-3.5 py-1.5 transition"
-              >
-                <ClipboardCheck size={14} /> 開始點名
-              </button>
-            ) : (
-              <div className="bg-white border border-emerald-200 rounded-2xl p-3 shadow-sm">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-gray-700">
-                    已報到 <span className="text-emerald-600">{checkedCount}</span> / {totalCount} 位
-                    {absentCount > 0 && <span className="text-gray-400 font-normal">（未到 {absentCount}）</span>}
-                  </span>
-                  <button
-                    onClick={() => setCheckinMode(false)}
-                    className="text-[11px] text-gray-400 hover:text-gray-600 px-1"
-                  >
-                    完成
-                  </button>
-                </div>
-                <div className="h-1.5 rounded-full overflow-hidden bg-emerald-100 mb-2.5">
-                  <div
-                    className="h-full rounded-full bg-emerald-500 transition-all"
-                    style={{ width: `${totalCount ? (checkedCount / totalCount) * 100 : 0}%` }}
-                  />
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  <button onClick={() => setAllCheckin(true)} className="text-[11px] text-emerald-600 border border-emerald-200 rounded-full px-2.5 py-1 hover:bg-emerald-50 flex items-center gap-1">
-                    <CheckCircle2 size={12} /> 全部已到
-                  </button>
-                  <button onClick={() => setAllCheckin(false)} className="text-[11px] text-gray-500 border border-gray-200 rounded-full px-2.5 py-1 hover:bg-gray-50 flex items-center gap-1">
-                    <RotateCcw size={12} /> 重設
-                  </button>
-                  <button onClick={copyAbsentList} className="text-[11px] text-gray-500 border border-gray-200 rounded-full px-2.5 py-1 hover:bg-gray-50 flex items-center gap-1">
-                    <Copy size={12} /> 複製未到名單
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       <div ref={listRef} className="flex-1 px-6 pb-3 overflow-y-auto scroll-smooth min-w-0">
@@ -405,8 +313,6 @@ export default function TaskDetailClient() {
           closed={closed}
           onUpdate={handleUpdate}
           onDelete={handleDelete}
-          checkinMode={checkinMode}
-          onToggleCheckin={toggleCheckin}
         />
       </div>
 
@@ -462,18 +368,54 @@ export default function TaskDetailClient() {
             </>
           )}
           <div className="flex flex-col gap-2">
-            <input
-              ref={nameInputRef}
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                if (error) setError("");
-              }}
-              placeholder="你的姓名"
-              className={`w-full border rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition ${
-                error ? "border-rose-300 focus:ring-rose-200" : "border-gray-200 focus:ring-emerald-300"
-              }`}
-            />
+            {allowMulti ? (
+              <>
+                {names.map((nm, i) => (
+                  <input
+                    key={i}
+                    ref={i === 0 ? nameInputRef : undefined}
+                    value={nm}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setNames((prev) => {
+                        const next = [...prev];
+                        next[i] = v;
+                        // 漸進式：當最後一格開始填字，自動長出下一格
+                        if (i === next.length - 1 && v.trim()) next.push("");
+                        // 收合：末端多個空格只保留一個待命格
+                        while (next.length > 1 && next[next.length - 1] === "" && next[next.length - 2] === "") {
+                          next.pop();
+                        }
+                        return next;
+                      });
+                      if (error) setError("");
+                    }}
+                    placeholder={i === 0 ? "你的姓名" : "幫別人報名（選填）"}
+                    className={`w-full border rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition ${
+                      error && i === 0 ? "border-rose-300 focus:ring-rose-200" : "border-gray-200 focus:ring-emerald-300"
+                    }`}
+                  />
+                ))}
+                {isMultiActive && (
+                  <p className="text-[11px] text-emerald-600 px-2 -mt-0.5">
+                    一次幫 {filledNames.length} 位報名
+                  </p>
+                )}
+              </>
+            ) : (
+              <input
+                ref={nameInputRef}
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (error) setError("");
+                }}
+                placeholder="你的姓名"
+                className={`w-full border rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition ${
+                  error ? "border-rose-300 focus:ring-rose-200" : "border-gray-200 focus:ring-emerald-300"
+                }`}
+              />
+            )}
             {error && (
               <p className="text-xs text-rose-500 flex items-center gap-1 px-2 -mt-1">
                 <AlertCircle size={12} className="shrink-0" /> {error}
@@ -502,10 +444,13 @@ export default function TaskDetailClient() {
               )
             )}
             <input
-              value={note}
+              value={isMultiActive ? "" : note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="備註（選填）"
-              className="w-full border border-gray-200 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              placeholder={isMultiActive ? "幫多人報名時暫不支援備註" : "備註（選填）"}
+              disabled={isMultiActive}
+              className={`w-full border rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 transition ${
+                isMultiActive ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed" : "border-gray-200"
+              }`}
             />
             <button
               onClick={handleSend}
