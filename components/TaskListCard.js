@@ -279,7 +279,7 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
 
         <div className="w-full px-4 py-3 flex items-center gap-1.5">
           <div onClick={toggleExpand} className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
-            <div className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+            <div className={`w-9 h-9 rounded-full ${iconBg} text-white flex items-center justify-center shrink-0`}>
               <MessageCircle size={16} />
             </div>
             <div className="flex-1 min-w-0">
@@ -384,17 +384,16 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
             </div>
 
             <div className="mb-3">
-              <div className="flex items-center justify-between mb-1.5 px-0.5">
-                <p className="text-[11px] font-medium text-gray-400">報名名單</p>
-                {isClosed && signups.length > 0 && !checkinMode && (
-                  <button
-                    onClick={() => setCheckinMode(true)}
-                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 active:scale-[0.97] border border-emerald-200 rounded-full px-2.5 py-1 transition"
-                  >
-                    <ClipboardCheck size={12} /> 開始點名
-                  </button>
-                )}
-              </div>
+              <p className="text-[11px] font-medium text-gray-400 mb-1.5 px-0.5">報名名單</p>
+
+              {isClosed && signups.length > 0 && !checkinMode && (
+                <button
+                  onClick={() => setCheckinMode(true)}
+                  className="w-full mb-2.5 flex items-center justify-center gap-1.5 text-xs font-semibold text-white bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] rounded-full py-2.5 shadow-sm shadow-emerald-200 transition"
+                >
+                  <ClipboardCheck size={15} /> 開始點名報到
+                </button>
+              )}
 
               {isClosed && checkinMode && (
                 <div className="bg-white border border-emerald-200 rounded-xl p-2.5 mb-2 shadow-sm">
