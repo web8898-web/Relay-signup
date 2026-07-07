@@ -9,6 +9,7 @@ import FadeIn from "@/components/FadeIn";
 import TaskListCard from "@/components/TaskListCard";
 import { useOrganizerProfile } from "@/lib/OrganizerContext";
 import { supabase } from "@/lib/supabaseClient";
+import { taskStatus } from "@/lib/utils";
 
 // LINE's official "add friend" deep link format for a given Basic ID.
 const FRIEND_ADD_URL = "https://line.me/R/ti/p/%40085uqqfg";
@@ -68,6 +69,27 @@ export default function MyTasksListContent() {
     loadTasks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile]);
+
+  // 任務排序權重：已結束 → 已額滿 → 進行中（由上到下）。
+  function statusRank(t) {
+    if (taskStatus(t).label === "已截止") return 0;
+    const list = signupsByTask[t.id] || [];
+    const headcount = t.quantity_unit
+      ? list.reduce((sum, s) => {
+          if (s.category_quantities && Object.keys(s.category_quantities).length > 0) {
+            return sum + Object.values(s.category_quantities).reduce((a, b) => a + (b || 0), 0);
+          }
+          return sum + (s.quantity ?? 1);
+        }, 0)
+      : list.length;
+    const isFull = t.max_signups ? headcount >= t.max_signups : false;
+    return isFull ? 1 : 2;
+  }
+  const sortedTasks = [...tasks].sort((a, b) => {
+    const d = statusRank(a) - statusRank(b);
+    if (d !== 0) return d;
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
 
   async function handleDelete(taskId) {
     // Optimistic removal: the swipe-to-delete gesture in TaskListCard
@@ -154,7 +176,7 @@ export default function MyTasksListContent() {
         {tasks.length === 0 && (
           <EmptyState icon={<ClipboardList size={30} />} title="還沒有任務" desc="點擊上方「建立任務」開始建立第一個接龍吧。" />
         )}
-        {tasks.map((t) => (
+        {sortedTasks.map((t) => (
           <TaskListCard
             key={t.id}
             task={t}
