@@ -8,9 +8,10 @@ const DUPLICATE_WINDOW_MS = 30_000;
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { task_id, categories, name, note, quantity, category_quantities, owner_token } = body;
+    const { task_id, categories, name, names, note, quantity, category_quantities, owner_token } = body;
 
-    if (!task_id || !name || !owner_token) {
+    const hasNames = Array.isArray(names) && names.some((n) => String(n || "").trim());
+    if (!task_id || (!name && !hasNames) || !owner_token) {
       return NextResponse.json({ error: "缺少必要欄位" }, { status: 400 });
     }
 
@@ -123,6 +124,51 @@ export async function POST(request) {
         { error: `請稍候 ${waitSeconds} 秒後再試一次`, cooldown_seconds: waitSeconds },
         { status: 429 }
       );
+    }
+
+    // ── 多人報名（一次幫多人）──
+    // 僅在任務「無分類且無數量單位」時開放，此時每人 = 一個名額，
+    // 結構最單純。names 帶 2 個以上有效名字時走這條批次分支。
+    const cleanNames = Array.isArray(names)
+      ? names.map((n) => String(n || "").trim()).filter(Boolean).slice(0, 50)
+      : [];
+    const isMultiEligible =
+      (!task.categories || task.categories.length === 0) && !task.quantity_unit;
+    if (isMultiEligible && cleanNames.length >= 2) {
+      // 名額檢查：一般任務每人算 1 個名額
+      if (task.max_signups) {
+        const { count } = await supabase
+          .from("signups")
+          .select("id", { count: "exact", head: true })
+          .eq("task_id", task_id);
+        const remaining = task.max_signups - (count ?? 0);
+        if (remaining <= 0) {
+          return NextResponse.json({ error: "這個任務已經額滿了" }, { status: 400 });
+        }
+        if (cleanNames.length > remaining) {
+          return NextResponse.json(
+            { error: `名額不足，僅剩 ${remaining} 個，請減少報名人數` },
+            { status: 400 }
+          );
+        }
+      }
+      const rows = cleanNames.map((nm) => ({
+        task_id,
+        categories: [],
+        name: nm.slice(0, 60),
+        note: "",
+        quantity: null,
+        category_quantities: {},
+        owner_token,
+      }));
+      const { data: inserted, error: multiErr } = await supabase
+        .from("signups")
+        .insert(rows)
+        .select();
+      if (multiErr) throw multiErr;
+      // 智慧通知：批次視為多筆活動，用最後一筆觸發一次評估即可
+      await notifySignupActivity({ supabase, task, signup: inserted?.[inserted.length - 1] });
+      return NextResponse.json({ signups: inserted, count: inserted.length });
     }
 
     const { data, error } = await supabase
