@@ -149,6 +149,21 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
   const st = taskStatus(task);
   const signupCount = signups.length;
 
+  // 統一的任務顯示狀態，供圖示配色與排序共用：
+  // 已結束（截止）> 已額滿 > 進行中。額滿＝有設定上限且人頭數達標。
+  const headcount = task.quantity_unit
+    ? signups.reduce((sum, s) => {
+        if (s.category_quantities && Object.keys(s.category_quantities).length > 0) {
+          return sum + Object.values(s.category_quantities).reduce((a, b) => a + (b || 0), 0);
+        }
+        return sum + (s.quantity ?? 1);
+      }, 0)
+    : signups.length;
+  const isClosed = st.label === "已截止";
+  const isFull = !isClosed && task.max_signups ? headcount >= task.max_signups : false;
+  // 圖示樣式：結束＝灰底白氣泡、額滿＝紅底白氣泡、其餘＝綠底白氣泡
+  const iconBg = isClosed ? "bg-gray-400" : isFull ? "bg-rose-500" : "bg-emerald-500";
+
   const NO_CATEGORY = "__no_category__";
   const categoryCounts = {};
   let noCategoryCount = 0;
@@ -206,7 +221,7 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
 
         <div className="w-full px-4 py-3 flex items-center gap-1.5">
           <div onClick={toggleExpand} className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
-            <div className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+            <div className={`w-9 h-9 rounded-full ${iconBg} text-white flex items-center justify-center shrink-0`}>
               <MessageCircle size={16} />
             </div>
             <div className="flex-1 min-w-0">
