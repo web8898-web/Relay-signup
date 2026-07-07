@@ -101,8 +101,9 @@ export default function HomePage() {
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce [animation-delay:-0.15s]" />
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce" />
             </div>
-            <p className="text-xs text-gray-400 mt-3">
-              登入中<span className="inline-block w-6 text-left">{".".repeat(dotCount)}</span>
+            <p className="text-xs text-gray-400 mt-3 relative inline-block">
+              登入中
+              <span className="absolute left-full top-0 w-6 text-left">{".".repeat(dotCount)}</span>
             </p>
           </div>
         ) : loading ? null : !profile ? (
