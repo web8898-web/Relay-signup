@@ -82,7 +82,7 @@ export default function MyTasksListContent() {
           return sum + (s.quantity ?? 1);
         }, 0)
       : list.length;
-    const isFull = t.max_signups ? headcount >= t.max_signups : false;
+    const isFull = !!t.max_signups && headcount >= t.max_signups;
     return isFull ? 1 : 2;
   }
   const sortedTasks = [...tasks].sort((a, b) => {
