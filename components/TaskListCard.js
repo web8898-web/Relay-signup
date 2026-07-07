@@ -150,6 +150,13 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
   const st = taskStatus(task);
   const signupCount = signups.length;
 
+  // 報名順序編號（依全體報名順序，篩選分類時仍維持原編號），
+  // 與公開「查看名單」頁一致。
+  const orderNumber = {};
+  signups.forEach((s, i) => {
+    orderNumber[s.id] = i + 1;
+  });
+
   // 統一的顯示狀態：已結束 > 已額滿 > 進行中，供圖示配色與狀態標籤共用。
   const headcount = task.quantity_unit
     ? signups.reduce((sum, s) => {
@@ -490,6 +497,9 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="shrink-0 inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-emerald-100 text-emerald-700 text-[9px] font-bold">
+                            {orderNumber[s.id]}
+                          </span>
                           <span className="text-xs font-medium text-gray-700 truncate">{s.name}</span>
                           {s.categories?.map((c) => (
                             <span key={c} className={`text-[10px] px-1.5 py-0.5 rounded-full border whitespace-nowrap ${chipClass(c)}`}>
