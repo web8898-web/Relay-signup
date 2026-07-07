@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useState, useEffect } from "react";
 import { MessageCircle, ChevronRight, MoreVertical, Edit2, Share2, Calendar, Users, Download, FileSpreadsheet, FileText, Bell, BellOff, Trash2, ClipboardCheck, Check, RotateCcw, Copy, CheckCircle2 } from "lucide-react";
-import { taskStatus, chipClass, avatarClass, relTime } from "@/lib/utils";
+import { taskStatus, chipClass, avatarClass, relTime, batchInfoFor } from "@/lib/utils";
 import { getOwnerToken } from "@/lib/ownerToken";
 import { useScrollFadeRight } from "@/lib/useScrollFadeRight";
 import { liff } from "@/lib/liff";
@@ -155,6 +155,12 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
   const orderNumber = {};
   signups.forEach((s, i) => {
     orderNumber[s.id] = i + 1;
+  });
+  // 同批多人報名的側標色（同組左邊緣同色）
+  const batchInfoList = batchInfoFor(signups);
+  const batchColorById = {};
+  signups.forEach((s, i) => {
+    if (batchInfoList[i]) batchColorById[s.id] = batchInfoList[i].color;
   });
 
   // 統一的顯示狀態：已結束 > 已額滿 > 進行中，供圖示配色與狀態標籤共用。
@@ -473,7 +479,9 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
                     <div
                       key={s.id || i}
                       onClick={checkinMode ? () => toggleCheckin(s) : undefined}
-                      className={`flex items-start gap-2 border rounded-xl px-3 py-2 transition ${
+                      className={`relative overflow-hidden flex items-start gap-2 border rounded-xl px-3 py-2 transition ${
+                        batchColorById[s.id] ? "pl-4" : ""
+                      } ${
                         checkinMode
                           ? `cursor-pointer select-none active:scale-[0.99] ${
                               checkedIds.has(s.id) ? "bg-emerald-50 border-emerald-200" : "bg-gray-50 border-gray-100"
@@ -481,6 +489,9 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
                           : "bg-gray-50 border-gray-100"
                       }`}
                     >
+                      {batchColorById[s.id] && (
+                        <span className={`absolute left-0 top-0 bottom-0 w-1.5 ${batchColorById[s.id]}`} aria-hidden="true" />
+                      )}
                       {checkinMode ? (
                         <div
                           className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border-2 transition ${
