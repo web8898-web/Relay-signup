@@ -152,6 +152,8 @@ export async function POST(request) {
           );
         }
       }
+      // 同一批一起送出的報名共用一個 batch_id，供名單顯示「同組」側標
+      const batchId = (globalThis.crypto?.randomUUID?.() ) || null;
       const rows = cleanNames.map((nm) => ({
         task_id,
         categories: [],
@@ -160,6 +162,7 @@ export async function POST(request) {
         quantity: null,
         category_quantities: {},
         owner_token,
+        batch_id: batchId,
       }));
       const { data: inserted, error: multiErr } = await supabase
         .from("signups")
