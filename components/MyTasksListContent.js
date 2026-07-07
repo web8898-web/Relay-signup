@@ -173,6 +173,20 @@ export default function MyTasksListContent() {
           </button>
         )}
 
+        {tasks.length > 0 && (
+          <div className="flex items-center justify-center flex-wrap gap-x-4 gap-y-1.5 px-1 py-0.5">
+            <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> 進行中
+            </span>
+            <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-500" /> 已額滿
+            </span>
+            <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
+              <span className="w-2.5 h-2.5 rounded-full bg-gray-400" /> 已結束
+            </span>
+          </div>
+        )}
+
         {tasks.length === 0 && (
           <EmptyState icon={<ClipboardList size={30} />} title="還沒有任務" desc="點擊上方「建立任務」開始建立第一個接龍吧。" />
         )}
