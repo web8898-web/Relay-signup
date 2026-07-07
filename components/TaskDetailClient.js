@@ -201,7 +201,7 @@ export default function TaskDetailClient() {
       setQuantity(1);
       setCategoryQuantities({});
       setCategories([]);
-      showToast(data.count && data.count > 1 ? `已幫 ${data.count} 位完成報名！` : "已成功接龍！");
+      showToast(data.count && data.count > 1 ? `這次共完成 ${data.count} 位的報名！` : "已成功接龍！");
       startCooldown(30);
       // Re-fetch from the database instead of only patching local state, so
       // the list is always guaranteed to match what's actually saved —
