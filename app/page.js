@@ -91,7 +91,14 @@ export default function HomePage() {
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce [animation-delay:-0.15s]" />
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce" />
             </div>
-            <p className="text-xs text-gray-400 mt-3">確認登入狀態中…</p>
+            <p className="text-xs text-gray-400 mt-3 flex items-center justify-center">
+              登入中
+              <span className="inline-flex ml-0.5">
+                <span className="animate-bounce [animation-delay:-0.3s]">.</span>
+                <span className="animate-bounce [animation-delay:-0.15s]">.</span>
+                <span className="animate-bounce">.</span>
+              </span>
+            </p>
           </div>
         ) : loading ? null : !profile ? (
           <div className="bg-white border border-gray-100 rounded-3xl p-8 flex flex-col items-center text-center shadow-sm mt-2">
