@@ -53,6 +53,16 @@ export default function HomePage() {
   }, [profile]);
 
   const [showTour, setShowTour] = useState(false);
+
+  // 「登入中」後面的點數：1→2→3→4→5→1 循環，營造載入動態
+  const [dotCount, setDotCount] = useState(1);
+  useEffect(() => {
+    const t = setInterval(() => {
+      setDotCount((n) => (n >= 5 ? 1 : n + 1));
+    }, 350);
+    return () => clearInterval(t);
+  }, []);
+
   useEffect(() => {
     if (!profile) return; // 尚未用 LINE 登入，不顯示首次導覽
     if (getOnboardingState()) return;
@@ -91,13 +101,8 @@ export default function HomePage() {
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce [animation-delay:-0.15s]" />
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce" />
             </div>
-            <p className="text-xs text-gray-400 mt-3 flex items-center justify-center">
-              登入中
-              <span className="inline-flex ml-0.5">
-                <span className="animate-bounce [animation-delay:-0.3s]">.</span>
-                <span className="animate-bounce [animation-delay:-0.15s]">.</span>
-                <span className="animate-bounce">.</span>
-              </span>
+            <p className="text-xs text-gray-400 mt-3">
+              登入中<span className="inline-block w-6 text-left">{".".repeat(dotCount)}</span>
             </p>
           </div>
         ) : loading ? null : !profile ? (
