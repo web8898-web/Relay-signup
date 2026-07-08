@@ -64,6 +64,29 @@ input, textarea, select {
   animation-delay: 0.75s;
 }
 
+@keyframes loading-dot-sequence {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.9);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+.loading-dot-sequence {
+  animation: loading-dot-sequence 1.08s ease-in-out infinite;
+}
+
+.loading-dot-delay-1 {
+  animation-delay: 0.18s;
+}
+
+.loading-dot-delay-2 {
+  animation-delay: 0.36s;
+}
+
 /*
   任務清單展開後的內嵌報名名單：
   原本每一列高度太矮，加上 overflow-hidden 會把姓名與分類標籤壓在一起，
