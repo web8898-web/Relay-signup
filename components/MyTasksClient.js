@@ -42,6 +42,7 @@ export default function MyTasksClient() {
   const [tasksLoading, setTasksLoading] = useState(true);
   const [toast, setToast] = useState("");
   const [friendBannerExpanded, setFriendBannerExpanded] = useState(true);
+  const [expandedTaskId, setExpandedTaskId] = useState(null);
 
   useEffect(() => {
     const saved = typeof window !== "undefined" ? localStorage.getItem(FRIEND_BANNER_KEY) : null;
@@ -94,6 +95,7 @@ export default function MyTasksClient() {
   async function handleDelete(taskId) {
     const removedTask = tasks.find((t) => t.id === taskId);
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
+    if (expandedTaskId === taskId) setExpandedTaskId(null);
     try {
       const res = await fetch(`/api/tasks/${taskId}`, {
         method: "DELETE",
@@ -162,7 +164,7 @@ export default function MyTasksClient() {
         }
       />
       <OrganizerTabs current="tasks" />
-      <div className="flex-1 px-6 pt-3 pb-[65vh] flex flex-col gap-3 overflow-y-auto">
+      <div className="flex-1 px-6 pt-3 pb-[65vh] flex flex-col gap-3 overflow-y-auto scroll-smooth">
         {friendBannerExpanded ? (
           <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 flex items-start gap-2.5">
             <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
@@ -174,33 +176,18 @@ export default function MyTasksClient() {
                 加入官方帳號好友，有人報名時 LINE 就會直接通知你。可以在每個任務旁的鈴鐺圖示，個別開關要不要收通知。
               </p>
               <div className="flex justify-end">
-                <a
-                  href={FRIEND_ADD_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block mt-2 bg-emerald-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-emerald-600 transition"
-                >
+                <a href={FRIEND_ADD_URL} target="_blank" rel="noopener noreferrer" className="inline-block mt-2 bg-emerald-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-emerald-600 transition">
                   加官方帳號好友
                 </a>
               </div>
             </div>
-            <button
-              onClick={() => setBannerExpanded(false)}
-              className="text-emerald-400 hover:text-emerald-600 shrink-0"
-              aria-label="收合提示"
-            >
+            <button onClick={() => setBannerExpanded(false)} className="text-emerald-400 hover:text-emerald-600 shrink-0" aria-label="收合提示">
               <ChevronUp size={16} />
             </button>
           </div>
         ) : (
-          <button
-            onClick={() => setBannerExpanded(true)}
-            className="w-full flex items-center justify-between text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-3 hover:bg-emerald-100 transition"
-            aria-label="展開提示"
-          >
-            <span className="flex items-center gap-2">
-              <Bell size={14} /> 加好友才能收到報名通知
-            </span>
+          <button onClick={() => setBannerExpanded(true)} className="w-full flex items-center justify-between text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-3 hover:bg-emerald-100 transition" aria-label="展開提示">
+            <span className="flex items-center gap-2"><Bell size={14} /> 加好友才能收到報名通知</span>
             <ChevronDown size={14} />
           </button>
         )}
@@ -213,10 +200,7 @@ export default function MyTasksClient() {
               title="還沒有建立任何接龍"
               desc={"建立第一個接龍後，就能分享到 LINE，\n讓大家立即開始報名。"}
               action={
-                <button
-                  onClick={() => router.push("/create")}
-                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-3 font-semibold flex items-center justify-center gap-2 shadow-md shadow-emerald-200 transition"
-                >
+                <button onClick={() => router.push("/create")} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-3 font-semibold flex items-center justify-center gap-2 shadow-md shadow-emerald-200 transition">
                   <PenLine size={17} /> 建立第一個任務
                 </button>
               }
@@ -229,6 +213,9 @@ export default function MyTasksClient() {
             task={t}
             signups={signupsByTask[t.id] || []}
             accessToken={profile.accessToken}
+            expanded={expandedTaskId === t.id}
+            dimmed={!!expandedTaskId && expandedTaskId !== t.id}
+            onToggleExpand={() => setExpandedTaskId((current) => (current === t.id ? null : t.id))}
             onEdit={() => router.push(`/my-tasks/${t.id}/edit`)}
             onShare={() => router.push(`/create/share/${t.id}`)}
             onDelete={() => handleDelete(t.id)}
@@ -237,10 +224,7 @@ export default function MyTasksClient() {
       </div>
 
       <div className="px-6 pb-6 pt-2">
-        <button
-          onClick={() => router.push("/create")}
-          className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-3 font-semibold flex items-center justify-center gap-2 shadow-md shadow-emerald-200 transition"
-        >
+        <button onClick={() => router.push("/create")} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-3 font-semibold flex items-center justify-center gap-2 shadow-md shadow-emerald-200 transition">
           <Plus size={18} /> 新增任務
         </button>
       </div>
