@@ -10,6 +10,7 @@ import TaskGoneIllustration from "@/components/TaskGoneIllustration";
 import FadeIn from "@/components/FadeIn";
 import Toast from "@/components/Toast";
 import QuantityStepper from "@/components/QuantityStepper";
+import ConfettiSuccess from "@/components/ConfettiSuccess";
 import { supabase } from "@/lib/supabaseClient";
 import { taskStatus, isHeadcountUnit } from "@/lib/utils";
 import { getOwnerToken, getMySignupIds, rememberMySignup, forgetMySignup } from "@/lib/ownerToken";
@@ -18,11 +19,6 @@ import { useScrollFadeRight } from "@/lib/useScrollFadeRight";
 export default function TaskDetailClient() {
   const { id } = useParams();
   const router = useRouter();
-  // When someone taps "查看名單" on the share card (instead of "我要報名"),
-  // they land here with the form hidden — just the task info and who's
-  // already joined, no pressure to fill anything in until they choose to.
-  // Read straight from window.location (rather than the useSearchParams
-  // hook) so this component doesn't need a <Suspense> boundary wrapper.
   const [viewOnly, setViewOnly] = useState(
     () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("mode") === "view"
   );
@@ -32,8 +28,6 @@ export default function TaskDetailClient() {
   const [myIds, setMyIds] = useState([]);
   const [categories, setCategories] = useState([]);
   const [name, setName] = useState("");
-  // 多人報名：names 是「你的名字 + 幫別人報名」的欄位陣列。
-  // 只有任務無分類且無數量單位時啟用（漸進式：填了才長出下一格）。
   const [names, setNames] = useState([""]);
   const [note, setNote] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -42,16 +36,15 @@ export default function TaskDetailClient() {
   const [error, setError] = useState("");
   const [categoryError, setCategoryError] = useState("");
   const [toast, setToast] = useState("");
+  const [showConfetti, setShowConfetti] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const cooldownIntervalRef = useRef(null);
   const listRef = useRef(null);
   const formSectionRef = useRef(null);
   const prevViewOnlyRef = useRef(viewOnly);
+  const nameInputRef = useRef(null);
+  const [catScrollRef, catSentinelRef, catCanScrollRight] = useScrollFadeRight(!loading && task?.categories?.length > 0);
 
-  // When someone reveals the form from "查看名單" mode (viewOnly true ->
-  // false), scroll it into view automatically — otherwise the form
-  // appears below the fold and they'd have to notice it and scroll down
-  // themselves.
   useEffect(() => {
     if (prevViewOnlyRef.current && !viewOnly) {
       requestAnimationFrame(() => {
@@ -60,8 +53,6 @@ export default function TaskDetailClient() {
     }
     prevViewOnlyRef.current = viewOnly;
   }, [viewOnly]);
-  const nameInputRef = useRef(null);
-  const [catScrollRef, catSentinelRef, catCanScrollRight] = useScrollFadeRight(!loading && task?.categories?.length > 0);
 
   function startCooldown(seconds) {
     setCooldown(seconds);
@@ -88,6 +79,12 @@ export default function TaskDetailClient() {
     setTimeout(() => setToast(""), 2200);
   }
 
+  function playSuccess(message) {
+    setShowConfetti(true);
+    showToast(message);
+    setTimeout(() => setShowConfetti(false), 1700);
+  }
+
   async function load() {
     setLoading(true);
     const startedAt = Date.now();
@@ -102,11 +99,6 @@ export default function TaskDetailClient() {
     setSignups(signupData || []);
     setMyIds(getMySignupIds());
 
-    // Guarantee the transition screen is actually visible for a beat —
-    // without this, a fast network response can resolve in a few tens of
-    // milliseconds, making the loading state flash past unnoticed and the
-    // final screen (found or not-found) feel like it just jump-cut in
-    // rather than eased in after a proper transition.
     const MIN_TRANSITION_MS = 500;
     const elapsed = Date.now() - startedAt;
     if (elapsed < MIN_TRANSITION_MS) {
@@ -126,16 +118,10 @@ export default function TaskDetailClient() {
     ? signups.reduce((sum, s) => sum + (s.quantity ?? 1), 0)
     : signups.length;
   const full = task?.max_signups ? totalHeadcount >= task.max_signups : false;
-  // 多人報名開放條件：無分類「且」無數量單位
   const allowMulti = task ? (!task.categories || task.categories.length === 0) && !task.quantity_unit : false;
   const filledNames = names.map((n) => n.trim()).filter(Boolean);
   const isMultiActive = allowMulti && filledNames.length >= 2;
   const taskHasCategories = task?.categories?.length > 0;
-  // Per-category quantity mode is determined by whether the TASK itself
-  // defines categories (not by whether the visitor has picked one yet).
-  // That's what keeps the quantity field hidden entirely until a tag is
-  // selected, instead of falling back to a generic "數量" field the
-  // moment the page loads.
   const usesPerCategoryQuantity = !!task?.quantity_unit && taskHasCategories;
 
   function toggleCategory(c) {
@@ -191,7 +177,6 @@ export default function TaskDetailClient() {
         if (data.cooldown_seconds) startCooldown(data.cooldown_seconds);
         throw new Error(data.error);
       }
-      // 記住這次報名的 id：單人回傳 data.signup、多人回傳 data.signups 陣列
       const created = data.signups || (data.signup ? [data.signup] : []);
       created.forEach((sg) => sg?.id && rememberMySignup(sg.id));
       setMyIds(getMySignupIds());
@@ -201,12 +186,8 @@ export default function TaskDetailClient() {
       setQuantity(1);
       setCategoryQuantities({});
       setCategories([]);
-      showToast(data.count && data.count > 1 ? `這次共完成 ${data.count} 位的報名！` : "已成功接龍！");
+      playSuccess(data.count && data.count > 1 ? `這次共完成 ${data.count} 位的報名！` : "已成功接龍！");
       startCooldown(30);
-      // Re-fetch from the database instead of only patching local state, so
-      // the list is always guaranteed to match what's actually saved —
-      // this is what fixes the "first signup doesn't show until you leave
-      // and re-open the page" issue.
       const { data: signupData } = await supabase
         .from("signups")
         .select("*")
@@ -382,9 +363,7 @@ export default function TaskDetailClient() {
                       setNames((prev) => {
                         const next = [...prev];
                         next[i] = v;
-                        // 漸進式：當最後一格開始填字，自動長出下一格
                         if (i === next.length - 1 && v.trim()) next.push("");
-                        // 收合：末端多個空格只保留一個待命格
                         while (next.length > 1 && next[next.length - 1] === "" && next[next.length - 2] === "") {
                           next.pop();
                         }
@@ -488,6 +467,8 @@ export default function TaskDetailClient() {
         </div>
       )}
     </FadeIn>
+
+    <ConfettiSuccess show={showConfetti} message="報名成功！" />
 
     {toast && (
       <Toast className="bottom-28">
