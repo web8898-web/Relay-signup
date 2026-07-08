@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ClipboardList, LogIn, MessageCircle, Plus, Bell, ChevronUp, ChevronDown } from "lucide-react";
+import { ClipboardList, LogIn, MessageCircle, Plus, Bell, ChevronUp, ChevronDown, PenLine } from "lucide-react";
 import { TopBar, EmptyState } from "@/components/TopBar";
 import OrganizerTabs from "@/components/OrganizerTabs";
 import LoadingBubble from "@/components/LoadingBubble";
@@ -11,9 +11,28 @@ import { useLineProfile } from "@/lib/useLineProfile";
 import { avatarClass } from "@/lib/utils";
 import { supabase } from "@/lib/supabaseClient";
 
-// LINE's official "add friend" deep link format for a given Basic ID.
 const FRIEND_ADD_URL = "https://line.me/R/ti/p/%40085uqqfg";
 const FRIEND_BANNER_KEY = "friendBannerExpanded";
+
+function TaskListSkeleton() {
+  return (
+    <div className="flex flex-col gap-3 py-1">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-sm animate-pulse">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-emerald-50" />
+            <div className="flex-1 min-w-0">
+              <div className="h-3.5 w-36 rounded-full bg-gray-100" />
+              <div className="h-2.5 w-24 rounded-full bg-gray-100 mt-2" />
+            </div>
+            <div className="w-7 h-7 rounded-full bg-gray-50" />
+            <div className="w-7 h-7 rounded-full bg-gray-50" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function MyTasksClient() {
   const router = useRouter();
@@ -22,11 +41,6 @@ export default function MyTasksClient() {
   const [signupsByTask, setSignupsByTask] = useState({});
   const [tasksLoading, setTasksLoading] = useState(true);
   const [toast, setToast] = useState("");
-  // Defaults to expanded (big banner) the very first time. After that, the
-  // person's collapse/expand choice is remembered — but collapsing never
-  // makes it disappear entirely, since someone who dismisses it *before*
-  // actually adding the friend would otherwise lose the only entry point
-  // to do so later.
   const [friendBannerExpanded, setFriendBannerExpanded] = useState(true);
 
   useEffect(() => {
@@ -78,10 +92,6 @@ export default function MyTasksClient() {
   }, [profile]);
 
   async function handleDelete(taskId) {
-    // Optimistic removal: the swipe-to-delete gesture in TaskListCard
-    // already plays its own exit animation, so we take the card out of the
-    // list right away instead of waiting on the network — waiting here is
-    // what made the swipe feel like it was hanging on the red background.
     const removedTask = tasks.find((t) => t.id === taskId);
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
     try {
@@ -93,8 +103,6 @@ export default function MyTasksClient() {
       if (!res.ok) throw new Error(data.error);
       showToast("已移除任務");
     } catch (e) {
-      // The delete didn't actually go through on the server — put the
-      // task back so the list stays correct.
       if (removedTask) {
         setTasks((prev) =>
           [...prev, removedTask].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
@@ -197,13 +205,23 @@ export default function MyTasksClient() {
           </button>
         )}
 
-        {tasksLoading && (
-          <div className="flex justify-center py-6">
-            <LoadingBubble size={18} />
-          </div>
-        )}
+        {tasksLoading && <TaskListSkeleton />}
         {!tasksLoading && tasks.length === 0 && (
-          <EmptyState icon={<ClipboardList size={30} />} title="還沒有任務" desc="點擊上方「建立任務」開始建立第一個接龍吧。" />
+          <div className="bg-white border border-gray-100 rounded-[28px] px-5 py-2 shadow-sm">
+            <EmptyState
+              icon={<ClipboardList size={30} />}
+              title="還沒有建立任何接龍"
+              desc={"建立第一個接龍後，就能分享到 LINE，\n讓大家立即開始報名。"}
+              action={
+                <button
+                  onClick={() => router.push("/create")}
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-3 font-semibold flex items-center justify-center gap-2 shadow-md shadow-emerald-200 transition"
+                >
+                  <PenLine size={17} /> 建立第一個任務
+                </button>
+              }
+            />
+          </div>
         )}
         {tasks.map((t) => (
           <TaskListCard
