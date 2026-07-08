@@ -11,6 +11,19 @@ import FadeIn from "@/components/FadeIn";
 import { useLineProfile } from "@/lib/useLineProfile";
 import { avatarClass } from "@/lib/utils";
 
+const HOME_RETURN_ANIMATION_KEY = "relay_home_return_expand";
+
+function shouldPlayHomeReturnAnimation() {
+  if (typeof window === "undefined") return false;
+  try {
+    const shouldPlay = sessionStorage.getItem(HOME_RETURN_ANIMATION_KEY) === "1";
+    if (shouldPlay) sessionStorage.removeItem(HOME_RETURN_ANIMATION_KEY);
+    return shouldPlay;
+  } catch (e) {
+    return false;
+  }
+}
+
 export default function HomePage() {
   const { profile, loading, login, error } = useLineProfile();
   const router = useRouter();
@@ -23,6 +36,16 @@ export default function HomePage() {
   const [minWaitDone, setMinWaitDone] = useState(false);
   const [sessionAuthed, setSessionAuthed] = useState(false);
   const [transitionTo, setTransitionTo] = useState(null);
+  const [returnExpanding, setReturnExpanding] = useState(() => shouldPlayHomeReturnAnimation());
+
+  useEffect(() => {
+    if (!returnExpanding) return;
+    const raf1 = requestAnimationFrame(() => {
+      const raf2 = requestAnimationFrame(() => setReturnExpanding(false));
+      return () => cancelAnimationFrame(raf2);
+    });
+    return () => cancelAnimationFrame(raf1);
+  }, [returnExpanding]);
 
   useEffect(() => {
     let authed = false;
@@ -75,7 +98,9 @@ export default function HomePage() {
 
   const showLoadingCard = (loading || !minWaitDone) && !sessionAuthed;
   const isTransitioning = !!transitionTo;
-  const transitionTitle = transitionTo === "/create" ? "建立任務" : "任務清單";
+  const heroCollapsed = isTransitioning || returnExpanding;
+  const contentHiddenForMorph = isTransitioning || returnExpanding;
+  const transitionTitle = transitionTo === "/create" ? "建立任務" : transitionTo === "/my-tasks" ? "任務清單" : "接龍報名小助手";
 
   function navigateWithHeroCollapse(path) {
     if (isTransitioning) return;
@@ -87,14 +112,14 @@ export default function HomePage() {
     <div className={`flex-1 flex flex-col min-w-0 ${isTransitioning ? "pointer-events-none" : ""}`}>
       <div
         className={`relative bg-emerald-500 text-white shadow-md overflow-hidden transform-gpu will-change-[height,border-radius,transform,opacity] transition-[height,min-height,padding,border-radius,box-shadow,opacity] duration-[560ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          isTransitioning
+          heroCollapsed
             ? "px-4 py-4 rounded-b-none h-[56px] min-h-[56px]"
             : "px-6 pt-12 pb-10 rounded-b-[2.5rem] h-[276px] min-h-[276px]"
         } ${showLoadingCard ? "opacity-90" : "opacity-100"}`}
       >
         <div
           className={`absolute inset-0 px-4 py-4 flex items-center gap-3 transform-gpu will-change-transform transition-[opacity,transform] duration-[560ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
-            isTransitioning ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
+            heroCollapsed ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
           }`}
         >
           <ArrowLeft size={20} className="text-white/90 shrink-0" />
@@ -112,7 +137,7 @@ export default function HomePage() {
         {profile && (
           <div
             className={`absolute top-5 right-5 flex items-center gap-1.5 bg-white/15 rounded-full pl-1 pr-2.5 py-1 transform-gpu will-change-transform transition-[opacity,transform] duration-[560ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
-              isTransitioning ? "opacity-0 -translate-y-5 scale-95" : "opacity-100 translate-y-0 scale-100"
+              heroCollapsed ? "opacity-0 -translate-y-5 scale-95" : "opacity-100 translate-y-0 scale-100"
             }`}
           >
             <div className={`w-5 h-5 rounded-full ${avatarClass(profile.displayName)} text-white flex items-center justify-center text-[10px] font-bold shrink-0`}>
@@ -123,7 +148,7 @@ export default function HomePage() {
         )}
         <div
           className={`transform-gpu origin-top-left will-change-transform transition-[opacity,transform] duration-[560ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
-            isTransitioning ? "opacity-0 -translate-y-8 scale-[0.96]" : "opacity-100 translate-y-0 scale-100"
+            heroCollapsed ? "opacity-0 -translate-y-8 scale-[0.96]" : "opacity-100 translate-y-0 scale-100"
           }`}
         >
           <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mb-4">
@@ -138,7 +163,7 @@ export default function HomePage() {
 
       <div
         className={`flex-1 px-6 py-8 flex flex-col gap-4 transform-gpu will-change-transform transition-[opacity,transform] duration-[560ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          isTransitioning ? "opacity-0 -translate-y-6" : "opacity-100 translate-y-0"
+          contentHiddenForMorph ? "opacity-0 -translate-y-6" : "opacity-100 translate-y-0"
         }`}
       >
         {showLoadingCard ? (
