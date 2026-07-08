@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   MessageCircle,
   MoreVertical,
@@ -13,12 +13,13 @@ import {
   FileText,
   Bell,
   BellOff,
-  Trash2,
   ClipboardCheck,
   Check,
   RotateCcw,
   Copy,
   CheckCircle2,
+  Search,
+  X,
 } from "lucide-react";
 import { taskStatus, chipClass, avatarClass, relTime, batchInfoFor } from "@/lib/utils";
 import { getOwnerToken } from "@/lib/ownerToken";
@@ -31,6 +32,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [filter, setFilter] = useState("全部");
+  const [searchText, setSearchText] = useState("");
   const [notifyEnabled, setNotifyEnabled] = useState(task.notify_enabled !== false);
   const [notifyBusy, setNotifyBusy] = useState(false);
   const [checkinMode, setCheckinMode] = useState(false);
@@ -214,12 +216,29 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
     }
   }
 
-  const filteredSignups =
-    filter === "全部"
-      ? signups
-      : filter === NO_CATEGORY
-      ? signups.filter((s) => !s.categories || s.categories.length === 0)
-      : signups.filter((s) => s.categories?.includes(filter));
+  const filteredSignups = useMemo(() => {
+    const keyword = searchText.trim().toLowerCase();
+    const byCategory =
+      filter === "全部"
+        ? signups
+        : filter === NO_CATEGORY
+        ? signups.filter((s) => !s.categories || s.categories.length === 0)
+        : signups.filter((s) => s.categories?.includes(filter));
+
+    if (!keyword) return byCategory;
+    return byCategory.filter((s) => {
+      const text = [
+        s.name,
+        s.note,
+        ...(s.categories || []),
+        String(orderNumber[s.id] || ""),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return text.includes(keyword);
+    });
+  }, [filter, searchText, signups]);
 
   return (
     <div ref={cardRef} className="relative scroll-mt-4">
@@ -293,7 +312,28 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
               </div>
 
               <div className="mb-3">
-                <p className="text-[11px] font-medium text-gray-400 mb-1.5 px-0.5">報名名單</p>
+                <div className="flex items-center justify-between gap-2 mb-1.5 px-0.5">
+                  <p className="text-[11px] font-medium text-gray-400">報名名單</p>
+                  {searchText && <p className="text-[11px] text-emerald-500">找到 {filteredSignups.length} 位</p>}
+                </div>
+
+                {signups.length > 0 && (
+                  <div className="relative mb-2.5">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
+                    <input
+                      value={searchText}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => setSearchText(e.target.value)}
+                      placeholder="搜尋姓名、備註或分類"
+                      className="w-full rounded-full border border-gray-100 bg-gray-50 py-2 pl-9 pr-9 text-xs text-gray-600 outline-none focus:border-emerald-200 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition"
+                    />
+                    {searchText && (
+                      <button onClick={(e) => { e.stopPropagation(); setSearchText(""); }} className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full text-gray-300 hover:text-gray-500 flex items-center justify-center">
+                        <X size={13} />
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {isClosed && signups.length > 0 && !checkinMode && (
                   <button onClick={(e) => { e.stopPropagation(); setCheckinMode(true); }} className="w-full mb-2.5 flex items-center justify-center gap-1.5 text-xs font-semibold text-white bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] rounded-full py-2.5 shadow-sm shadow-emerald-200 transition">
@@ -340,7 +380,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
                 )}
 
                 {filteredSignups.length === 0 ? (
-                  <p className="text-xs text-gray-300 text-center py-4">{signups.length === 0 ? "還沒有人報名" : "這個分類還沒有人報名"}</p>
+                  <p className="text-xs text-gray-300 text-center py-4">{signups.length === 0 ? "還沒有人報名" : searchText ? "找不到符合的報名者" : "這個分類還沒有人報名"}</p>
                 ) : (
                   <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto pr-0.5">
                     {filteredSignups.map((s, i) => (
