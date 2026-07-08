@@ -37,6 +37,20 @@ input, textarea, select {
   grid-template-rows: 0fr !important;
 }
 
+@keyframes toast-confetti {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.7) rotate(0deg);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -72px, 0) scale(1) rotate(180deg);
+  }
+}
+
 @keyframes login-card-enter {
   0% {
     opacity: 0;
