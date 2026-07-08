@@ -2,17 +2,30 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
+const HOME_RETURN_ANIMATION_KEY = "relay_home_return_expand";
+
+function markHomeReturnAnimation() {
+  try {
+    sessionStorage.setItem(HOME_RETURN_ANIMATION_KEY, "1");
+  } catch (e) {}
+}
+
 export function TopBar({ title, backHref, onBack, right }) {
+  function handleBackClick() {
+    markHomeReturnAnimation();
+    onBack?.();
+  }
+
   return (
     <>
       <div className="h-[56px] shrink-0" aria-hidden="true" />
       <div className="fixed top-0 left-1/2 z-[9999] w-full max-w-md -translate-x-1/2 bg-emerald-500 text-white px-4 py-4 flex items-center gap-3 shadow-sm">
         {backHref ? (
-          <Link href={backHref} className="text-white/90 hover:text-white">
+          <Link href={backHref} onClick={backHref === "/" ? markHomeReturnAnimation : undefined} className="text-white/90 hover:text-white">
             <ArrowLeft size={20} />
           </Link>
         ) : onBack ? (
-          <button onClick={onBack} className="text-white/90 hover:text-white">
+          <button onClick={handleBackClick} className="text-white/90 hover:text-white">
             <ArrowLeft size={20} />
           </button>
         ) : null}
