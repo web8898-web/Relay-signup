@@ -16,30 +16,31 @@ export default function HomePage() {
   const { profile, loading, login, error } = useLineProfile();
   const router = useRouter();
 
-  // 首次操作教學導覽的起點：本機沒有任何進度標記代表第一次來，
-  // 聚光燈指向「建立任務」按鈕。點進去之後，建立任務頁會接手
-  // 後續步驟（那邊同樣是看到沒有標記就自動開始）。
-  // 「確認登入狀態中」畫面的最短停留時間：第一次進站至少顯示
-  // 3 秒再進入對應畫面（已登入→功能畫面、未登入→登入畫面）。
-  // 但如果這個瀏覽分頁在本次使用中已經確認過登入（例如從建立
-  // 任務、任務清單按返回回到首頁），就不再重跑 3 秒等待，直接
-  // 柔和淡入功能畫面。
+  // 第一次進站保留完整首頁＋登入動畫 1.5 秒，建立產品記憶點；
+  // 同一個瀏覽分頁已確認登入，或這台裝置曾看過首頁登入動畫，就跳過等待，
+  // 讓回訪使用者接近「秒進」。
   const SESSION_AUTHED = "relay_session_authed";
+  const SEEN_LOGIN_ANIMATION = "relay_seen_login_animation";
   const [minWaitDone, setMinWaitDone] = useState(false);
   const [sessionAuthed, setSessionAuthed] = useState(false);
   useEffect(() => {
     let authed = false;
+    let seenLoginAnimation = false;
     try {
       authed = sessionStorage.getItem(SESSION_AUTHED) === "1";
+      seenLoginAnimation = localStorage.getItem(SEEN_LOGIN_ANIMATION) === "1";
     } catch (e) {}
-    if (authed) {
-      // 本次使用已確認過登入：跳過等待畫面，重新確認登入的短暫
-      // 空檔也不顯示等待卡片，避免返回首頁時閃現
-      setSessionAuthed(true);
+    if (authed || seenLoginAnimation) {
+      setSessionAuthed(authed);
       setMinWaitDone(true);
       return;
     }
-    const t = setTimeout(() => setMinWaitDone(true), 3000);
+    const t = setTimeout(() => {
+      setMinWaitDone(true);
+      try {
+        localStorage.setItem(SEEN_LOGIN_ANIMATION, "1");
+      } catch (e) {}
+    }, 1500);
     return () => clearTimeout(t);
   }, []);
 
@@ -49,17 +50,18 @@ export default function HomePage() {
     if (!profile) return;
     try {
       sessionStorage.setItem(SESSION_AUTHED, "1");
+      localStorage.setItem(SEEN_LOGIN_ANIMATION, "1");
     } catch (e) {}
   }, [profile]);
 
   const [showTour, setShowTour] = useState(false);
 
-  // 「登入中」後面的點數：1→2→3→4→5→1 循環，營造載入動態
-  const [dotCount, setDotCount] = useState(1);
+  // 登入動畫點點：● ○ ○ → ○ ● ○ → ○ ○ ●，比單純跳動更安定。
+  const [activeDot, setActiveDot] = useState(0);
   useEffect(() => {
     const t = setInterval(() => {
-      setDotCount((n) => (n >= 5 ? 1 : n + 1));
-    }, 350);
+      setActiveDot((n) => (n + 1) % 3);
+    }, 360);
     return () => clearInterval(t);
   }, []);
 
@@ -70,9 +72,15 @@ export default function HomePage() {
     return () => clearTimeout(t);
   }, [profile]);
 
+  const showLoadingCard = (loading || !minWaitDone) && !sessionAuthed;
+
   return (
     <div className="flex-1 flex flex-col min-w-0">
-      <div className="relative bg-emerald-500 text-white px-6 pt-12 pb-10 rounded-b-[2.5rem] shadow-md">
+      <div
+        className={`relative bg-emerald-500 text-white px-6 pt-12 pb-10 rounded-b-[2.5rem] shadow-md transition-opacity duration-700 ${
+          showLoadingCard ? "opacity-90" : "opacity-100"
+        }`}
+      >
         {profile && (
           <div className="absolute top-5 right-5 flex items-center gap-1.5 bg-white/15 rounded-full pl-1 pr-2.5 py-1">
             <div className={`w-5 h-5 rounded-full ${avatarClass(profile.displayName)} text-white flex items-center justify-center text-[10px] font-bold shrink-0`}>
@@ -91,19 +99,27 @@ export default function HomePage() {
       </div>
 
       <div className="flex-1 px-6 py-8 flex flex-col gap-4">
-        {(loading || !minWaitDone) && !sessionAuthed ? (
-          <div className="bg-white border border-gray-100 rounded-3xl p-8 flex flex-col items-center text-center shadow-sm mt-2">
-            <div className="w-16 h-16 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-200 mb-5">
-              <MessageCircle size={24} />
+        {showLoadingCard ? (
+          <div className="bg-white border border-gray-100 rounded-[1.75rem] p-7 flex flex-col items-center text-center shadow-sm mt-2 w-[85%] max-w-[320px] mx-auto">
+            <div className="relative mb-5 flex items-center justify-center">
+              <span className="login-pulse-ring absolute rounded-full border border-emerald-300/60" aria-hidden="true" />
+              <span className="login-pulse-ring login-pulse-ring-delay absolute rounded-full border border-emerald-300/40" aria-hidden="true" />
+              <div className="login-logo-breathe relative z-10 w-16 h-16 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-200">
+                <MessageCircle size={24} />
+              </div>
             </div>
-            <div className="flex gap-1.5 mt-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce [animation-delay:-0.3s]" />
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce [animation-delay:-0.15s]" />
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce" />
+            <div className="flex gap-2 mt-1" aria-label="正在登入">
+              {[0, 1, 2].map((i) => (
+                <span
+                  key={i}
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                    activeDot === i ? "bg-emerald-500 scale-110 opacity-100" : "bg-emerald-200 scale-90 opacity-70"
+                  }`}
+                />
+              ))}
             </div>
-            <p className="text-xs text-gray-400 mt-3 relative inline-block">
-              登入中
-              <span className="absolute left-full top-0 w-6 text-left">{".".repeat(dotCount)}</span>
+            <p className="text-xs text-gray-400 mt-3 tracking-wide">
+              正在登入<span className="text-emerald-400">•••</span>
             </p>
           </div>
         ) : loading ? null : !profile ? (
