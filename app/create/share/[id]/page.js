@@ -78,7 +78,7 @@ export default function ShareTaskPage() {
       if (liff.isApiAvailable && liff.isApiAvailable("shareTargetPicker")) {
         const flexMessage = buildFlexMessage(task, url);
         await liff.shareTargetPicker([flexMessage]);
-        showToast("已開啟分享選單");
+        showToast("分享已送出");
         return;
       }
     } catch (e) {
