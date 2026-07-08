@@ -114,9 +114,9 @@ export default function ShareTaskPage() {
   if (!task) return null;
 
   return (
-    <FadeIn className="flex-1 flex flex-col relative min-w-0">
+    <div className="flex-1 flex flex-col relative min-w-0">
       <TopBar title="建立完成" onBack={() => router.push("/my-tasks")} />
-      <div className="flex-1 px-5 py-5 overflow-y-auto">
+      <FadeIn className="flex-1 px-5 py-5 overflow-y-auto">
         <div className="flex flex-col items-center text-center pt-2">
           <div className={`w-20 h-20 rounded-full flex items-center justify-center shadow-lg mb-4 transition-all duration-500 ${shared ? "bg-emerald-500 text-white shadow-emerald-200" : "bg-emerald-50 text-emerald-500 shadow-emerald-100"}`}>
             {shared ? <Sparkles size={34} /> : <CheckCircle2 size={38} strokeWidth={2.4} />}
@@ -205,7 +205,7 @@ export default function ShareTaskPage() {
         >
           <ArrowLeft size={15} /> 回到任務清單
         </button>
-      </div>
+      </FadeIn>
 
       <Toast className="bottom-4">
         {toast && (
@@ -230,6 +230,6 @@ export default function ShareTaskPage() {
           onSkip={finishTour}
         />
       )}
-    </FadeIn>
+    </div>
   );
 }
