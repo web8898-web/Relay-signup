@@ -42,6 +42,7 @@ export default function MyTasksClient() {
   const [tasksLoading, setTasksLoading] = useState(true);
   const [toast, setToast] = useState("");
   const [friendBannerExpanded, setFriendBannerExpanded] = useState(true);
+  const [expandedTaskId, setExpandedTaskId] = useState(null);
 
   useEffect(() => {
     const saved = typeof window !== "undefined" ? localStorage.getItem(FRIEND_BANNER_KEY) : null;
@@ -94,6 +95,7 @@ export default function MyTasksClient() {
   async function handleDelete(taskId) {
     const removedTask = tasks.find((t) => t.id === taskId);
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
+    if (expandedTaskId === taskId) setExpandedTaskId(null);
     try {
       const res = await fetch(`/api/tasks/${taskId}`, {
         method: "DELETE",
@@ -211,6 +213,9 @@ export default function MyTasksClient() {
             task={t}
             signups={signupsByTask[t.id] || []}
             accessToken={profile.accessToken}
+            expanded={expandedTaskId === t.id}
+            dimmed={!!expandedTaskId && expandedTaskId !== t.id}
+            onToggleExpand={() => setExpandedTaskId((current) => (current === t.id ? null : t.id))}
             onEdit={() => router.push(`/my-tasks/${t.id}/edit`)}
             onShare={() => router.push(`/create/share/${t.id}`)}
             onDelete={() => handleDelete(t.id)}
