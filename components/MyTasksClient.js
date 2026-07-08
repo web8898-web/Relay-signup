@@ -6,7 +6,7 @@ import { TopBar, EmptyState } from "@/components/TopBar";
 import OrganizerTabs from "@/components/OrganizerTabs";
 import LoadingBubble from "@/components/LoadingBubble";
 import FadeIn from "@/components/FadeIn";
-import TaskListCard from "@/components/TaskListCard";
+import TaskListCard from "@/components/TaskListCardStable";
 import { useLineProfile } from "@/lib/useLineProfile";
 import { avatarClass } from "@/lib/utils";
 import { supabase } from "@/lib/supabaseClient";
@@ -42,7 +42,6 @@ export default function MyTasksClient() {
   const [tasksLoading, setTasksLoading] = useState(true);
   const [toast, setToast] = useState("");
   const [friendBannerExpanded, setFriendBannerExpanded] = useState(true);
-  const [expandedTaskId, setExpandedTaskId] = useState(null);
 
   useEffect(() => {
     const saved = typeof window !== "undefined" ? localStorage.getItem(FRIEND_BANNER_KEY) : null;
@@ -95,7 +94,6 @@ export default function MyTasksClient() {
   async function handleDelete(taskId) {
     const removedTask = tasks.find((t) => t.id === taskId);
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
-    if (expandedTaskId === taskId) setExpandedTaskId(null);
     try {
       const res = await fetch(`/api/tasks/${taskId}`, {
         method: "DELETE",
@@ -208,22 +206,15 @@ export default function MyTasksClient() {
           </div>
         )}
         {tasks.map((t) => (
-          <div
+          <TaskListCard
             key={t.id}
-            onClick={() => setExpandedTaskId((current) => (current === t.id ? null : t.id))}
-            className="cursor-pointer"
-          >
-            <TaskListCard
-              task={t}
-              signups={signupsByTask[t.id] || []}
-              accessToken={profile.accessToken}
-              expanded={expandedTaskId === t.id}
-              dimmed={!!expandedTaskId && expandedTaskId !== t.id}
-              onEdit={() => router.push(`/my-tasks/${t.id}/edit`)}
-              onShare={() => router.push(`/create/share/${t.id}`)}
-              onDelete={() => handleDelete(t.id)}
-            />
-          </div>
+            task={t}
+            signups={signupsByTask[t.id] || []}
+            accessToken={profile.accessToken}
+            onEdit={() => router.push(`/my-tasks/${t.id}/edit`)}
+            onShare={() => router.push(`/create/share/${t.id}`)}
+            onDelete={() => handleDelete(t.id)}
+          />
         ))}
       </div>
 
