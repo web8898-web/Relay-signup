@@ -15,17 +15,11 @@ export const metadata = {
   },
 };
 
-// Runs synchronously as the very first thing inside <body>, before any of
-// the app's own markup is even parsed, let alone painted. LIFF's deep-link
-// redirect (e.g. https://liff.line.me/{liffId}/my-tasks/xxx) always makes a
-// brief first stop on this root page with a `liff.state` query param before
-// the SDK auto-navigates to the real target — that first stop is a fixed
-// part of LINE's redirect protocol and can't be skipped. What CAN be
-// avoided is people actually seeing the homepage during that gap: this
-// plain inline script covers the screen the instant it detects that param,
-// which is well before React's JS bundle has even loaded — a React
-// component can't run early enough to prevent the flash, only a raw
-// <script> parsed inline in the HTML can.
+// Runs synchronously as early as possible, before the app UI paints. LIFF's
+// deep-link redirect can briefly land on this root page with a `liff.state`
+// query param before the SDK navigates to the real target. Setting the title
+// in <head> makes the in-app browser title settle on the product name earlier,
+// and the splash prevents users from seeing a blank/root-page flash.
 const antiFlashScript = `
 (function () {
   try {
@@ -59,9 +53,9 @@ export default function RootLayout({ children }) {
         <title>接龍報名小助手</title>
         <meta name="application-name" content="接龍報名小助手" />
         <meta name="apple-mobile-web-app-title" content="接龍報名小助手" />
+        <script dangerouslySetInnerHTML={{ __html: antiFlashScript }} />
       </head>
       <body className="bg-gradient-to-b from-emerald-50 via-white to-emerald-50 min-h-screen">
-        <script dangerouslySetInnerHTML={{ __html: antiFlashScript }} />
         <LiffBootstrap />
         <LiffTransitionOverlay />
         <div className="w-full max-w-md mx-auto min-h-screen bg-white shadow-xl relative flex flex-col">
