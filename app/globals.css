@@ -124,3 +124,22 @@ input, textarea, select {
 .max-h-64.overflow-y-auto > .relative.overflow-hidden.flex.items-start span {
   line-height: 1.35;
 }
+
+/*
+  已截止任務的點名操作按鈕：
+  三顆功能按鈕原本用 flex-wrap 依文字寬度自然排列，右側會留下不均勻空白。
+  這裡只鎖定點名面板內的操作列，改成三等分排列，讓「全部已到 / 重設 / 複製未到名單」視覺寬度一致。
+*/
+.bg-white.border.border-emerald-200.rounded-xl.p-2\.5.mb-2.shadow-sm > .flex.flex-wrap.gap-1\.5 {
+  display: grid !important;
+  grid-template-columns: 1fr 0.78fr 1.35fr;
+  gap: 0.375rem !important;
+}
+
+.bg-white.border.border-emerald-200.rounded-xl.p-2\.5.mb-2.shadow-sm > .flex.flex-wrap.gap-1\.5 > button {
+  width: 100% !important;
+  min-height: 2rem;
+  justify-content: center !important;
+  padding: 0.375rem 0.25rem !important;
+  white-space: nowrap;
+}
