@@ -100,25 +100,25 @@ export default function HomePage() {
 
       <div className="flex-1 px-6 py-8 flex flex-col gap-4">
         {showLoadingCard ? (
-          <div className="bg-white border border-gray-100 rounded-[1.75rem] p-7 flex flex-col items-center text-center shadow-sm mt-2 w-[85%] max-w-[320px] mx-auto">
-            <div className="relative mb-5 flex items-center justify-center">
-              <span className="login-pulse-ring absolute rounded-full border border-emerald-300/60" aria-hidden="true" />
-              <span className="login-pulse-ring login-pulse-ring-delay absolute rounded-full border border-emerald-300/40" aria-hidden="true" />
-              <div className="login-logo-breathe relative z-10 w-16 h-16 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-200">
-                <MessageCircle size={24} />
+          <div className="login-card-enter bg-white border border-gray-100 rounded-[24px] px-5 py-6 flex flex-col items-center text-center shadow-[0_12px_30px_-24px_rgba(15,23,42,0.45)] mt-1 w-[75%] max-w-[280px] mx-auto">
+            <div className="relative mb-4 flex items-center justify-center">
+              <span className="login-pulse-ring absolute rounded-full border border-emerald-300/40" aria-hidden="true" />
+              <span className="login-pulse-ring login-pulse-ring-delay absolute rounded-full border border-emerald-300/25" aria-hidden="true" />
+              <div className="login-logo-breathe relative z-10 w-15 h-15 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md shadow-emerald-200">
+                <MessageCircle size={23} />
               </div>
             </div>
-            <div className="flex gap-2 mt-1" aria-label="正在登入">
+            <div className="flex gap-2 mt-0.5" aria-label="正在登入">
               {[0, 1, 2].map((i) => (
                 <span
                   key={i}
-                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
                     activeDot === i ? "bg-emerald-500 scale-110 opacity-100" : "bg-emerald-200 scale-90 opacity-70"
                   }`}
                 />
               ))}
             </div>
-            <p className="text-xs text-gray-400 mt-3 tracking-wide">
+            <p className="text-[11px] text-gray-400 mt-2.5 tracking-wide">
               正在登入<span className="text-emerald-400">•••</span>
             </p>
           </div>
