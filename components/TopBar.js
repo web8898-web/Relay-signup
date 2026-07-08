@@ -4,19 +4,22 @@ import { ArrowLeft } from "lucide-react";
 
 export function TopBar({ title, backHref, onBack, right }) {
   return (
-    <div className="sticky top-0 z-40 bg-emerald-500 text-white px-4 py-4 flex items-center gap-3 shadow-sm shrink-0">
-      {backHref ? (
-        <Link href={backHref} className="text-white/90 hover:text-white">
-          <ArrowLeft size={20} />
-        </Link>
-      ) : onBack ? (
-        <button onClick={onBack} className="text-white/90 hover:text-white">
-          <ArrowLeft size={20} />
-        </button>
-      ) : null}
-      <p className="font-bold flex-1 truncate">{title}</p>
-      {right}
-    </div>
+    <>
+      <div className="h-[56px] shrink-0" aria-hidden="true" />
+      <div className="fixed top-0 left-1/2 z-[9999] w-full max-w-md -translate-x-1/2 bg-emerald-500 text-white px-4 py-4 flex items-center gap-3 shadow-sm">
+        {backHref ? (
+          <Link href={backHref} className="text-white/90 hover:text-white">
+            <ArrowLeft size={20} />
+          </Link>
+        ) : onBack ? (
+          <button onClick={onBack} className="text-white/90 hover:text-white">
+            <ArrowLeft size={20} />
+          </button>
+        ) : null}
+        <p className="font-bold flex-1 truncate">{title}</p>
+        {right}
+      </div>
+    </>
   );
 }
 
