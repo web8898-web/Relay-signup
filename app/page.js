@@ -1,8 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ClipboardList, PenLine, ChevronRight, MessageCircle, RotateCcw } from "lucide-react";
+import { ArrowLeft, ClipboardList, PenLine, ChevronRight, MessageCircle, RotateCcw } from "lucide-react";
 import OnboardingTour, {
   getOnboardingState,
   setOnboardingState,
@@ -23,6 +22,8 @@ export default function HomePage() {
   const SEEN_LOGIN_ANIMATION = "relay_seen_login_animation";
   const [minWaitDone, setMinWaitDone] = useState(false);
   const [sessionAuthed, setSessionAuthed] = useState(false);
+  const [transitionTo, setTransitionTo] = useState(null);
+
   useEffect(() => {
     let authed = false;
     let seenLoginAnimation = false;
@@ -73,32 +74,73 @@ export default function HomePage() {
   }, [profile]);
 
   const showLoadingCard = (loading || !minWaitDone) && !sessionAuthed;
+  const isTransitioning = !!transitionTo;
+  const transitionTitle = transitionTo === "/create" ? "建立任務" : "任務清單";
+
+  function navigateWithHeroCollapse(path) {
+    if (isTransitioning) return;
+    setTransitionTo(path);
+    setTimeout(() => router.push(path), 430);
+  }
 
   return (
-    <div className="flex-1 flex flex-col min-w-0">
+    <div className={`flex-1 flex flex-col min-w-0 ${isTransitioning ? "pointer-events-none" : ""}`}>
       <div
-        className={`relative bg-emerald-500 text-white px-6 pt-12 pb-10 rounded-b-[2.5rem] shadow-md transition-opacity duration-700 ${
-          showLoadingCard ? "opacity-90" : "opacity-100"
-        }`}
+        className={`relative bg-emerald-500 text-white shadow-md overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          isTransitioning
+            ? "px-4 py-4 rounded-b-none min-h-[56px]"
+            : "px-6 pt-12 pb-10 rounded-b-[2.5rem] min-h-[276px]"
+        } ${showLoadingCard ? "opacity-90" : "opacity-100"}`}
       >
+        <div
+          className={`absolute inset-0 px-4 py-4 flex items-center gap-3 transition-all duration-300 ${
+            isTransitioning ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"
+          }`}
+        >
+          <ArrowLeft size={20} className="text-white/90 shrink-0" />
+          <p className="font-bold flex-1 truncate">{transitionTitle}</p>
+          {profile && (
+            <div className="flex items-center gap-1.5 bg-white/15 rounded-full pl-1 pr-2.5 py-1 shrink-0">
+              <div className={`w-5 h-5 rounded-full ${avatarClass(profile.displayName)} text-white flex items-center justify-center text-[10px] font-bold shrink-0`}>
+                {profile.displayName?.[0] || "?"}
+              </div>
+              <span className="text-xs text-white/90 font-medium max-w-[80px] truncate">{profile.displayName}</span>
+            </div>
+          )}
+        </div>
+
         {profile && (
-          <div className="absolute top-5 right-5 flex items-center gap-1.5 bg-white/15 rounded-full pl-1 pr-2.5 py-1">
+          <div
+            className={`absolute top-5 right-5 flex items-center gap-1.5 bg-white/15 rounded-full pl-1 pr-2.5 py-1 transition-all duration-300 ${
+              isTransitioning ? "opacity-0 translate-y-[-8px]" : "opacity-100 translate-y-0"
+            }`}
+          >
             <div className={`w-5 h-5 rounded-full ${avatarClass(profile.displayName)} text-white flex items-center justify-center text-[10px] font-bold shrink-0`}>
               {profile.displayName?.[0] || "?"}
             </div>
             <span className="text-xs text-white/90 font-medium max-w-[80px] truncate">{profile.displayName}</span>
           </div>
         )}
-        <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mb-4">
-          <MessageCircle size={28} />
+        <div
+          className={`transition-all duration-300 ${
+            isTransitioning ? "opacity-0 -translate-y-4 scale-[0.98]" : "opacity-100 translate-y-0 scale-100"
+          }`}
+        >
+          <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mb-4">
+            <MessageCircle size={28} />
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight">接龍報名小助手</h1>
+          <p className="text-emerald-50 mt-2 text-sm leading-relaxed">
+            像在聊天室接龍一樣，開一個任務，讓大家一則一則回覆完成報名。
+          </p>
         </div>
-        <h1 className="text-3xl font-bold tracking-tight">接龍報名小助手</h1>
-        <p className="text-emerald-50 mt-2 text-sm leading-relaxed">
-          像在聊天室接龍一樣，開一個任務，讓大家一則一則回覆完成報名。
-        </p>
       </div>
 
-      <div className="flex-1 px-6 py-8 flex flex-col gap-4">
+      <div
+        className={`flex-1 px-6 py-8 flex flex-col gap-4 transition-all duration-300 ${
+          isTransitioning ? "opacity-0 -translate-y-4" : "opacity-100 translate-y-0"
+        }`}
+      >
         {showLoadingCard ? (
           <div className="login-card-enter mt-5 flex flex-col items-center text-center mx-auto">
             <div className="relative mb-4 flex items-center justify-center w-24 h-24">
@@ -141,53 +183,55 @@ export default function HomePage() {
           </div>
         ) : (
           <FadeIn className="flex flex-col gap-4">
-        <Link
-          href="/my-tasks"
-          className="group w-full bg-white border border-gray-200 rounded-3xl p-5 flex items-center gap-4 text-left shadow-sm hover:shadow-md hover:border-emerald-300 active:scale-[0.98] active:border-emerald-400 transition"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-            <ClipboardList size={22} />
-          </div>
-          <div className="flex-1">
-            <p className="font-semibold text-gray-800">任務清單</p>
-            <p className="text-xs text-gray-400 mt-0.5">{profile ? "管理你建立的任務" : "使用前，請先用 LINE 登入"}</p>
-          </div>
-          <ChevronRight size={18} className="text-gray-300 group-hover:text-emerald-400" />
-        </Link>
+            <button
+              type="button"
+              onClick={() => navigateWithHeroCollapse("/my-tasks")}
+              className="group w-full bg-white border border-gray-200 rounded-3xl p-5 flex items-center gap-4 text-left shadow-sm hover:shadow-md hover:border-emerald-300 active:scale-[0.98] active:border-emerald-400 transition"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                <ClipboardList size={22} />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-gray-800">任務清單</p>
+                <p className="text-xs text-gray-400 mt-0.5">{profile ? "管理你建立的任務" : "使用前，請先用 LINE 登入"}</p>
+              </div>
+              <ChevronRight size={18} className="text-gray-300 group-hover:text-emerald-400" />
+            </button>
 
-        <Link
-          href="/create"
-          data-tour="create-entry"
-          className="group w-full bg-white border border-gray-200 rounded-3xl p-5 flex items-center gap-4 text-left shadow-sm hover:shadow-md hover:border-emerald-300 active:scale-[0.98] active:border-emerald-400 transition"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-            <PenLine size={22} />
-          </div>
-          <div className="flex-1">
-            <p className="font-semibold text-gray-800">建立任務</p>
-            <p className="text-xs text-gray-400 mt-0.5">{profile ? "建立任務並分享到群組" : "使用前，請先用 LINE 登入"}</p>
-          </div>
-          <ChevronRight size={18} className="text-gray-300 group-hover:text-emerald-400" />
-        </Link>
+            <button
+              type="button"
+              onClick={() => navigateWithHeroCollapse("/create")}
+              data-tour="create-entry"
+              className="group w-full bg-white border border-gray-200 rounded-3xl p-5 flex items-center gap-4 text-left shadow-sm hover:shadow-md hover:border-emerald-300 active:scale-[0.98] active:border-emerald-400 transition"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                <PenLine size={22} />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-gray-800">建立任務</p>
+                <p className="text-xs text-gray-400 mt-0.5">{profile ? "建立任務並分享到群組" : "使用前，請先用 LINE 登入"}</p>
+              </div>
+              <ChevronRight size={18} className="text-gray-300 group-hover:text-emerald-400" />
+            </button>
 
-        <div className="mt-2">
-          <p className="text-xs font-semibold text-gray-400 mb-2 px-1">使用教學</p>
-          <button
-            onClick={() => {
-              // 清掉本機的教學進度標記，並立刻從首頁重新開始導覽
-              resetOnboarding();
-              setShowTour(true);
-            }}
-            className="group w-full bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-3 text-left shadow-sm hover:shadow-md hover:border-emerald-300 active:scale-[0.98] active:border-emerald-400 transition"
-          >
-            <RotateCcw size={15} className="text-emerald-500 shrink-0" />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-800">播放導覽教學</p>
-              <p className="text-[11px] text-gray-400 mt-0.5">一步一步帶你建立任務並分享到 LINE</p>
+            <div className="mt-2">
+              <p className="text-xs font-semibold text-gray-400 mb-2 px-1">使用教學</p>
+              <button
+                onClick={() => {
+                  // 清掉本機的教學進度標記，並立刻從首頁重新開始導覽
+                  resetOnboarding();
+                  setShowTour(true);
+                }}
+                className="group w-full bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-3 text-left shadow-sm hover:shadow-md hover:border-emerald-300 active:scale-[0.98] active:border-emerald-400 transition"
+              >
+                <RotateCcw size={15} className="text-emerald-500 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-gray-800">播放導覽教學</p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">一步一步帶你建立任務並分享到 LINE</p>
+                </div>
+                <ChevronRight size={16} className="text-gray-300 group-hover:text-emerald-400 shrink-0" />
+              </button>
             </div>
-            <ChevronRight size={16} className="text-gray-300 group-hover:text-emerald-400 shrink-0" />
-          </button>
-        </div>
           </FadeIn>
         )}
 
