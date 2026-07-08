@@ -28,9 +28,20 @@ input, textarea, select {
   font-size: 16px !important;
 }
 
+@keyframes login-card-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(4px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @keyframes login-logo-breathe {
   0%, 100% {
-    transform: scale(0.96);
+    transform: scale(0.975);
   }
   50% {
     transform: scale(1);
@@ -39,17 +50,21 @@ input, textarea, select {
 
 @keyframes login-pulse-ring {
   0% {
-    width: 4rem;
-    height: 4rem;
-    opacity: 0.34;
-    transform: scale(0.96);
+    width: 3.75rem;
+    height: 3.75rem;
+    opacity: 0.2;
+    transform: scale(0.98);
   }
   100% {
-    width: 6rem;
-    height: 6rem;
+    width: 5.25rem;
+    height: 5.25rem;
     opacity: 0;
-    transform: scale(1.08);
+    transform: scale(1.04);
   }
+}
+
+.login-card-enter {
+  animation: login-card-enter 220ms ease-out both;
 }
 
 .login-logo-breathe {
