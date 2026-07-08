@@ -76,7 +76,8 @@ async function buildShareSvg(task, url, signupCount = 0) {
   <rect x="90" y="62" width="1020" height="506" rx="58" fill="#FFFFFF" filter="url(#shadow)"/>
 
   <rect x="140" y="108" width="74" height="74" rx="24" fill="url(#brand)"/>
-  <path d="M164 147c0-15 12-27 27-27s27 12 27 27-12 27-27 27h-15l-15 13 3-15c-8-5-13-14-13-25z" fill="#FFFFFF" opacity="0.96"/>
+  <path d="M177 122c-18 0-32 13-32 29 0 8 4 16 11 21l-4 13 16-6c3 1 6 1.5 9 1.5 18 0 32-13 32-29S195 122 177 122z" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M160 181l-8 7 2-12" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
   <text x="236" y="137" font-family="Noto Sans TC, Arial, sans-serif" font-size="30" font-weight="800" fill="#16946A">接龍報名小助手</text>
   <text x="236" y="174" font-family="Noto Sans TC, Arial, sans-serif" font-size="20" fill="#94A3B8">快速建立・分享・統計報名</text>
 
