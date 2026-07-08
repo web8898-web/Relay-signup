@@ -28,6 +28,15 @@ input, textarea, select {
   font-size: 16px !important;
 }
 
+/* 明確補上 Tailwind arbitrary grid rows，避免部署後 purge / cache 導致任務展開高度失效。 */
+.grid-rows-\[1fr\] {
+  grid-template-rows: 1fr !important;
+}
+
+.grid-rows-\[0fr\] {
+  grid-template-rows: 0fr !important;
+}
+
 @keyframes login-card-enter {
   0% {
     opacity: 0;
