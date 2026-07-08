@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/TopBar";
 import Toast from "@/components/Toast";
 import LoadingBubble from "@/components/LoadingBubble";
 import FadeIn from "@/components/FadeIn";
-import TaskListCard from "@/components/TaskListCard";
+import TaskListCard from "@/components/TaskListCardStable";
 import { useOrganizerProfile } from "@/lib/OrganizerContext";
 import { supabase } from "@/lib/supabaseClient";
 import { isHeadcountUnit, taskStatus } from "@/lib/utils";
