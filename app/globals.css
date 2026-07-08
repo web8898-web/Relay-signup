@@ -28,6 +28,42 @@ input, textarea, select {
   font-size: 16px !important;
 }
 
+@keyframes login-logo-breathe {
+  0%, 100% {
+    transform: scale(0.96);
+  }
+  50% {
+    transform: scale(1);
+  }
+}
+
+@keyframes login-pulse-ring {
+  0% {
+    width: 4rem;
+    height: 4rem;
+    opacity: 0.34;
+    transform: scale(0.96);
+  }
+  100% {
+    width: 6rem;
+    height: 6rem;
+    opacity: 0;
+    transform: scale(1.08);
+  }
+}
+
+.login-logo-breathe {
+  animation: login-logo-breathe 1.5s ease-in-out infinite;
+}
+
+.login-pulse-ring {
+  animation: login-pulse-ring 1.5s ease-out infinite;
+}
+
+.login-pulse-ring-delay {
+  animation-delay: 0.75s;
+}
+
 /*
   任務清單展開後的內嵌報名名單：
   原本每一列高度太矮，加上 overflow-hidden 會把姓名與分類標籤壓在一起，
