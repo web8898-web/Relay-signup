@@ -9,7 +9,7 @@ import FadeIn from "@/components/FadeIn";
 import TaskListCard from "@/components/TaskListCard";
 import { useOrganizerProfile } from "@/lib/OrganizerContext";
 import { supabase } from "@/lib/supabaseClient";
-import { taskStatus } from "@/lib/utils";
+import { isHeadcountUnit, taskStatus } from "@/lib/utils";
 
 // LINE's official "add friend" deep link format for a given Basic ID.
 const FRIEND_ADD_URL = "https://line.me/R/ti/p/%40085uqqfg";
@@ -70,26 +70,42 @@ export default function MyTasksListContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile]);
 
-  // 任務排序權重：已結束 → 已額滿 → 進行中（由上到下）。
+  function headcountForTask(t) {
+    const list = signupsByTask[t.id] || [];
+    if (isHeadcountUnit(t.quantity_unit)) {
+      return list.reduce((sum, s) => {
+        if (s.category_quantities && Object.keys(s.category_quantities).length > 0) {
+          return sum + Object.values(s.category_quantities).reduce((a, b) => a + (b || 0), 0);
+        }
+        return sum + (s.quantity ?? 1);
+      }, 0);
+    }
+    return list.length;
+  }
+
+  // 任務排序權重：已截止 → 已額滿 → 進行中。
+  // 同狀態用起始日排序，讓使用者先看到日期較早、較需要處理的任務。
   function statusRank(t) {
     if (taskStatus(t).label === "已截止") return 0;
-    const list = signupsByTask[t.id] || [];
-    const headcount = t.quantity_unit
-      ? list.reduce((sum, s) => {
-          if (s.category_quantities && Object.keys(s.category_quantities).length > 0) {
-            return sum + Object.values(s.category_quantities).reduce((a, b) => a + (b || 0), 0);
-          }
-          return sum + (s.quantity ?? 1);
-        }, 0)
-      : list.length;
-    const isFull = !!t.max_signups && headcount >= t.max_signups;
+    const isFull = !!t.max_signups && headcountForTask(t) >= t.max_signups;
     return isFull ? 1 : 2;
   }
-  const sortedTasks = [...tasks].sort((a, b) => {
-    const d = statusRank(a) - statusRank(b);
-    if (d !== 0) return d;
-    return new Date(b.created_at) - new Date(a.created_at);
-  });
+
+  function startDateValue(t) {
+    return t.start_date || "9999-12-31";
+  }
+
+  function sortTasks(list) {
+    return [...list].sort((a, b) => {
+      const rankDiff = statusRank(a) - statusRank(b);
+      if (rankDiff !== 0) return rankDiff;
+      const dateDiff = startDateValue(a).localeCompare(startDateValue(b));
+      if (dateDiff !== 0) return dateDiff;
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+  }
+
+  const sortedTasks = sortTasks(tasks);
 
   async function handleDelete(taskId) {
     // Optimistic removal: the swipe-to-delete gesture in TaskListCard
@@ -110,9 +126,7 @@ export default function MyTasksListContent() {
       // The delete didn't actually go through on the server — put the
       // task back so the list stays correct.
       if (removedTask) {
-        setTasks((prev) =>
-          [...prev, removedTask].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-        );
+        setTasks((prev) => sortTasks([...prev, removedTask]));
       }
       showToast(e.message || "移除失敗");
     }
