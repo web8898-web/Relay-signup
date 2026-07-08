@@ -27,3 +27,26 @@ body {
 input, textarea, select {
   font-size: 16px !important;
 }
+
+/*
+  任務清單展開後的內嵌報名名單：
+  原本每一列高度太矮，加上 overflow-hidden 會把姓名與分類標籤壓在一起，
+  在 LINE 內建瀏覽器特別明顯。這裡只鎖定 TaskListCard 內那組
+  max-h-64 / overflow-y-auto 的名單列，讓每筆資料有足夠高度並取消裁切。
+*/
+.max-h-64.overflow-y-auto > .relative.overflow-hidden.flex.items-start {
+  min-height: 52px !important;
+  overflow: visible !important;
+  align-items: flex-start !important;
+  padding-top: 0.625rem !important;
+  padding-bottom: 0.625rem !important;
+  margin-bottom: 0.25rem;
+}
+
+.max-h-64.overflow-y-auto > .relative.overflow-hidden.flex.items-start > .flex-1 {
+  min-width: 0 !important;
+}
+
+.max-h-64.overflow-y-auto > .relative.overflow-hidden.flex.items-start span {
+  line-height: 1.35;
+}
