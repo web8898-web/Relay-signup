@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 
 export function TopBar({ title, backHref, onBack, right }) {
   return (
-    <div className="bg-emerald-500 text-white px-4 py-4 flex items-center gap-3 shadow-sm shrink-0">
+    <div className="sticky top-0 z-40 bg-emerald-500 text-white px-4 py-4 flex items-center gap-3 shadow-sm shrink-0">
       {backHref ? (
         <Link href={backHref} className="text-white/90 hover:text-white">
           <ArrowLeft size={20} />
