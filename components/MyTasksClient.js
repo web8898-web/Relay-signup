@@ -208,18 +208,22 @@ export default function MyTasksClient() {
           </div>
         )}
         {tasks.map((t) => (
-          <TaskListCard
+          <div
             key={t.id}
-            task={t}
-            signups={signupsByTask[t.id] || []}
-            accessToken={profile.accessToken}
-            expanded={expandedTaskId === t.id}
-            dimmed={!!expandedTaskId && expandedTaskId !== t.id}
-            onToggleExpand={() => setExpandedTaskId((current) => (current === t.id ? null : t.id))}
-            onEdit={() => router.push(`/my-tasks/${t.id}/edit`)}
-            onShare={() => router.push(`/create/share/${t.id}`)}
-            onDelete={() => handleDelete(t.id)}
-          />
+            onClick={() => setExpandedTaskId((current) => (current === t.id ? null : t.id))}
+            className="cursor-pointer"
+          >
+            <TaskListCard
+              task={t}
+              signups={signupsByTask[t.id] || []}
+              accessToken={profile.accessToken}
+              expanded={expandedTaskId === t.id}
+              dimmed={!!expandedTaskId && expandedTaskId !== t.id}
+              onEdit={() => router.push(`/my-tasks/${t.id}/edit`)}
+              onShare={() => router.push(`/create/share/${t.id}`)}
+              onDelete={() => handleDelete(t.id)}
+            />
+          </div>
         ))}
       </div>
 
