@@ -57,7 +57,7 @@ export default function MyTasksClient() {
     if (data?.length) {
       const { data: signupData } = await supabase
         .from("signups")
-        .select("task_id, name, note, categories, quantity, category_quantities, created_at")
+        .select("id, task_id, name, note, categories, quantity, category_quantities, checked_in, created_at")
         .in("task_id", data.map((t) => t.id))
         .order("created_at", { ascending: true });
       const map = {};
@@ -66,6 +66,8 @@ export default function MyTasksClient() {
         map[s.task_id].push(s);
       });
       setSignupsByTask(map);
+    } else {
+      setSignupsByTask({});
     }
     setTasksLoading(false);
   }
