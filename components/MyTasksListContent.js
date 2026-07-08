@@ -217,11 +217,10 @@ export default function MyTasksListContent() {
         )}
         {sortedTasks.map((t) => (
           <div key={t.id} className="rounded-2xl bg-white">
-            <div className="mb-1.5 px-3 flex items-center justify-between text-[11px] text-gray-400">
+            <div className="mb-1.5 px-3 text-[11px] text-gray-400">
               <span className="inline-flex items-center gap-1">
                 <CalendarDays size={12} /> {formatDateRange(t)}
               </span>
-              <span>{taskStatus(t).label === "已截止" ? "已結束" : "起始日排序"}</span>
             </div>
             <TaskListCard
               task={t}
