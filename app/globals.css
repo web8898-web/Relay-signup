@@ -256,5 +256,15 @@ input, textarea, select {
   避免任務標題與卡片上緣被固定列遮住。
 */
 .scroll-mt-4 {
-  scroll-margin-top: 6.5rem !important;
+  scroll-margin-top: 9.5rem !important;
+}
+
+/*
+  iOS / LINE 內建瀏覽器對 scrollIntoView({ block: "nearest" }) 會忽略部分 scroll-margin，
+  導致展開卡片剛好卡到固定 TopBar 底下。展開狀態時用「負 margin + 上 padding」
+  做出實際安全區，視覺高度不被固定列吃掉。
+*/
+.scroll-mt-4:has(.grid-rows-\[1fr\]) {
+  margin-top: -5.25rem !important;
+  padding-top: 5.25rem !important;
 }
