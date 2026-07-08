@@ -152,12 +152,19 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
     window.dispatchEvent(new CustomEvent(TASK_CARD_EXPAND_EVENT, { detail: { taskId: task.id } }));
     setMenuOpen(false);
     setConfirmDelete(false);
-    window.requestAnimationFrame(() => {
+
+    // 先等上一張卡片收合完成，再定位目前點擊的卡片，最後才展開。
+    // 這樣可以避免「先捲動、後收合」造成目標位置再次改變，畫面就不會跳掉。
+    setTimeout(() => {
+      cardRef.current?.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
       setTimeout(() => {
-        cardRef.current?.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
-      }, 40);
-      setTimeout(() => setExpanded(true), 220);
-    });
+        setExpanded(true);
+        // 展開高度改變後再微調一次，讓標題仍穩定停在上方。
+        setTimeout(() => {
+          cardRef.current?.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
+        }, 80);
+      }, 220);
+    }, 340);
   }
 
   async function toggleNotify(e) {
