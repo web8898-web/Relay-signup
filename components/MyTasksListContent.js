@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ClipboardList, Plus, Bell, ChevronUp, ChevronDown, CalendarDays } from "lucide-react";
 import { EmptyState } from "@/components/TopBar";
@@ -14,6 +14,8 @@ import { isHeadcountUnit, taskStatus } from "@/lib/utils";
 // LINE's official "add friend" deep link format for a given Basic ID.
 const FRIEND_ADD_URL = "https://line.me/R/ti/p/%40085uqqfg";
 const FRIEND_BANNER_KEY = "friendBannerExpanded";
+const TASK_CARD_EXPAND_EVENT = "relay-task-card-stable-expand";
+const TASK_SWITCH_DELAY_MS = 340;
 
 function formatDateShort(value) {
   if (!value) return "未設定";
@@ -34,10 +36,23 @@ export default function MyTasksListContent() {
   const [tasksLoading, setTasksLoading] = useState(true);
   const [toast, setToast] = useState("");
   const [friendBannerExpanded, setFriendBannerExpanded] = useState(true);
+  const [expandedTaskId, setExpandedTaskId] = useState(null);
+  const pendingSwitchTimerRef = useRef(null);
 
   useEffect(() => {
     const saved = typeof window !== "undefined" ? localStorage.getItem(FRIEND_BANNER_KEY) : null;
     if (saved !== null) setFriendBannerExpanded(saved === "1");
+  }, []);
+
+  useEffect(() => {
+    function rememberExpandedCard(event) {
+      setExpandedTaskId(event.detail?.taskId || null);
+    }
+    window.addEventListener(TASK_CARD_EXPAND_EVENT, rememberExpandedCard);
+    return () => {
+      window.removeEventListener(TASK_CARD_EXPAND_EVENT, rememberExpandedCard);
+      if (pendingSwitchTimerRef.current) clearTimeout(pendingSwitchTimerRef.current);
+    };
   }, []);
 
   function setBannerExpanded(expanded) {
@@ -117,6 +132,37 @@ export default function MyTasksListContent() {
   }
 
   const sortedTasks = sortTasks(tasks);
+
+  function shouldDelayTaskSwitch(event) {
+    const target = event.target;
+    if (!(target instanceof Element)) return false;
+    if (target.closest("input, textarea, select, a")) return false;
+
+    const button = target.closest("button");
+    if (!button) return true;
+
+    // 只有任務卡左側主按鈕需要接手。通知、分享、更多、匯出、編輯等按鈕不攔截。
+    return String(button.className || "").includes("flex-1");
+  }
+
+  function handleTaskClickCapture(event, taskId) {
+    if (!expandedTaskId || expandedTaskId === taskId) return;
+    if (!shouldDelayTaskSwitch(event)) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (pendingSwitchTimerRef.current) clearTimeout(pendingSwitchTimerRef.current);
+
+    setExpandedTaskId(null);
+    window.dispatchEvent(new CustomEvent(TASK_CARD_EXPAND_EVENT, { detail: { taskId: null } }));
+
+    const cardWrapper = event.currentTarget;
+    pendingSwitchTimerRef.current = setTimeout(() => {
+      const primaryButton = cardWrapper.querySelector('button[type="button"]');
+      primaryButton?.click();
+    }, TASK_SWITCH_DELAY_MS);
+  }
 
   async function handleDelete(taskId) {
     // Optimistic removal: the swipe-to-delete gesture in TaskListCard
@@ -216,7 +262,11 @@ export default function MyTasksListContent() {
           <EmptyState icon={<ClipboardList size={30} />} title="還沒有任務" desc="點擊上方「建立任務」開始建立第一個接龍吧。" />
         )}
         {sortedTasks.map((t) => (
-          <div key={t.id} className="rounded-2xl bg-white">
+          <div
+            key={t.id}
+            className="rounded-2xl bg-white"
+            onClickCapture={(event) => handleTaskClickCapture(event, t.id)}
+          >
             <div className="mb-1.5 px-3 text-[11px] text-gray-400">
               <span className="inline-flex items-center gap-1">
                 <CalendarDays size={12} /> {formatDateRange(t)}
