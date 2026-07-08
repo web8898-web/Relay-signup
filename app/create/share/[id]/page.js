@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Share2, Copy, ArrowLeft, CheckCircle2, Eye, Sparkles } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import TaskShareCard from "@/components/TaskShareCard";
+import TaskShareImagePanel from "@/components/TaskShareImagePanel";
 import LoadingBubble from "@/components/LoadingBubble";
 import FadeIn from "@/components/FadeIn";
 import Toast from "@/components/Toast";
@@ -136,7 +137,7 @@ export default function ShareTaskPage() {
               <p className="text-xs text-gray-400 mt-1">{task.start_date} ~ {task.end_date}</p>
             </div>
             <div className="shrink-0 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[11px] font-semibold">
-              0 人報名
+              {signupCount} 人報名
             </div>
           </div>
 
@@ -179,6 +180,8 @@ export default function ShareTaskPage() {
             </div>
           </div>
         </div>
+
+        <TaskShareImagePanel task={task} url={shareUrl()} signupCount={signupCount} onToast={showToast} />
 
         {showPreview && (
           <div className="mt-5">
