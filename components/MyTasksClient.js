@@ -154,7 +154,7 @@ export default function MyTasksClient() {
         }
       />
       <OrganizerTabs current="tasks" />
-      <div className="flex-1 px-6 py-3 flex flex-col gap-3 overflow-y-auto">
+      <div className="flex-1 px-6 pt-3 pb-[65vh] flex flex-col gap-3 overflow-y-auto">
         {friendBannerExpanded ? (
           <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 flex items-start gap-2.5">
             <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
