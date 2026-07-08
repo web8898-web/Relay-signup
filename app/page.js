@@ -80,21 +80,21 @@ export default function HomePage() {
   function navigateWithHeroCollapse(path) {
     if (isTransitioning) return;
     setTransitionTo(path);
-    setTimeout(() => router.push(path), 430);
+    setTimeout(() => router.push(path), 560);
   }
 
   return (
     <div className={`flex-1 flex flex-col min-w-0 ${isTransitioning ? "pointer-events-none" : ""}`}>
       <div
-        className={`relative bg-emerald-500 text-white shadow-md overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        className={`relative bg-emerald-500 text-white shadow-md overflow-hidden transform-gpu will-change-[height,border-radius,transform,opacity] transition-[height,min-height,padding,border-radius,box-shadow,opacity] duration-[560ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
           isTransitioning
-            ? "px-4 py-4 rounded-b-none min-h-[56px]"
-            : "px-6 pt-12 pb-10 rounded-b-[2.5rem] min-h-[276px]"
+            ? "px-4 py-4 rounded-b-none h-[56px] min-h-[56px]"
+            : "px-6 pt-12 pb-10 rounded-b-[2.5rem] h-[276px] min-h-[276px]"
         } ${showLoadingCard ? "opacity-90" : "opacity-100"}`}
       >
         <div
-          className={`absolute inset-0 px-4 py-4 flex items-center gap-3 transition-all duration-300 ${
-            isTransitioning ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"
+          className={`absolute inset-0 px-4 py-4 flex items-center gap-3 transform-gpu will-change-transform transition-[opacity,transform] duration-[560ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            isTransitioning ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
           }`}
         >
           <ArrowLeft size={20} className="text-white/90 shrink-0" />
@@ -111,8 +111,8 @@ export default function HomePage() {
 
         {profile && (
           <div
-            className={`absolute top-5 right-5 flex items-center gap-1.5 bg-white/15 rounded-full pl-1 pr-2.5 py-1 transition-all duration-300 ${
-              isTransitioning ? "opacity-0 translate-y-[-8px]" : "opacity-100 translate-y-0"
+            className={`absolute top-5 right-5 flex items-center gap-1.5 bg-white/15 rounded-full pl-1 pr-2.5 py-1 transform-gpu will-change-transform transition-[opacity,transform] duration-[560ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
+              isTransitioning ? "opacity-0 -translate-y-5 scale-95" : "opacity-100 translate-y-0 scale-100"
             }`}
           >
             <div className={`w-5 h-5 rounded-full ${avatarClass(profile.displayName)} text-white flex items-center justify-center text-[10px] font-bold shrink-0`}>
@@ -122,8 +122,8 @@ export default function HomePage() {
           </div>
         )}
         <div
-          className={`transition-all duration-300 ${
-            isTransitioning ? "opacity-0 -translate-y-4 scale-[0.98]" : "opacity-100 translate-y-0 scale-100"
+          className={`transform-gpu origin-top-left will-change-transform transition-[opacity,transform] duration-[560ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            isTransitioning ? "opacity-0 -translate-y-8 scale-[0.96]" : "opacity-100 translate-y-0 scale-100"
           }`}
         >
           <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mb-4">
@@ -137,8 +137,8 @@ export default function HomePage() {
       </div>
 
       <div
-        className={`flex-1 px-6 py-8 flex flex-col gap-4 transition-all duration-300 ${
-          isTransitioning ? "opacity-0 -translate-y-4" : "opacity-100 translate-y-0"
+        className={`flex-1 px-6 py-8 flex flex-col gap-4 transform-gpu will-change-transform transition-[opacity,transform] duration-[560ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          isTransitioning ? "opacity-0 -translate-y-6" : "opacity-100 translate-y-0"
         }`}
       >
         {showLoadingCard ? (
