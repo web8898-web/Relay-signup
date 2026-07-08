@@ -20,14 +20,15 @@ export function TopBar({ title, backHref, onBack, right }) {
   );
 }
 
-export function EmptyState({ icon, title, desc }) {
+export function EmptyState({ icon, title, desc, action, compact = false }) {
   return (
-    <div className="flex flex-col items-center text-center py-14 text-gray-300">
-      <div className="w-14 h-14 rounded-full bg-gray-50 flex items-center justify-center mb-3 text-gray-300">
+    <div className={`flex flex-col items-center text-center ${compact ? "py-8" : "py-14"}`}>
+      <div className="w-16 h-16 rounded-3xl bg-emerald-50 flex items-center justify-center mb-4 text-emerald-500 shadow-sm shadow-emerald-100">
         {icon}
       </div>
-      <p className="text-sm font-medium text-gray-400">{title}</p>
-      <p className="text-xs text-gray-300 mt-1 max-w-[220px]">{desc}</p>
+      <p className="text-base font-bold text-gray-700">{title}</p>
+      <p className="text-sm text-gray-400 mt-2 max-w-[260px] leading-relaxed whitespace-pre-line">{desc}</p>
+      {action && <div className="mt-5 w-full max-w-[260px]">{action}</div>}
     </div>
   );
 }
