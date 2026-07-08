@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ClipboardList, Plus, Bell, ChevronUp, ChevronDown } from "lucide-react";
+import { ClipboardList, Plus, Bell, ChevronUp, ChevronDown, CalendarDays } from "lucide-react";
 import { EmptyState } from "@/components/TopBar";
 import Toast from "@/components/Toast";
 import LoadingBubble from "@/components/LoadingBubble";
@@ -14,6 +14,17 @@ import { isHeadcountUnit, taskStatus } from "@/lib/utils";
 // LINE's official "add friend" deep link format for a given Basic ID.
 const FRIEND_ADD_URL = "https://line.me/R/ti/p/%40085uqqfg";
 const FRIEND_BANNER_KEY = "friendBannerExpanded";
+
+function formatDateShort(value) {
+  if (!value) return "未設定";
+  const parts = String(value).split("-");
+  if (parts.length === 3) return `${Number(parts[1])}/${Number(parts[2])}`;
+  return value;
+}
+
+function formatDateRange(task) {
+  return `${formatDateShort(task.start_date)}～${formatDateShort(task.end_date)}`;
+}
 
 export default function MyTasksListContent() {
   const router = useRouter();
@@ -205,15 +216,22 @@ export default function MyTasksListContent() {
           <EmptyState icon={<ClipboardList size={30} />} title="還沒有任務" desc="點擊上方「建立任務」開始建立第一個接龍吧。" />
         )}
         {sortedTasks.map((t) => (
-          <TaskListCard
-            key={t.id}
-            task={t}
-            signups={signupsByTask[t.id] || []}
-            accessToken={profile.accessToken}
-            onEdit={() => router.push(`/my-tasks/${t.id}/edit`)}
-            onShare={() => router.push(`/create/share/${t.id}`)}
-            onDelete={() => handleDelete(t.id)}
-          />
+          <div key={t.id} className="rounded-2xl bg-white">
+            <div className="mb-1.5 px-3 flex items-center justify-between text-[11px] text-gray-400">
+              <span className="inline-flex items-center gap-1">
+                <CalendarDays size={12} /> {formatDateRange(t)}
+              </span>
+              <span>{taskStatus(t).label === "已截止" ? "已結束" : "起始日排序"}</span>
+            </div>
+            <TaskListCard
+              task={t}
+              signups={signupsByTask[t.id] || []}
+              accessToken={profile.accessToken}
+              onEdit={() => router.push(`/my-tasks/${t.id}/edit`)}
+              onShare={() => router.push(`/create/share/${t.id}`)}
+              onDelete={() => handleDelete(t.id)}
+            />
+          </div>
         ))}
       </FadeIn>
 
