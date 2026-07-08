@@ -8,7 +8,7 @@ import LoadingBubble from "@/components/LoadingBubble";
 import FadeIn from "@/components/FadeIn";
 import TaskListCard from "@/components/TaskListCard";
 import { useLineProfile } from "@/lib/useLineProfile";
-import { avatarClass, taskStatus } from "@/lib/utils";
+import { avatarClass } from "@/lib/utils";
 import { supabase } from "@/lib/supabaseClient";
 
 const FRIEND_ADD_URL = "https://line.me/R/ti/p/%40085uqqfg";
@@ -30,19 +30,6 @@ function TaskListSkeleton() {
           </div>
         </div>
       ))}
-    </div>
-  );
-}
-
-function TaskSectionHeader({ title, count, muted = false }) {
-  return (
-    <div className="sticky top-0 z-10 -mx-1 pt-1 pb-2 bg-white/90 backdrop-blur-md">
-      <div className="flex items-center gap-2 px-1">
-        <span className={`w-2 h-2 rounded-full ${muted ? "bg-gray-300" : "bg-emerald-400"}`} />
-        <p className={`text-[12px] font-bold tracking-wide ${muted ? "text-gray-500" : "text-emerald-700"}`}>{title}</p>
-        <span className="text-[11px] text-gray-400 font-semibold">{count}</span>
-        <div className="h-px flex-1 bg-gray-100" />
-      </div>
     </div>
   );
 }
@@ -125,26 +112,6 @@ export default function MyTasksClient() {
       }
       showToast(e.message || "移除失敗");
     }
-  }
-
-  const openTasks = tasks.filter((t) => taskStatus(t).label !== "已截止");
-  const closedTasks = tasks.filter((t) => taskStatus(t).label === "已截止");
-
-  function renderTask(t) {
-    return (
-      <TaskListCard
-        key={t.id}
-        task={t}
-        signups={signupsByTask[t.id] || []}
-        accessToken={profile.accessToken}
-        expanded={expandedTaskId === t.id}
-        dimmed={!!expandedTaskId && expandedTaskId !== t.id}
-        onToggleExpand={() => setExpandedTaskId((current) => (current === t.id ? null : t.id))}
-        onEdit={() => router.push(`/my-tasks/${t.id}/edit`)}
-        onShare={() => router.push(`/create/share/${t.id}`)}
-        onDelete={() => handleDelete(t.id)}
-      />
-    );
   }
 
   if (loading) {
@@ -240,22 +207,20 @@ export default function MyTasksClient() {
             />
           </div>
         )}
-        {!tasksLoading && tasks.length > 0 && (
-          <>
-            {openTasks.length > 0 && (
-              <section className="flex flex-col gap-3">
-                <TaskSectionHeader title="進行中" count={openTasks.length} />
-                {openTasks.map(renderTask)}
-              </section>
-            )}
-            {closedTasks.length > 0 && (
-              <section className="flex flex-col gap-3 mt-2">
-                <TaskSectionHeader title="已截止" count={closedTasks.length} muted />
-                {closedTasks.map(renderTask)}
-              </section>
-            )}
-          </>
-        )}
+        {tasks.map((t) => (
+          <TaskListCard
+            key={t.id}
+            task={t}
+            signups={signupsByTask[t.id] || []}
+            accessToken={profile.accessToken}
+            expanded={expandedTaskId === t.id}
+            dimmed={!!expandedTaskId && expandedTaskId !== t.id}
+            onToggleExpand={() => setExpandedTaskId((current) => (current === t.id ? null : t.id))}
+            onEdit={() => router.push(`/my-tasks/${t.id}/edit`)}
+            onShare={() => router.push(`/create/share/${t.id}`)}
+            onDelete={() => handleDelete(t.id)}
+          />
+        ))}
       </div>
 
       <div className="px-6 pb-6 pt-2">
