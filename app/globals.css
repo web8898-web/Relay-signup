@@ -250,3 +250,11 @@ input, textarea, select {
   color: inherit !important;
   opacity: 0.62;
 }
+
+/*
+  固定綠色 TopBar 後，任務卡自動捲動展開時需要預留上方安全距離，
+  避免任務標題與卡片上緣被固定列遮住。
+*/
+.scroll-mt-4 {
+  scroll-margin-top: 6.5rem !important;
+}
