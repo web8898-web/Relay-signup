@@ -191,7 +191,7 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
               <div key={s.id} className="flex gap-2.5 items-start relative pl-2">
                 {binfo && (
                   <span
-                    className={`absolute left-0 w-[3px] rounded-full opacity-60 ${binfo.color}`}
+                    className={`absolute left-0 w-[3px] rounded-full opacity-35 ${binfo.color}`}
                     style={{
                       top: binfo.isFirst ? "0.375rem" : "-0.75rem",
                       bottom: binfo.isLast ? "0.375rem" : "-0.75rem",
@@ -217,17 +217,17 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 mb-1">
+                  <div className="flex items-start justify-between gap-2 mb-1">
                     <p className="text-xs font-medium text-gray-600 flex items-center gap-1.5 min-w-0">
                       <span className="shrink-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold">
                         {orderNumber[s.id]}
                       </span>
-                      <span className="truncate">{s.name}</span>
+                      <span className="break-words min-w-0">{s.name}</span>
                     </p>
                     {checkinMode && quantityUnit ? (
-                      <span className="text-[10px] text-gray-400 shrink-0">{headcountOf(s)} {quantityUnit}</span>
+                      <span className="text-[10px] text-gray-400 shrink-0 pt-0.5">{headcountOf(s)} {quantityUnit}</span>
                     ) : (
-                      <span className="text-[10px] text-gray-300">{relTime(s.created_at)}</span>
+                      <span className="text-[10px] text-gray-300 shrink-0 pt-0.5">{relTime(s.created_at)}</span>
                     )}
                   </div>
 
