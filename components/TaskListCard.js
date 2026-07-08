@@ -27,10 +27,18 @@ import { liff } from "@/lib/liff";
 
 const REVEAL_WIDTH = 84;
 const DELETE_FRACTION = 0.55;
-const TASK_CARD_EXPAND_EVENT = "relay-task-card-expand";
 
-export default function TaskListCard({ task, signups = [], accessToken, onEdit, onDelete, onShare }) {
-  const [expanded, setExpanded] = useState(false);
+export default function TaskListCard({
+  task,
+  signups = [],
+  accessToken,
+  expanded = false,
+  dimmed = false,
+  onToggleExpand,
+  onEdit,
+  onDelete,
+  onShare,
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [filter, setFilter] = useState("全部");
@@ -49,19 +57,6 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
   const checkinStorageKey = `relay_checkin_${task.id}`;
 
   useEffect(() => {
-    function handleOtherCardExpand(event) {
-      if (event.detail?.taskId === task.id) return;
-      setExpanded(false);
-      setMenuOpen(false);
-      setConfirmDelete(false);
-      setCheckinMode(false);
-      setDragX(0);
-    }
-    window.addEventListener(TASK_CARD_EXPAND_EVENT, handleOtherCardExpand);
-    return () => window.removeEventListener(TASK_CARD_EXPAND_EVENT, handleOtherCardExpand);
-  }, [task.id]);
-
-  useEffect(() => {
     if (!expanded) return;
     try {
       const saved = JSON.parse(localStorage.getItem(checkinStorageKey) || "null");
@@ -74,7 +69,26 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
   }, [expanded, checkinStorageKey, signups]);
 
   useEffect(() => {
-    if (!expanded) setCheckinMode(false);
+    if (!expanded) {
+      setCheckinMode(false);
+      setMenuOpen(false);
+      setConfirmDelete(false);
+      setDragX(0);
+      return;
+    }
+
+    // 交給父層控制「一次只展開一張」後，這裡只負責把目前卡片穩定定位。
+    // 下方已保留足夠 scroll room，底部任務也能移到舒服的閱讀位置。
+    const t1 = setTimeout(() => {
+      cardRef.current?.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
+    }, 80);
+    const t2 = setTimeout(() => {
+      cardRef.current?.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
+    }, 360);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, [expanded]);
 
   function persistCheckedIds(ids) {
@@ -144,27 +158,7 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
       closeSwipe();
       return;
     }
-    if (expanded) {
-      setExpanded(false);
-      setCheckinMode(false);
-      return;
-    }
-    window.dispatchEvent(new CustomEvent(TASK_CARD_EXPAND_EVENT, { detail: { taskId: task.id } }));
-    setMenuOpen(false);
-    setConfirmDelete(false);
-
-    // 先等上一張卡片收合完成，再定位目前點擊的卡片，最後才展開。
-    // 這樣可以避免「先捲動、後收合」造成目標位置再次改變，畫面就不會跳掉。
-    setTimeout(() => {
-      cardRef.current?.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
-      setTimeout(() => {
-        setExpanded(true);
-        // 展開高度改變後再微調一次，讓標題仍穩定停在上方。
-        setTimeout(() => {
-          cardRef.current?.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
-        }, 80);
-      }, 220);
-    }, 340);
+    onToggleExpand?.();
   }
 
   async function toggleNotify(e) {
@@ -295,7 +289,7 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
       : signups.filter((s) => s.categories?.includes(filter));
 
   return (
-    <div className="relative scroll-mt-4">
+    <div className={`relative scroll-mt-4 transition-all duration-300 ${dimmed ? "opacity-60 scale-[0.985]" : "opacity-100 scale-100"}`}>
       <div className="absolute inset-0 rounded-2xl bg-rose-500 flex items-center justify-end pr-6">
         <button onClick={handleTrashTap} className="text-white flex flex-col items-center gap-0.5" aria-label="刪除任務">
           <Trash2 size={20} />
@@ -304,9 +298,9 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
 
       <div
         ref={cardRef}
-        className={`relative scroll-mt-4 rounded-2xl border border-gray-100 bg-white shadow-sm overflow-visible ${
-          dragging ? "" : "transition-transform duration-200 ease-out"
-        } ${removing ? "opacity-0 transition-opacity duration-200" : ""}`}
+        className={`relative scroll-mt-4 rounded-2xl border bg-white overflow-visible transition-all duration-300 ease-out ${
+          expanded ? "border-emerald-100 shadow-[0_18px_36px_-28px_rgba(15,23,42,0.55)]" : "border-gray-100 shadow-sm"
+        } ${dragging ? "" : "transition-transform duration-200 ease-out"} ${removing ? "opacity-0 transition-opacity duration-200" : ""}`}
         style={dragX !== 0 ? { transform: `translateX(${dragX}px)` } : undefined}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -316,7 +310,7 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
 
         <div className="w-full px-4 py-3 flex items-center gap-1.5">
           <div onClick={toggleExpand} className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
-            <div className={`w-9 h-9 rounded-full ${iconBg} text-white flex items-center justify-center shrink-0`}>
+            <div className={`w-9 h-9 rounded-full ${iconBg} text-white flex items-center justify-center shrink-0 transition-transform duration-300 ${expanded ? "scale-105" : "scale-100"}`}>
               <MessageCircle size={16} />
             </div>
             <div className="flex-1 min-w-0">
@@ -389,7 +383,7 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
           </div>
         </div>
 
-        <div className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+        <div className={`grid transition-[grid-template-rows] duration-300 ease-out ${expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
           <div className="overflow-hidden">
             <div className="px-4 pb-4">
               <div className="bg-emerald-50/60 border border-emerald-100 rounded-xl px-3.5 py-3 mb-3">
