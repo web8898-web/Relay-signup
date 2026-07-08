@@ -150,9 +150,14 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
       return;
     }
     window.dispatchEvent(new CustomEvent(TASK_CARD_EXPAND_EVENT, { detail: { taskId: task.id } }));
-    setExpanded(true);
     setMenuOpen(false);
     setConfirmDelete(false);
+    window.requestAnimationFrame(() => {
+      setTimeout(() => {
+        cardRef.current?.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
+      }, 40);
+      setTimeout(() => setExpanded(true), 220);
+    });
   }
 
   async function toggleNotify(e) {
@@ -283,7 +288,7 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
       : signups.filter((s) => s.categories?.includes(filter));
 
   return (
-    <div className="relative">
+    <div className="relative scroll-mt-4">
       <div className="absolute inset-0 rounded-2xl bg-rose-500 flex items-center justify-end pr-6">
         <button onClick={handleTrashTap} className="text-white flex flex-col items-center gap-0.5" aria-label="刪除任務">
           <Trash2 size={20} />
@@ -292,7 +297,7 @@ export default function TaskListCard({ task, signups = [], accessToken, onEdit, 
 
       <div
         ref={cardRef}
-        className={`relative rounded-2xl border border-gray-100 bg-white shadow-sm overflow-visible ${
+        className={`relative scroll-mt-4 rounded-2xl border border-gray-100 bg-white shadow-sm overflow-visible ${
           dragging ? "" : "transition-transform duration-200 ease-out"
         } ${removing ? "opacity-0 transition-opacity duration-200" : ""}`}
         style={dragX !== 0 ? { transform: `translateX(${dragX}px)` } : undefined}
