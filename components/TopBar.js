@@ -1,4 +1,6 @@
 "use client";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
@@ -11,27 +13,37 @@ function markHomeReturnAnimation() {
 }
 
 export function TopBar({ title, backHref, onBack, right }) {
+  const [portalReady, setPortalReady] = useState(false);
+
+  useEffect(() => {
+    setPortalReady(true);
+  }, []);
+
   function handleBackClick() {
     markHomeReturnAnimation();
     onBack?.();
   }
 
+  const bar = (
+    <div className="fixed top-0 left-1/2 z-[9999] w-full max-w-md -translate-x-1/2 bg-emerald-500 text-white px-4 py-4 flex items-center gap-3 shadow-sm">
+      {backHref ? (
+        <Link href={backHref} onClick={backHref === "/" ? markHomeReturnAnimation : undefined} className="text-white/90 hover:text-white">
+          <ArrowLeft size={20} />
+        </Link>
+      ) : onBack ? (
+        <button onClick={handleBackClick} className="text-white/90 hover:text-white">
+          <ArrowLeft size={20} />
+        </button>
+      ) : null}
+      <p className="font-bold flex-1 truncate">{title}</p>
+      {right}
+    </div>
+  );
+
   return (
     <>
       <div className="h-[56px] shrink-0" aria-hidden="true" />
-      <div className="fixed top-0 left-1/2 z-[9999] w-full max-w-md -translate-x-1/2 bg-emerald-500 text-white px-4 py-4 flex items-center gap-3 shadow-sm">
-        {backHref ? (
-          <Link href={backHref} onClick={backHref === "/" ? markHomeReturnAnimation : undefined} className="text-white/90 hover:text-white">
-            <ArrowLeft size={20} />
-          </Link>
-        ) : onBack ? (
-          <button onClick={handleBackClick} className="text-white/90 hover:text-white">
-            <ArrowLeft size={20} />
-          </button>
-        ) : null}
-        <p className="font-bold flex-1 truncate">{title}</p>
-        {right}
-      </div>
+      {portalReady ? createPortal(bar, document.body) : null}
     </>
   );
 }
