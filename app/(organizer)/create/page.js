@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, CheckCircle2, X, AlertTriangle } from "lucide-react";
+import { Loader2, CheckCircle2, X, AlertTriangle, ChevronDown } from "lucide-react";
 import AutoGrowTextarea from "@/components/AutoGrowTextarea";
 import DatePickerField from "@/components/DatePickerField";
 import OnboardingTour, {
@@ -13,6 +13,9 @@ import { chipClass, todayStr } from "@/lib/utils";
 
 const fieldClass =
   "w-full bg-gray-50 border-none rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-xs placeholder:text-gray-400 transition focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-white";
+
+const CATEGORY_EXAMPLES = ["帶小孩", "帶朋友", "素食", "葷食"];
+const UNIT_EXAMPLES = ["盒", "份", "張", "包"];
 
 export default function CreateTaskPage() {
   const router = useRouter();
@@ -41,6 +44,7 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
   const [error, setError] = useState("");
   const [titleTouched, setTitleTouched] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const titleRef = useRef(null);
 
   // 首次操作教學導覽：本機沒有任何進度標記，代表第一次來到這個
@@ -65,11 +69,6 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
       text: "簡單說明這個任務在做什麼，例如集合時間地點、團購截止日，報名的人在報名頁就看得到。",
     },
     {
-      target: "categories",
-      title: "設定分類（選填）",
-      text: "可以加入幾個分類讓報名的人勾選，例如帶小孩、帶朋友，或雞排、珍奶等品項，適合分組或團購的場景。",
-    },
-    {
       target: "dates",
       title: "選擇日期",
       text: "設定任務的起始日和到期日，點一下就會打開日期選擇器。",
@@ -80,9 +79,9 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
       text: "設定最多幾人可以報名，額滿後就無法再報名。不填代表不限人數。",
     },
     {
-      target: "unit",
-      title: "數量單位（選填）",
-      text: "如果報名需要填數量（例如團購幾份），在這裡填單位，像「份」「斤」「個」。填了之後，報名的人才會看到數量欄位。",
+      target: "advanced",
+      title: "進階設定（選填）",
+      text: "需要分類、統計數量時再設定，沒有需要可以略過。新手只要先完成基本設定就好。",
     },
     {
       target: "note",
@@ -104,6 +103,9 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
     title.trim() !== "" ||
     description.trim() !== "" ||
     categories.length > 0 ||
+    catInput.trim() !== "" ||
+    maxSignups.trim() !== "" ||
+    quantityUnit.trim() !== "" ||
     note.trim() !== "" ||
     startDate !== defaults.current.start_date ||
     endDate !== defaults.current.end_date;
@@ -134,11 +136,16 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
     else onLeave();
   }
 
+  function addCategoryValue(value) {
+    const v = String(value || "").trim();
+    if (v && !categories.includes(v)) setCategories((prev) => [...prev, v]);
+  }
+
   function addCategory() {
-    const v = catInput.trim();
-    if (v && !categories.includes(v)) setCategories([...categories, v]);
+    addCategoryValue(catInput);
     setCatInput("");
   }
+
   function removeCategory(c) {
     setCategories(categories.filter((x) => x !== c));
   }
@@ -206,35 +213,6 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
           />
         </Field>
 
-        <Field label="分類（自訂，選填）" tourId="categories">
-          <div className="flex gap-2">
-            <input
-              value={catInput}
-              onChange={(e) => setCatInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCategory())}
-              placeholder="例如：職位分類、組別分類、產品分類"
-              className={`flex-1 ${fieldClass} py-2.5`}
-            />
-            <button
-              onClick={addCategory}
-              className="px-4 rounded-2xl bg-white border border-emerald-500 text-emerald-500 text-sm font-medium hover:bg-emerald-50 transition shrink-0"
-            >
-              新增
-            </button>
-          </div>
-          <p className="text-[11px] text-gray-400 mt-1.5 px-0.5">輸入文字後，按「新增」或按 Enter 加入一個分類</p>
-          {categories.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-3">
-              {categories.map((c) => (
-                <span key={c} className={`text-xs px-3 py-1 rounded-full border flex items-center gap-1 ${chipClass(c)}`}>
-                  {c}
-                  <button onClick={() => removeCategory(c)}><X size={12} /></button>
-                </span>
-              ))}
-            </div>
-          )}
-        </Field>
-
         <Field label="日期" tourId="dates">
           <div className="flex items-center gap-2">
             <DatePickerField
@@ -267,14 +245,101 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
           />
         </Field>
 
-        <Field label="數量單位（選填，例如：份、斤、個——填了報名的人才會看到數量欄位）" tourId="unit">
-          <input
-            value={quantityUnit}
-            onChange={(e) => setQuantityUnit(e.target.value)}
-            placeholder="例如：份"
-            className={fieldClass}
-          />
-        </Field>
+        <div data-tour="advanced" className="rounded-3xl border border-emerald-100 bg-emerald-50/35 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setAdvancedOpen((open) => !open)}
+            className="w-full px-4 py-3.5 flex items-center justify-between gap-3 text-left active:bg-emerald-50 transition"
+          >
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-emerald-700">進階設定</p>
+              <p className="text-[11px] text-emerald-700/70 mt-0.5 leading-relaxed">
+                需要分類、統計數量時再設定，沒有需要可以略過。
+              </p>
+            </div>
+            <ChevronDown
+              size={18}
+              className={`text-emerald-500 shrink-0 transition-transform ${advancedOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+
+          {advancedOpen && (
+            <div className="border-t border-emerald-100 bg-white/75 px-4 py-4 flex flex-col gap-5">
+              <Field label="報名類別">
+                <p className="text-[11px] text-gray-400 mb-2 px-0.5 leading-relaxed">
+                  讓報名者選擇項目，例如：帶小孩、帶朋友、素食、葷食。
+                </p>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {CATEGORY_EXAMPLES.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => addCategoryValue(item)}
+                      className="text-xs px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 active:scale-95 transition"
+                    >
+                      + {item}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    value={catInput}
+                    onChange={(e) => setCatInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCategory())}
+                    placeholder="自訂類別，例如：早上場"
+                    className={`flex-1 ${fieldClass} py-2.5`}
+                  />
+                  <button
+                    type="button"
+                    onClick={addCategory}
+                    className="px-4 rounded-2xl bg-white border border-emerald-500 text-emerald-500 text-sm font-medium hover:bg-emerald-50 transition shrink-0"
+                  >
+                    新增
+                  </button>
+                </div>
+                <p className="text-[11px] text-gray-400 mt-1.5 px-0.5">輸入文字後，按「新增」或按 Enter 加入一個分類</p>
+                {categories.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {categories.map((c) => (
+                      <span key={c} className={`text-xs px-3 py-1 rounded-full border flex items-center gap-1 ${chipClass(c)}`}>
+                        {c}
+                        <button type="button" onClick={() => removeCategory(c)}><X size={12} /></button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </Field>
+
+              <Field label="數量單位">
+                <p className="text-[11px] text-gray-400 mb-2 px-0.5 leading-relaxed">
+                  如果一個人可以報名多份才需要填，例如：盒、份、張、包。
+                </p>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {UNIT_EXAMPLES.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => setQuantityUnit(item)}
+                      className={`text-xs px-3 py-1.5 rounded-full border active:scale-95 transition ${
+                        quantityUnit === item
+                          ? "bg-emerald-500 text-white border-emerald-500"
+                          : "bg-gray-50 text-gray-500 border-gray-100"
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  value={quantityUnit}
+                  onChange={(e) => setQuantityUnit(e.target.value)}
+                  placeholder="例如：份"
+                  className={fieldClass}
+                />
+              </Field>
+            </div>
+          )}
+        </div>
 
         <Field label="備註" tourId="note">
           <AutoGrowTextarea
