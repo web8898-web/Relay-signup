@@ -15,7 +15,7 @@ const fieldClass =
   "w-full bg-gray-50 border-none rounded-2xl px-4 py-3 text-sm text-gray-800 placeholder:text-xs placeholder:text-gray-400 transition focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-white";
 
 const CATEGORY_EXAMPLES = ["帶小孩", "帶朋友", "素食", "葷食"];
-const UNIT_EXAMPLES = ["盒", "份", "張", "包"];
+const UNIT_EXAMPLES = ["盒", "份", "張", "包", "人", "個"];
 
 export default function CreateTaskPage() {
   const router = useRouter();
@@ -312,7 +312,7 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
 
               <Field label="數量單位">
                 <p className="text-[11px] text-gray-400 mb-2 px-0.5 leading-relaxed">
-                  如果一個人可以報名多份才需要填，例如：盒、份、張、包。
+                  如果一個人可以報名多份才需要填，例如：盒、份、張、包、人、個。
                 </p>
                 <div className="flex flex-wrap gap-2 mb-3">
                   {UNIT_EXAMPLES.map((item) => (
