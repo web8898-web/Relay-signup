@@ -11,7 +11,6 @@ import { useOrganizerProfile } from "@/lib/OrganizerContext";
 import { supabase } from "@/lib/supabaseClient";
 import { isHeadcountUnit, taskStatus } from "@/lib/utils";
 
-// LINE's official "add friend" deep link format for a given Basic ID.
 const FRIEND_ADD_URL = "https://line.me/R/ti/p/%40085uqqfg";
 const FRIEND_BANNER_KEY = "friendBannerExpanded";
 const TASK_CARD_EXPAND_EVENT = "relay-task-card-stable-expand";
@@ -114,8 +113,6 @@ export default function MyTasksListContent() {
     return list.length;
   }
 
-  // 任務排序權重：已截止 → 已額滿 → 進行中。
-  // 同狀態用起始日排序，讓使用者先看到日期較早、較需要處理的任務。
   function statusRank(t) {
     if (taskStatus(t).label === "已截止") return 0;
     const isFull = !!t.max_signups && headcountForTask(t) >= t.max_signups;
@@ -186,11 +183,8 @@ export default function MyTasksListContent() {
     setConfirmBulkDelete(false);
     setSelectedTaskIds((prev) => {
       const next = new Set(prev);
-      if (allVisibleSelected) {
-        filteredTasks.forEach((t) => next.delete(t.id));
-      } else {
-        filteredTasks.forEach((t) => next.add(t.id));
-      }
+      if (allVisibleSelected) filteredTasks.forEach((t) => next.delete(t.id));
+      else filteredTasks.forEach((t) => next.add(t.id));
       return next;
     });
   }
@@ -199,11 +193,8 @@ export default function MyTasksListContent() {
     const target = event.target;
     if (!(target instanceof Element)) return false;
     if (target.closest("input, textarea, select, a")) return false;
-
     const button = target.closest("button");
     if (!button) return true;
-
-    // 只有任務卡左側主按鈕需要接手。通知、分享、更多、匯出、編輯等按鈕不攔截。
     return String(button.className || "").includes("flex-1");
   }
 
@@ -239,9 +230,7 @@ export default function MyTasksListContent() {
       if (!res.ok) throw new Error(data.error);
       showToast("已移除任務");
     } catch (e) {
-      if (removedTask) {
-        setTasks((prev) => sortTasks([...prev, removedTask]));
-      }
+      if (removedTask) setTasks((prev) => sortTasks([...prev, removedTask]));
       showToast(e.message || "移除失敗");
     }
   }
@@ -299,7 +288,7 @@ export default function MyTasksListContent() {
 
   return (
     <div className="flex-1 flex flex-col relative min-w-0">
-      <FadeIn className={`flex-1 px-6 py-3 flex flex-col gap-3 overflow-y-auto ${editMode ? "pb-28" : ""}`}>
+      <FadeIn className={`flex-1 px-6 py-3 flex flex-col gap-3 overflow-y-auto ${editMode ? "pb-24" : ""}`}>
         {friendBannerExpanded ? (
           <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 flex items-start gap-2.5">
             <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
@@ -311,30 +300,17 @@ export default function MyTasksListContent() {
                 加入官方帳號好友，有人報名時 LINE 就會直接通知你。可以在每個任務旁的鈴鐺圖示，個別開關要不要收通知。
               </p>
               <div className="flex justify-end">
-                <a
-                  href={FRIEND_ADD_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block mt-2 bg-emerald-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-emerald-600 transition"
-                >
+                <a href={FRIEND_ADD_URL} target="_blank" rel="noopener noreferrer" className="inline-block mt-2 bg-emerald-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-emerald-600 transition">
                   加官方帳號好友
                 </a>
               </div>
             </div>
-            <button
-              onClick={() => setBannerExpanded(false)}
-              className="text-emerald-400 hover:text-emerald-600 shrink-0"
-              aria-label="收合提示"
-            >
+            <button onClick={() => setBannerExpanded(false)} className="text-emerald-400 hover:text-emerald-600 shrink-0" aria-label="收合提示">
               <ChevronUp size={16} />
             </button>
           </div>
         ) : (
-          <button
-            onClick={() => setBannerExpanded(true)}
-            className="w-full flex items-center justify-between text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-3 hover:bg-emerald-100 transition"
-            aria-label="展開提示"
-          >
+          <button onClick={() => setBannerExpanded(true)} className="w-full flex items-center justify-between text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-3 hover:bg-emerald-100 transition" aria-label="展開提示">
             <span className="flex items-center gap-2">
               <Bell size={14} /> 加好友才能收到報名通知
             </span>
@@ -354,35 +330,20 @@ export default function MyTasksListContent() {
                   className="w-full rounded-full border border-gray-100 bg-gray-50 py-2 pl-9 pr-9 text-xs text-gray-600 outline-none focus:border-emerald-200 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition"
                 />
                 {taskSearch && (
-                  <button
-                    onClick={() => setTaskSearch("")}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full text-gray-300 hover:text-gray-500 flex items-center justify-center"
-                    aria-label="清除搜尋"
-                  >
+                  <button onClick={() => setTaskSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full text-gray-300 hover:text-gray-500 flex items-center justify-center" aria-label="清除搜尋">
                     <X size={13} />
                   </button>
                 )}
               </div>
-              <button
-                onClick={editMode ? leaveEditMode : enterEditMode}
-                className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold transition ${
-                  editMode ? "bg-gray-100 text-gray-500" : "bg-emerald-50 text-emerald-600 border border-emerald-100"
-                }`}
-              >
+              <button onClick={editMode ? leaveEditMode : enterEditMode} className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold transition ${editMode ? "bg-gray-100 text-gray-500" : "bg-emerald-50 text-emerald-600 border border-emerald-100"}`}>
                 {editMode ? "完成" : "編輯"}
               </button>
             </div>
 
             <div className="flex items-center justify-center flex-wrap gap-x-4 gap-y-1.5 px-1 py-0.5">
-              <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> 進行中
-              </span>
-              <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
-                <span className="w-2.5 h-2.5 rounded-full bg-rose-500" /> 已額滿
-              </span>
-              <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
-                <span className="w-2.5 h-2.5 rounded-full bg-gray-400" /> 已結束
-              </span>
+              <span className="flex items-center gap-1.5 text-[11px] text-gray-400"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> 進行中</span>
+              <span className="flex items-center gap-1.5 text-[11px] text-gray-400"><span className="w-2.5 h-2.5 rounded-full bg-rose-500" /> 已額滿</span>
+              <span className="flex items-center gap-1.5 text-[11px] text-gray-400"><span className="w-2.5 h-2.5 rounded-full bg-gray-400" /> 已結束</span>
             </div>
           </>
         )}
@@ -401,17 +362,13 @@ export default function MyTasksListContent() {
         {filteredTasks.map((t) => {
           const selected = selectedTaskIds.has(t.id);
           return (
-            <div
-              key={t.id}
-              className={`rounded-2xl bg-white transition ${editMode ? "pl-0" : ""}`}
-              onClickCapture={(event) => handleTaskClickCapture(event, t.id)}
-            >
+            <div key={t.id} className="rounded-2xl bg-white transition" onClickCapture={(event) => handleTaskClickCapture(event, t.id)}>
               <div className="mb-1.5 px-3 text-[11px] text-gray-400">
                 <span className="inline-flex items-center gap-1">
                   <CalendarDays size={12} /> {formatDateRange(t)}
                 </span>
               </div>
-              <div className={`relative flex items-stretch gap-2 transition ${editMode ? "-ml-1" : ""}`}>
+              <div className={`relative flex items-stretch gap-1.5 transition ${editMode ? "-ml-0.5" : ""}`}>
                 {editMode && (
                   <button
                     type="button"
@@ -419,14 +376,10 @@ export default function MyTasksListContent() {
                       e.stopPropagation();
                       toggleTaskSelected(t.id);
                     }}
-                    className="w-9 flex items-center justify-center shrink-0"
+                    className="w-7 flex items-center justify-center shrink-0"
                     aria-label={selected ? "取消選取任務" : "選取任務"}
                   >
-                    <span
-                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition ${
-                        selected ? "bg-emerald-500 border-emerald-500 text-white" : "bg-white border-gray-300 text-transparent"
-                      }`}
-                    >
+                    <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition ${selected ? "bg-emerald-500 border-emerald-500 text-white" : "bg-white border-gray-300 text-transparent"}`}>
                       <Check size={14} strokeWidth={3} />
                     </span>
                   </button>
@@ -447,7 +400,7 @@ export default function MyTasksListContent() {
                         e.stopPropagation();
                         toggleTaskSelected(t.id);
                       }}
-                      className="absolute inset-y-0 left-9 right-0 rounded-2xl"
+                      className="absolute inset-y-0 left-7 right-0 rounded-2xl"
                       aria-label="切換選取任務"
                     />
                   )}
@@ -459,59 +412,51 @@ export default function MyTasksListContent() {
       </FadeIn>
 
       {editMode ? (
-        <FadeIn className="px-6 pb-5 pt-2 bg-white/95 backdrop-blur border-t border-gray-100 shadow-[0_-12px_30px_-28px_rgba(15,23,42,0.45)]">
-          {confirmBulkDelete ? (
-            <div className="rounded-2xl bg-rose-50 border border-rose-100 p-3">
-              <p className="text-sm font-semibold text-rose-600 text-center">確定移除 {selectedCount} 個任務？</p>
-              <div className="flex gap-2 mt-3">
-                <button
-                  disabled={bulkDeleting}
-                  onClick={() => setConfirmBulkDelete(false)}
-                  className="flex-1 rounded-full border border-gray-200 bg-white py-2.5 text-sm font-semibold text-gray-500 disabled:opacity-50"
-                >
-                  取消
-                </button>
-                <button
-                  disabled={bulkDeleting}
-                  onClick={handleBulkDelete}
-                  className="flex-1 rounded-full bg-rose-500 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
-                >
-                  {bulkDeleting ? "移除中..." : "確定移除"}
-                </button>
-              </div>
+        <FadeIn className="px-6 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] bg-white/95 backdrop-blur border-t border-gray-100 shadow-[0_-12px_30px_-28px_rgba(15,23,42,0.45)]">
+          <div className="flex items-center gap-2 min-h-[56px]">
+            <button onClick={toggleSelectAllVisible} className="shrink-0 rounded-full border border-gray-200 bg-white px-3 py-2.5 text-xs font-semibold text-gray-500">
+              {allVisibleSelected ? "取消全選" : "全選"}
+            </button>
+            <div className="flex-1 text-center text-xs text-gray-400">
+              已選取 <span className="font-semibold text-emerald-600">{selectedCount}</span> 個任務
             </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={toggleSelectAllVisible}
-                className="shrink-0 rounded-full border border-gray-200 bg-white px-3 py-2.5 text-xs font-semibold text-gray-500"
-              >
-                {allVisibleSelected ? "取消全選" : "全選"}
-              </button>
-              <div className="flex-1 text-center text-xs text-gray-400">
-                已選取 <span className="font-semibold text-emerald-600">{selectedCount}</span> 個
-              </div>
-              <button
-                disabled={selectedCount === 0}
-                onClick={handleBulkDelete}
-                className={`shrink-0 rounded-full px-4 py-2.5 text-xs font-semibold flex items-center gap-1.5 transition ${
-                  selectedCount === 0 ? "bg-gray-100 text-gray-300" : "bg-rose-500 text-white shadow-sm shadow-rose-100"
-                }`}
-              >
-                <Trash2 size={14} /> 刪除
-              </button>
-            </div>
-          )}
+            <button
+              disabled={selectedCount === 0}
+              onClick={handleBulkDelete}
+              className={`shrink-0 rounded-full px-4 py-2.5 text-xs font-semibold flex items-center gap-1.5 transition ${selectedCount === 0 ? "bg-gray-100 text-gray-300" : "bg-rose-500 text-white shadow-sm shadow-rose-100"}`}
+            >
+              <Trash2 size={14} /> 刪除
+            </button>
+          </div>
         </FadeIn>
       ) : (
         <FadeIn className="px-6 pb-6 pt-2">
-          <button
-            onClick={() => router.push("/create")}
-            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-3 font-semibold flex items-center justify-center gap-2 shadow-md shadow-emerald-200 transition"
-          >
+          <button onClick={() => router.push("/create")} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-3 font-semibold flex items-center justify-center gap-2 shadow-md shadow-emerald-200 transition">
             <Plus size={18} /> 新增任務
           </button>
         </FadeIn>
+      )}
+
+      {confirmBulkDelete && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/20 px-6 backdrop-blur-[1px]">
+          <div className="w-full max-w-[320px] rounded-3xl bg-white p-5 shadow-2xl">
+            <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-rose-50 text-rose-500">
+              <Trash2 size={22} />
+            </div>
+            <p className="text-center text-base font-bold text-gray-800">移除任務？</p>
+            <p className="mt-2 text-center text-sm leading-relaxed text-gray-500">
+              確定要移除 <span className="font-semibold text-rose-500">{selectedCount}</span> 個任務嗎？<br />此動作無法復原。
+            </p>
+            <div className="mt-5 flex gap-2">
+              <button disabled={bulkDeleting} onClick={() => setConfirmBulkDelete(false)} className="flex-1 rounded-full border border-gray-200 bg-white py-3 text-sm font-semibold text-gray-500 disabled:opacity-50">
+                取消
+              </button>
+              <button disabled={bulkDeleting} onClick={handleBulkDelete} className="flex-1 rounded-full bg-rose-500 py-3 text-sm font-semibold text-white shadow-sm shadow-rose-100 disabled:opacity-50">
+                {bulkDeleting ? "移除中..." : "移除"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {toast && (
