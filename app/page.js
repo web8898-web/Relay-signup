@@ -251,8 +251,8 @@ export default function HomePage() {
               >
                 <RotateCcw size={15} className="text-emerald-500 shrink-0" />
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-gray-800">播放導覽教學</p>
-                  <p className="text-[11px] text-gray-400 mt-0.5">一步一步帶你建立任務並分享到 LINE</p>
+                  <p className="text-sm font-semibold text-gray-800">播放建立任務教學</p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">示範基本欄位，進階設定有需要再展開</p>
                 </div>
                 <ChevronRight size={16} className="text-gray-300 group-hover:text-emerald-400 shrink-0" />
               </button>
@@ -280,11 +280,11 @@ export default function HomePage() {
             {
               target: "create-entry",
               tapTarget: true,
-              title: "從這裡開始",
-              text: "點「建立任務」，我們一步一步帶你建立第一個任務，並分享到 LINE 群組。",
+              title: "先建立第一個任務",
+              text: "點「建立任務」後，照著基本欄位填寫就能完成。分類、數量單位已放在進階設定，有需要再展開。",
             },
           ]}
-          finishLabel="好，前往建立任務"
+          finishLabel="好，開始建立"
           onFinish={() => {
             // 不寫入任何標記，維持「還沒看過」的狀態，
             // 建立任務頁載入時就會自動接續後面的導覽步驟。
