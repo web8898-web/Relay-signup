@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Share2, Copy, ArrowLeft, CheckCircle2, Eye, Sparkles } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
@@ -26,6 +26,7 @@ export default function ShareTaskPage() {
   const [sharing, setSharing] = useState(false);
   const [shared, setShared] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const previewRef = useRef(null);
 
   const [showTour, setShowTour] = useState(false);
   useEffect(() => {
@@ -65,6 +66,20 @@ export default function ShareTaskPage() {
   function shareUrl() {
     if (task?.short_code) return `${window.location.origin}/s/${task.short_code}`;
     return taskUrl();
+  }
+
+  function handlePreviewToggle() {
+    if (showPreview) {
+      setShowPreview(false);
+      return;
+    }
+
+    setShowPreview(true);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        previewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
   }
 
   async function handleLineShare() {
@@ -166,7 +181,7 @@ export default function ShareTaskPage() {
 
             <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => setShowPreview((v) => !v)}
+                onClick={handlePreviewToggle}
                 className="bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-full py-2.5 text-sm font-medium flex items-center justify-center gap-1.5 transition"
               >
                 <Eye size={15} /> {showPreview ? "收起預覽" : "預覽任務"}
@@ -184,7 +199,7 @@ export default function ShareTaskPage() {
         <TaskShareImagePanel task={task} url={shareUrl()} signupCount={signupCount} onToast={showToast} />
 
         {showPreview && (
-          <div className="mt-5">
+          <div ref={previewRef} className="mt-5 scroll-mt-20">
             <p className="text-xs text-gray-400 mb-3 text-center">這是分享到 LINE 群組時，成員會看到的卡片樣式</p>
             <TaskShareCard
               task={task}
