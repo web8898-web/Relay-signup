@@ -247,10 +247,10 @@ export default function TaskShareImagePanel({ task, url, signupCount = 0, onToas
   async function handleDownload() {
     try {
       const blob = await makeBlob();
-      const shared = await shareBlob(blob, "請選擇「儲存圖片」或分享到 LINE");
+      const shared = await shareBlob(blob, "請在開啟的選單中選擇「儲存圖片」");
       if (!shared) {
         await fallbackDownload(blob);
-        onToast?.("已下載分享圖片");
+        onToast?.("分享圖片已下載");
       }
     } catch (e) {
       if (e?.name !== "AbortError") onToast?.(e.message || "圖片產生失敗");
@@ -260,7 +260,7 @@ export default function TaskShareImagePanel({ task, url, signupCount = 0, onToas
   async function handleSystemShare() {
     try {
       const blob = await makeBlob();
-      const shared = await shareBlob(blob, "已開啟圖片分享");
+      const shared = await shareBlob(blob, "已開啟分享選單");
       if (!shared) {
         await fallbackDownload(blob);
         onToast?.("此裝置不支援直接分享，已改為下載圖片");
