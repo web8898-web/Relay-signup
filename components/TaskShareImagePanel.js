@@ -41,11 +41,11 @@ function compactLocation(task) {
 function splitTitle(value = "接龍報名") {
   const raw = String(value).replace(/[\n\r]+/g, " ").trim() || "接龍報名";
   const isMostlyAscii = /^[\x00-\x7F\s]+$/.test(raw);
-  const perLine = isMostlyAscii ? 15 : 7;
+  const perLine = isMostlyAscii ? 18 : 8;
   const line1 = raw.slice(0, perLine);
   let line2 = raw.slice(perLine, perLine * 2);
   if (raw.length > perLine * 2) line2 = `${line2.slice(0, Math.max(1, perLine - 1))}…`;
-  return [safeText(line1, 18), safeText(line2, 18)];
+  return [safeText(line1, 22), safeText(line2, 22)];
 }
 
 function statusColor(status) {
@@ -126,18 +126,10 @@ async function buildShareSvg(task, url, signupCount = 0) {
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#F3FFFA"/><stop offset="0.56" stop-color="#FFFFFF"/><stop offset="1" stop-color="#EEF9F4"/>
     </linearGradient>
-    <linearGradient id="mint" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#EAF8F2"/><stop offset="1" stop-color="#F9FFFC"/>
-    </linearGradient>
-    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#55B786"/><stop offset="1" stop-color="#16946A"/>
-    </linearGradient>
-    <linearGradient id="blueSoft" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#F1F8FF"/><stop offset="1" stop-color="#FFFFFF"/>
-    </linearGradient>
-    <linearGradient id="yellowSoft" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#FFF9EB"/><stop offset="1" stop-color="#FFFFFF"/>
-    </linearGradient>
+    <linearGradient id="mint" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#EAF8F2"/><stop offset="1" stop-color="#F9FFFC"/></linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#55B786"/><stop offset="1" stop-color="#16946A"/></linearGradient>
+    <linearGradient id="blueSoft" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F1F8FF"/><stop offset="1" stop-color="#FFFFFF"/></linearGradient>
+    <linearGradient id="yellowSoft" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF9EB"/><stop offset="1" stop-color="#FFFFFF"/></linearGradient>
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#0F172A" flood-opacity="0.10"/></filter>
     <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#0F172A" flood-opacity="0.08"/></filter>
   </defs>
@@ -158,43 +150,43 @@ async function buildShareSvg(task, url, signupCount = 0) {
   <rect x="92" y="248" width="180" height="58" rx="29" fill="url(#green)" opacity="0.82"/>
   <text x="182" y="287" text-anchor="middle" font-family="Noto Sans TC, Arial, sans-serif" font-size="30" font-weight="900" fill="#FFFFFF">接龍任務</text>
 
-  <text x="92" y="414" font-family="Noto Sans TC, Arial, sans-serif" font-size="62" font-weight="900" fill="#173D38">${titleLine1}</text>
-  ${titleLine2 ? `<text x="92" y="486" font-family="Noto Sans TC, Arial, sans-serif" font-size="62" font-weight="900" fill="#173D38">${titleLine2}</text>` : ""}
-  ${location ? `${pinIcon(92, 548)}<text x="142" y="588" font-family="Noto Sans TC, Arial, sans-serif" font-size="34" font-weight="800" fill="#334155">${location}</text>` : ""}
+  <text x="92" y="392" font-family="Noto Sans TC, Arial, sans-serif" font-size="54" font-weight="900" fill="#173D38">${titleLine1}</text>
+  ${titleLine2 ? `<text x="92" y="456" font-family="Noto Sans TC, Arial, sans-serif" font-size="54" font-weight="900" fill="#173D38">${titleLine2}</text>` : ""}
+  <text x="92" y="540" font-family="Noto Sans TC, Arial, sans-serif" font-size="30" font-weight="900" fill="#16946A">掃描右側 QR Code</text>
+  <text x="92" y="584" font-family="Noto Sans TC, Arial, sans-serif" font-size="30" font-weight="800" fill="#64748B">立即完成報名</text>
+  ${location ? `${pinIcon(92, 622)}<text x="142" y="662" font-family="Noto Sans TC, Arial, sans-serif" font-size="32" font-weight="800" fill="#334155">${location}</text>` : ""}
 
   <path d="M40 700 C180 608 295 676 420 610 C560 536 680 650 820 580 C920 530 995 560 1040 506 L1040 800 L40 800 Z" fill="#CFEADF" opacity="0.58"/>
   <path d="M40 780 C190 696 310 720 455 660 C615 594 755 720 914 655 C982 628 1020 640 1040 620 L1040 842 L40 842 Z" fill="#E8F5EF"/>
   <path d="M40 842 C190 805 355 810 520 798 C690 786 845 816 1040 772 L1040 884 L40 884 Z" fill="#FFFFFF" opacity="0.94"/>
 
-  <rect x="596" y="238" width="380" height="566" rx="42" fill="#FFFFFF" filter="url(#shadow)"/>
-  <rect x="648" y="286" width="276" height="276" rx="22" fill="#FFFFFF"/>
-  <image href="${qrDataUrl}" x="656" y="294" width="260" height="260"/>
-  <rect x="626" y="612" width="320" height="120" rx="28" fill="#F2FAF6"/>
-  <text x="786" y="665" text-anchor="middle" font-family="Noto Sans TC, Arial, sans-serif" font-size="33" font-weight="900" fill="#16946A">掃描 QR Code</text>
-  <text x="786" y="708" text-anchor="middle" font-family="Noto Sans TC, Arial, sans-serif" font-size="31" font-weight="800" fill="#64748B">立即完成報名</text>
+  <rect x="596" y="220" width="380" height="560" rx="42" fill="#FFFFFF" filter="url(#shadow)"/>
+  <rect x="648" y="268" width="276" height="276" rx="22" fill="#FFFFFF"/>
+  <image href="${qrDataUrl}" x="656" y="276" width="260" height="260"/>
+  <rect x="626" y="594" width="320" height="116" rx="28" fill="#F2FAF6"/>
+  <text x="786" y="644" text-anchor="middle" font-family="Noto Sans TC, Arial, sans-serif" font-size="32" font-weight="900" fill="#16946A">掃描 QR Code</text>
+  <text x="786" y="686" text-anchor="middle" font-family="Noto Sans TC, Arial, sans-serif" font-size="30" font-weight="800" fill="#64748B">立即完成報名</text>
 
-  <rect x="64" y="882" width="952" height="398" rx="40" fill="#FFFFFF" filter="url(#softShadow)"/>
+  <rect x="64" y="864" width="952" height="370" rx="40" fill="#FFFFFF" filter="url(#softShadow)"/>
 
-  <rect x="92" y="918" width="276" height="250" rx="32" fill="url(#mint)"/>
-  ${usersIcon(183, 966)}
-  <text x="230" y="1064" text-anchor="middle" font-family="Noto Sans TC, Arial, sans-serif" font-size="28" font-weight="800" fill="#0F172A">已報名人數</text>
-  <text x="230" y="1134" text-anchor="middle" font-family="Noto Sans TC, Arial, sans-serif" font-size="58" font-weight="900" fill="#16946A">${signupCount} 人</text>
+  <rect x="92" y="900" width="276" height="222" rx="32" fill="url(#mint)"/>
+  ${usersIcon(183, 940)}
+  <text x="230" y="1034" text-anchor="middle" font-family="Noto Sans TC, Arial, sans-serif" font-size="26" font-weight="800" fill="#0F172A">已報名人數</text>
+  <text x="230" y="1100" text-anchor="middle" font-family="Noto Sans TC, Arial, sans-serif" font-size="52" font-weight="900" fill="#16946A">${signupCount} 人</text>
 
-  <rect x="402" y="918" width="276" height="250" rx="32" fill="url(#blueSoft)"/>
-  ${calendarIcon(505, 958)}
-  <text x="540" y="1064" text-anchor="middle" font-family="Noto Sans TC, Arial, sans-serif" font-size="28" font-weight="800" fill="#0F172A">報名期間</text>
-  <text x="540" y="1128" text-anchor="middle" font-family="Noto Sans TC, Arial, sans-serif" font-size="43" font-weight="900" fill="#1E5E92">${dateRange}</text>
+  <rect x="402" y="900" width="276" height="222" rx="32" fill="url(#blueSoft)"/>
+  ${calendarIcon(505, 930)}
+  <text x="540" y="1034" text-anchor="middle" font-family="Noto Sans TC, Arial, sans-serif" font-size="26" font-weight="800" fill="#0F172A">報名期間</text>
+  <text x="540" y="1094" text-anchor="middle" font-family="Noto Sans TC, Arial, sans-serif" font-size="39" font-weight="900" fill="#1E5E92">${dateRange}</text>
 
-  <rect x="712" y="918" width="276" height="250" rx="32" fill="url(#yellowSoft)"/>
-  ${checkIcon(832, 958, statusFill)}
-  <text x="850" y="1064" text-anchor="middle" font-family="Noto Sans TC, Arial, sans-serif" font-size="28" font-weight="800" fill="#0F172A">任務狀態</text>
-  <text x="850" y="1134" text-anchor="middle" font-family="Noto Sans TC, Arial, sans-serif" font-size="50" font-weight="900" fill="${statusFill}">${status}</text>
+  <rect x="712" y="900" width="276" height="222" rx="32" fill="url(#yellowSoft)"/>
+  ${checkIcon(832, 930, statusFill)}
+  <text x="850" y="1034" text-anchor="middle" font-family="Noto Sans TC, Arial, sans-serif" font-size="26" font-weight="800" fill="#0F172A">任務狀態</text>
+  <text x="850" y="1100" text-anchor="middle" font-family="Noto Sans TC, Arial, sans-serif" font-size="46" font-weight="900" fill="${statusFill}">${status}</text>
 
-  <rect x="102" y="1200" width="876" height="54" rx="27" fill="#FFFFFF" stroke="#E6F1EC"/>
-  ${phoneIcon(326, 1210, "#55B786")}
-  <text x="565" y="1236" text-anchor="middle" font-family="Noto Sans TC, Arial, sans-serif" font-size="26" font-weight="700" fill="#334155">掃描 QR Code，立即完成報名</text>
-
-  <text x="540" y="1320" text-anchor="middle" font-family="Noto Sans TC, Arial, sans-serif" font-size="30" font-weight="900" fill="#16946A">接龍報名小助手</text>
+  <rect x="102" y="1156" width="876" height="54" rx="27" fill="#FFFFFF" stroke="#E6F1EC"/>
+  ${phoneIcon(326, 1166, "#55B786")}
+  <text x="565" y="1192" text-anchor="middle" font-family="Noto Sans TC, Arial, sans-serif" font-size="26" font-weight="700" fill="#334155">掃描 QR Code，立即完成報名</text>
 </svg>`;
 }
 
