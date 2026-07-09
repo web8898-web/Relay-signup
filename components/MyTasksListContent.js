@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { ClipboardList, Plus, Bell, ChevronUp, ChevronDown, CalendarDays, Search, X, Trash2, Check } from "lucide-react";
+import { ClipboardList, Plus, Bell, ChevronUp, ChevronDown, CalendarDays, Search, X, Trash2, Check, Loader2 } from "lucide-react";
 import { EmptyState } from "@/components/TopBar";
 import Toast from "@/components/Toast";
 import LoadingBubble from "@/components/LoadingBubble";
@@ -299,11 +299,26 @@ export default function MyTasksListContent() {
               確定要移除 <span className="font-semibold text-rose-500">{selectedCount}</span> 個任務嗎？<br />此動作無法復原。
             </p>
             <div className="mt-5 flex gap-2">
-              <button disabled={bulkDeleting} onClick={() => setConfirmBulkDelete(false)} className="flex-1 rounded-full border border-gray-200 bg-white py-3 text-sm font-semibold text-gray-500 disabled:opacity-50">
+              <button
+                disabled={bulkDeleting}
+                onClick={() => setConfirmBulkDelete(false)}
+                className="flex-1 rounded-full border border-gray-200 bg-white py-3 text-sm font-semibold text-gray-500 transition active:scale-95 active:bg-gray-100 hover:bg-gray-50 disabled:opacity-50 disabled:active:scale-100"
+              >
                 取消
               </button>
-              <button disabled={bulkDeleting} onClick={handleBulkDelete} className="flex-1 rounded-full bg-rose-500 py-3 text-sm font-semibold text-white shadow-sm shadow-rose-100 disabled:opacity-50">
-                {bulkDeleting ? "移除中..." : "移除"}
+              <button
+                disabled={bulkDeleting}
+                onClick={handleBulkDelete}
+                className="flex-1 rounded-full bg-rose-500 py-3 text-sm font-semibold text-white shadow-sm shadow-rose-100 transition active:scale-95 active:bg-rose-600 hover:bg-rose-600 disabled:opacity-80 disabled:active:scale-100 flex items-center justify-center gap-1.5"
+              >
+                {bulkDeleting ? (
+                  <>
+                    <Loader2 size={15} className="animate-spin" />
+                    移除中...
+                  </>
+                ) : (
+                  "移除"
+                )}
               </button>
             </div>
           </div>
@@ -410,9 +425,9 @@ export default function MyTasksListContent() {
       {editMode ? (
         <FadeIn className="px-6 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] bg-white/95 backdrop-blur border-t border-gray-100 shadow-[0_-12px_30px_-28px_rgba(15,23,42,0.45)]">
           <div className="flex items-center gap-2 min-h-[56px]">
-            <button onClick={toggleSelectAllVisible} className="shrink-0 rounded-full border border-gray-200 bg-white px-3 py-2.5 text-xs font-semibold text-gray-500">{allVisibleSelected ? "取消全選" : "全選"}</button>
+            <button onClick={toggleSelectAllVisible} className="shrink-0 rounded-full border border-gray-200 bg-white px-3 py-2.5 text-xs font-semibold text-gray-500 transition active:scale-95 active:bg-gray-100 hover:bg-gray-50">{allVisibleSelected ? "取消全選" : "全選"}</button>
             <div className="flex-1 text-center text-xs text-gray-400">已選取 <span className="font-semibold text-emerald-600">{selectedCount}</span> 個任務</div>
-            <button disabled={selectedCount === 0} onClick={handleBulkDelete} className={`shrink-0 rounded-full px-4 py-2.5 text-xs font-semibold flex items-center gap-1.5 transition ${selectedCount === 0 ? "bg-gray-100 text-gray-300" : "bg-rose-500 text-white shadow-sm shadow-rose-100"}`}><Trash2 size={14} /> 刪除</button>
+            <button disabled={selectedCount === 0} onClick={handleBulkDelete} className={`shrink-0 rounded-full px-4 py-2.5 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 ${selectedCount === 0 ? "bg-gray-100 text-gray-300 active:scale-100" : "bg-rose-500 text-white shadow-sm shadow-rose-100 active:bg-rose-600 hover:bg-rose-600"}`}><Trash2 size={14} /> 刪除</button>
           </div>
         </FadeIn>
       ) : (
