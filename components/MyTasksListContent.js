@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { ClipboardList, Plus, Bell, ChevronUp, ChevronDown, CalendarDays, Search, X, Trash2, Check } from "lucide-react";
 import { EmptyState } from "@/components/TopBar";
@@ -41,7 +42,24 @@ export default function MyTasksListContent() {
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [taskSearch, setTaskSearch] = useState("");
+  const [portalReady, setPortalReady] = useState(false);
   const pendingSwitchTimerRef = useRef(null);
+
+  useEffect(() => {
+    setPortalReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!confirmBulkDelete || typeof document === "undefined") return;
+    const originalOverflow = document.body.style.overflow;
+    const originalTouchAction = document.body.style.touchAction;
+    document.body.style.overflow = "hidden";
+    document.body.style.touchAction = "none";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.touchAction = originalTouchAction;
+    };
+  }, [confirmBulkDelete]);
 
   useEffect(() => {
     const saved = typeof window !== "undefined" ? localStorage.getItem(FRIEND_BANNER_KEY) : null;
@@ -138,14 +156,7 @@ export default function MyTasksListContent() {
     const keyword = taskSearch.trim().toLowerCase();
     if (!keyword) return sortedTasks;
     return sortedTasks.filter((t) => {
-      const text = [
-        t.title,
-        t.description,
-        t.note,
-        t.start_date,
-        t.end_date,
-        ...(t.categories || []),
-      ]
+      const text = [t.title, t.description, t.note, t.start_date, t.end_date, ...(t.categories || [])]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
@@ -276,6 +287,31 @@ export default function MyTasksListContent() {
     }
   }
 
+  const deleteDialog = confirmBulkDelete && portalReady
+    ? createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/35 px-6 backdrop-blur-sm" role="dialog" aria-modal="true">
+          <div className="w-full max-w-[320px] rounded-3xl bg-white p-5 shadow-2xl">
+            <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-rose-50 text-rose-500">
+              <Trash2 size={22} />
+            </div>
+            <p className="text-center text-base font-bold text-gray-800">移除任務？</p>
+            <p className="mt-2 text-center text-sm leading-relaxed text-gray-500">
+              確定要移除 <span className="font-semibold text-rose-500">{selectedCount}</span> 個任務嗎？<br />此動作無法復原。
+            </p>
+            <div className="mt-5 flex gap-2">
+              <button disabled={bulkDeleting} onClick={() => setConfirmBulkDelete(false)} className="flex-1 rounded-full border border-gray-200 bg-white py-3 text-sm font-semibold text-gray-500 disabled:opacity-50">
+                取消
+              </button>
+              <button disabled={bulkDeleting} onClick={handleBulkDelete} className="flex-1 rounded-full bg-rose-500 py-3 text-sm font-semibold text-white shadow-sm shadow-rose-100 disabled:opacity-50">
+                {bulkDeleting ? "移除中..." : "移除"}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )
+    : null;
+
   if (tasksLoading) {
     return (
       <div className="flex-1 flex flex-col relative min-w-0">
@@ -311,9 +347,7 @@ export default function MyTasksListContent() {
           </div>
         ) : (
           <button onClick={() => setBannerExpanded(true)} className="w-full flex items-center justify-between text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-3 hover:bg-emerald-100 transition" aria-label="展開提示">
-            <span className="flex items-center gap-2">
-              <Bell size={14} /> 加好友才能收到報名通知
-            </span>
+            <span className="flex items-center gap-2"><Bell size={14} /> 加好友才能收到報名通知</span>
             <ChevronDown size={14} />
           </button>
         )}
@@ -323,16 +357,9 @@ export default function MyTasksListContent() {
             <div className="flex items-center justify-between gap-2 px-1">
               <div className="relative flex-1">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
-                <input
-                  value={taskSearch}
-                  onChange={(e) => setTaskSearch(e.target.value)}
-                  placeholder="搜尋任務..."
-                  className="w-full rounded-full border border-gray-100 bg-gray-50 py-2 pl-9 pr-9 text-xs text-gray-600 outline-none focus:border-emerald-200 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition"
-                />
+                <input value={taskSearch} onChange={(e) => setTaskSearch(e.target.value)} placeholder="搜尋任務..." className="w-full rounded-full border border-gray-100 bg-gray-50 py-2 pl-9 pr-9 text-xs text-gray-600 outline-none focus:border-emerald-200 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition" />
                 {taskSearch && (
-                  <button onClick={() => setTaskSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full text-gray-300 hover:text-gray-500 flex items-center justify-center" aria-label="清除搜尋">
-                    <X size={13} />
-                  </button>
+                  <button onClick={() => setTaskSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full text-gray-300 hover:text-gray-500 flex items-center justify-center" aria-label="清除搜尋"><X size={13} /></button>
                 )}
               </div>
               <button onClick={editMode ? leaveEditMode : enterEditMode} className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold transition ${editMode ? "bg-gray-100 text-gray-500" : "bg-emerald-50 text-emerald-600 border border-emerald-100"}`}>
@@ -348,9 +375,7 @@ export default function MyTasksListContent() {
           </>
         )}
 
-        {tasks.length === 0 && (
-          <EmptyState icon={<ClipboardList size={30} />} title="還沒有任務" desc="點擊上方「建立任務」開始建立第一個接龍吧。" />
-        )}
+        {tasks.length === 0 && <EmptyState icon={<ClipboardList size={30} />} title="還沒有任務" desc="點擊上方「建立任務」開始建立第一個接龍吧。" />}
 
         {tasks.length > 0 && filteredTasks.length === 0 && (
           <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50/70 py-8 text-center">
@@ -364,46 +389,17 @@ export default function MyTasksListContent() {
           return (
             <div key={t.id} className="rounded-2xl bg-white transition" onClickCapture={(event) => handleTaskClickCapture(event, t.id)}>
               <div className="mb-1.5 px-3 text-[11px] text-gray-400">
-                <span className="inline-flex items-center gap-1">
-                  <CalendarDays size={12} /> {formatDateRange(t)}
-                </span>
+                <span className="inline-flex items-center gap-1"><CalendarDays size={12} /> {formatDateRange(t)}</span>
               </div>
               <div className={`relative flex items-stretch gap-1.5 transition ${editMode ? "-ml-0.5" : ""}`}>
                 {editMode && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleTaskSelected(t.id);
-                    }}
-                    className="w-7 flex items-center justify-center shrink-0"
-                    aria-label={selected ? "取消選取任務" : "選取任務"}
-                  >
-                    <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition ${selected ? "bg-emerald-500 border-emerald-500 text-white" : "bg-white border-gray-300 text-transparent"}`}>
-                      <Check size={14} strokeWidth={3} />
-                    </span>
+                  <button type="button" onClick={(e) => { e.stopPropagation(); toggleTaskSelected(t.id); }} className="w-7 flex items-center justify-center shrink-0" aria-label={selected ? "取消選取任務" : "選取任務"}>
+                    <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition ${selected ? "bg-emerald-500 border-emerald-500 text-white" : "bg-white border-gray-300 text-transparent"}`}><Check size={14} strokeWidth={3} /></span>
                   </button>
                 )}
                 <div className={`flex-1 min-w-0 transition ${editMode && selected ? "ring-2 ring-emerald-100 rounded-2xl" : ""}`}>
-                  <TaskListCard
-                    task={t}
-                    signups={signupsByTask[t.id] || []}
-                    accessToken={profile.accessToken}
-                    onEdit={() => router.push(`/my-tasks/${t.id}/edit`)}
-                    onShare={() => router.push(`/create/share/${t.id}`)}
-                    onDelete={() => handleDelete(t.id)}
-                  />
-                  {editMode && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleTaskSelected(t.id);
-                      }}
-                      className="absolute inset-y-0 left-7 right-0 rounded-2xl"
-                      aria-label="切換選取任務"
-                    />
-                  )}
+                  <TaskListCard task={t} signups={signupsByTask[t.id] || []} accessToken={profile.accessToken} onEdit={() => router.push(`/my-tasks/${t.id}/edit`)} onShare={() => router.push(`/create/share/${t.id}`)} onDelete={() => handleDelete(t.id)} />
+                  {editMode && <button type="button" onClick={(e) => { e.stopPropagation(); toggleTaskSelected(t.id); }} className="absolute inset-y-0 left-7 right-0 rounded-2xl" aria-label="切換選取任務" />}
                 </div>
               </div>
             </div>
@@ -414,56 +410,22 @@ export default function MyTasksListContent() {
       {editMode ? (
         <FadeIn className="px-6 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] bg-white/95 backdrop-blur border-t border-gray-100 shadow-[0_-12px_30px_-28px_rgba(15,23,42,0.45)]">
           <div className="flex items-center gap-2 min-h-[56px]">
-            <button onClick={toggleSelectAllVisible} className="shrink-0 rounded-full border border-gray-200 bg-white px-3 py-2.5 text-xs font-semibold text-gray-500">
-              {allVisibleSelected ? "取消全選" : "全選"}
-            </button>
-            <div className="flex-1 text-center text-xs text-gray-400">
-              已選取 <span className="font-semibold text-emerald-600">{selectedCount}</span> 個任務
-            </div>
-            <button
-              disabled={selectedCount === 0}
-              onClick={handleBulkDelete}
-              className={`shrink-0 rounded-full px-4 py-2.5 text-xs font-semibold flex items-center gap-1.5 transition ${selectedCount === 0 ? "bg-gray-100 text-gray-300" : "bg-rose-500 text-white shadow-sm shadow-rose-100"}`}
-            >
-              <Trash2 size={14} /> 刪除
-            </button>
+            <button onClick={toggleSelectAllVisible} className="shrink-0 rounded-full border border-gray-200 bg-white px-3 py-2.5 text-xs font-semibold text-gray-500">{allVisibleSelected ? "取消全選" : "全選"}</button>
+            <div className="flex-1 text-center text-xs text-gray-400">已選取 <span className="font-semibold text-emerald-600">{selectedCount}</span> 個任務</div>
+            <button disabled={selectedCount === 0} onClick={handleBulkDelete} className={`shrink-0 rounded-full px-4 py-2.5 text-xs font-semibold flex items-center gap-1.5 transition ${selectedCount === 0 ? "bg-gray-100 text-gray-300" : "bg-rose-500 text-white shadow-sm shadow-rose-100"}`}><Trash2 size={14} /> 刪除</button>
           </div>
         </FadeIn>
       ) : (
         <FadeIn className="px-6 pb-6 pt-2">
-          <button onClick={() => router.push("/create")} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-3 font-semibold flex items-center justify-center gap-2 shadow-md shadow-emerald-200 transition">
-            <Plus size={18} /> 新增任務
-          </button>
+          <button onClick={() => router.push("/create")} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-3 font-semibold flex items-center justify-center gap-2 shadow-md shadow-emerald-200 transition"><Plus size={18} /> 新增任務</button>
         </FadeIn>
       )}
 
-      {confirmBulkDelete && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/20 px-6 backdrop-blur-[1px]">
-          <div className="w-full max-w-[320px] rounded-3xl bg-white p-5 shadow-2xl">
-            <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-rose-50 text-rose-500">
-              <Trash2 size={22} />
-            </div>
-            <p className="text-center text-base font-bold text-gray-800">移除任務？</p>
-            <p className="mt-2 text-center text-sm leading-relaxed text-gray-500">
-              確定要移除 <span className="font-semibold text-rose-500">{selectedCount}</span> 個任務嗎？<br />此動作無法復原。
-            </p>
-            <div className="mt-5 flex gap-2">
-              <button disabled={bulkDeleting} onClick={() => setConfirmBulkDelete(false)} className="flex-1 rounded-full border border-gray-200 bg-white py-3 text-sm font-semibold text-gray-500 disabled:opacity-50">
-                取消
-              </button>
-              <button disabled={bulkDeleting} onClick={handleBulkDelete} className="flex-1 rounded-full bg-rose-500 py-3 text-sm font-semibold text-white shadow-sm shadow-rose-100 disabled:opacity-50">
-                {bulkDeleting ? "移除中..." : "移除"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {deleteDialog}
 
       {toast && (
         <Toast className="bottom-24">
-          <div className="bg-rose-500 text-white text-sm px-4 py-2 rounded-full shadow-lg whitespace-nowrap">
-            {toast}
-          </div>
+          <div className="bg-rose-500 text-white text-sm px-4 py-2 rounded-full shadow-lg whitespace-nowrap">{toast}</div>
         </Toast>
       )}
     </div>
