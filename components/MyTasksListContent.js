@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ClipboardList, Plus, Bell, ChevronUp, ChevronDown, CalendarDays } from "lucide-react";
+import { ClipboardList, Plus, Bell, ChevronUp, ChevronDown, CalendarDays, Search, X, Trash2, Check } from "lucide-react";
 import { EmptyState } from "@/components/TopBar";
 import Toast from "@/components/Toast";
 import LoadingBubble from "@/components/LoadingBubble";
@@ -37,6 +37,11 @@ export default function MyTasksListContent() {
   const [toast, setToast] = useState("");
   const [friendBannerExpanded, setFriendBannerExpanded] = useState(true);
   const [expandedTaskId, setExpandedTaskId] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [selectedTaskIds, setSelectedTaskIds] = useState(() => new Set());
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [taskSearch, setTaskSearch] = useState("");
   const pendingSwitchTimerRef = useRef(null);
 
   useEffect(() => {
@@ -132,6 +137,63 @@ export default function MyTasksListContent() {
   }
 
   const sortedTasks = sortTasks(tasks);
+  const filteredTasks = useMemo(() => {
+    const keyword = taskSearch.trim().toLowerCase();
+    if (!keyword) return sortedTasks;
+    return sortedTasks.filter((t) => {
+      const text = [
+        t.title,
+        t.description,
+        t.note,
+        t.start_date,
+        t.end_date,
+        ...(t.categories || []),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return text.includes(keyword);
+    });
+  }, [taskSearch, tasks, signupsByTask]);
+
+  const selectedCount = selectedTaskIds.size;
+  const allVisibleSelected = filteredTasks.length > 0 && filteredTasks.every((t) => selectedTaskIds.has(t.id));
+
+  function enterEditMode() {
+    setEditMode(true);
+    setExpandedTaskId(null);
+    setConfirmBulkDelete(false);
+    window.dispatchEvent(new CustomEvent(TASK_CARD_EXPAND_EVENT, { detail: { taskId: null } }));
+  }
+
+  function leaveEditMode() {
+    setEditMode(false);
+    setConfirmBulkDelete(false);
+    setSelectedTaskIds(new Set());
+  }
+
+  function toggleTaskSelected(taskId) {
+    setConfirmBulkDelete(false);
+    setSelectedTaskIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(taskId)) next.delete(taskId);
+      else next.add(taskId);
+      return next;
+    });
+  }
+
+  function toggleSelectAllVisible() {
+    setConfirmBulkDelete(false);
+    setSelectedTaskIds((prev) => {
+      const next = new Set(prev);
+      if (allVisibleSelected) {
+        filteredTasks.forEach((t) => next.delete(t.id));
+      } else {
+        filteredTasks.forEach((t) => next.add(t.id));
+      }
+      return next;
+    });
+  }
 
   function shouldDelayTaskSwitch(event) {
     const target = event.target;
@@ -146,6 +208,7 @@ export default function MyTasksListContent() {
   }
 
   function handleTaskClickCapture(event, taskId) {
+    if (editMode) return;
     if (!expandedTaskId || expandedTaskId === taskId) return;
     if (!shouldDelayTaskSwitch(event)) return;
 
@@ -165,10 +228,6 @@ export default function MyTasksListContent() {
   }
 
   async function handleDelete(taskId) {
-    // Optimistic removal: the swipe-to-delete gesture in TaskListCard
-    // already plays its own exit animation, so we take the card out of the
-    // list right away instead of waiting on the network — waiting here is
-    // what made the swipe feel like it was hanging on the red background.
     const removedTask = tasks.find((t) => t.id === taskId);
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
     try {
@@ -180,12 +239,51 @@ export default function MyTasksListContent() {
       if (!res.ok) throw new Error(data.error);
       showToast("已移除任務");
     } catch (e) {
-      // The delete didn't actually go through on the server — put the
-      // task back so the list stays correct.
       if (removedTask) {
         setTasks((prev) => sortTasks([...prev, removedTask]));
       }
       showToast(e.message || "移除失敗");
+    }
+  }
+
+  async function handleBulkDelete() {
+    if (selectedCount === 0 || bulkDeleting) return;
+    if (!confirmBulkDelete) {
+      setConfirmBulkDelete(true);
+      return;
+    }
+
+    const ids = [...selectedTaskIds];
+    const removedTasks = tasks.filter((t) => selectedTaskIds.has(t.id));
+    setBulkDeleting(true);
+    setTasks((prev) => prev.filter((t) => !selectedTaskIds.has(t.id)));
+    setSelectedTaskIds(new Set());
+    setConfirmBulkDelete(false);
+
+    try {
+      const results = await Promise.all(
+        ids.map((id) =>
+          fetch(`/api/tasks/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${profile.accessToken}` },
+          }).then(async (res) => {
+            if (!res.ok) {
+              const data = await res.json().catch(() => ({}));
+              throw new Error(data.error || "移除失敗");
+            }
+            return true;
+          })
+        )
+      );
+      if (results.every(Boolean)) {
+        showToast(`已移除 ${ids.length} 個任務`);
+        setEditMode(false);
+      }
+    } catch (e) {
+      setTasks((prev) => sortTasks([...prev, ...removedTasks]));
+      showToast(e.message || "移除失敗，已復原列表");
+    } finally {
+      setBulkDeleting(false);
     }
   }
 
@@ -201,7 +299,7 @@ export default function MyTasksListContent() {
 
   return (
     <div className="flex-1 flex flex-col relative min-w-0">
-      <FadeIn className="flex-1 px-6 py-3 flex flex-col gap-3 overflow-y-auto">
+      <FadeIn className={`flex-1 px-6 py-3 flex flex-col gap-3 overflow-y-auto ${editMode ? "pb-28" : ""}`}>
         {friendBannerExpanded ? (
           <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 flex items-start gap-2.5">
             <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
@@ -245,53 +343,176 @@ export default function MyTasksListContent() {
         )}
 
         {tasks.length > 0 && (
-          <div className="flex items-center justify-center flex-wrap gap-x-4 gap-y-1.5 px-1 py-0.5">
-            <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> 進行中
-            </span>
-            <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500" /> 已額滿
-            </span>
-            <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
-              <span className="w-2.5 h-2.5 rounded-full bg-gray-400" /> 已結束
-            </span>
-          </div>
+          <>
+            <div className="flex items-center justify-between gap-2 px-1">
+              <div className="relative flex-1">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
+                <input
+                  value={taskSearch}
+                  onChange={(e) => setTaskSearch(e.target.value)}
+                  placeholder="搜尋任務..."
+                  className="w-full rounded-full border border-gray-100 bg-gray-50 py-2 pl-9 pr-9 text-xs text-gray-600 outline-none focus:border-emerald-200 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition"
+                />
+                {taskSearch && (
+                  <button
+                    onClick={() => setTaskSearch("")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full text-gray-300 hover:text-gray-500 flex items-center justify-center"
+                    aria-label="清除搜尋"
+                  >
+                    <X size={13} />
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={editMode ? leaveEditMode : enterEditMode}
+                className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold transition ${
+                  editMode ? "bg-gray-100 text-gray-500" : "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                }`}
+              >
+                {editMode ? "完成" : "編輯"}
+              </button>
+            </div>
+
+            <div className="flex items-center justify-center flex-wrap gap-x-4 gap-y-1.5 px-1 py-0.5">
+              <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> 進行中
+              </span>
+              <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500" /> 已額滿
+              </span>
+              <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
+                <span className="w-2.5 h-2.5 rounded-full bg-gray-400" /> 已結束
+              </span>
+            </div>
+          </>
         )}
 
         {tasks.length === 0 && (
           <EmptyState icon={<ClipboardList size={30} />} title="還沒有任務" desc="點擊上方「建立任務」開始建立第一個接龍吧。" />
         )}
-        {sortedTasks.map((t) => (
-          <div
-            key={t.id}
-            className="rounded-2xl bg-white"
-            onClickCapture={(event) => handleTaskClickCapture(event, t.id)}
-          >
-            <div className="mb-1.5 px-3 text-[11px] text-gray-400">
-              <span className="inline-flex items-center gap-1">
-                <CalendarDays size={12} /> {formatDateRange(t)}
-              </span>
-            </div>
-            <TaskListCard
-              task={t}
-              signups={signupsByTask[t.id] || []}
-              accessToken={profile.accessToken}
-              onEdit={() => router.push(`/my-tasks/${t.id}/edit`)}
-              onShare={() => router.push(`/create/share/${t.id}`)}
-              onDelete={() => handleDelete(t.id)}
-            />
+
+        {tasks.length > 0 && filteredTasks.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50/70 py-8 text-center">
+            <p className="text-sm font-semibold text-gray-500">找不到符合的任務</p>
+            <p className="text-xs text-gray-400 mt-1">換個關鍵字試試看</p>
           </div>
-        ))}
+        )}
+
+        {filteredTasks.map((t) => {
+          const selected = selectedTaskIds.has(t.id);
+          return (
+            <div
+              key={t.id}
+              className={`rounded-2xl bg-white transition ${editMode ? "pl-0" : ""}`}
+              onClickCapture={(event) => handleTaskClickCapture(event, t.id)}
+            >
+              <div className="mb-1.5 px-3 text-[11px] text-gray-400">
+                <span className="inline-flex items-center gap-1">
+                  <CalendarDays size={12} /> {formatDateRange(t)}
+                </span>
+              </div>
+              <div className={`relative flex items-stretch gap-2 transition ${editMode ? "-ml-1" : ""}`}>
+                {editMode && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleTaskSelected(t.id);
+                    }}
+                    className="w-9 flex items-center justify-center shrink-0"
+                    aria-label={selected ? "取消選取任務" : "選取任務"}
+                  >
+                    <span
+                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition ${
+                        selected ? "bg-emerald-500 border-emerald-500 text-white" : "bg-white border-gray-300 text-transparent"
+                      }`}
+                    >
+                      <Check size={14} strokeWidth={3} />
+                    </span>
+                  </button>
+                )}
+                <div className={`flex-1 min-w-0 transition ${editMode && selected ? "ring-2 ring-emerald-100 rounded-2xl" : ""}`}>
+                  <TaskListCard
+                    task={t}
+                    signups={signupsByTask[t.id] || []}
+                    accessToken={profile.accessToken}
+                    onEdit={() => router.push(`/my-tasks/${t.id}/edit`)}
+                    onShare={() => router.push(`/create/share/${t.id}`)}
+                    onDelete={() => handleDelete(t.id)}
+                  />
+                  {editMode && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleTaskSelected(t.id);
+                      }}
+                      className="absolute inset-y-0 left-9 right-0 rounded-2xl"
+                      aria-label="切換選取任務"
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </FadeIn>
 
-      <FadeIn className="px-6 pb-6 pt-2">
-        <button
-          onClick={() => router.push("/create")}
-          className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-3 font-semibold flex items-center justify-center gap-2 shadow-md shadow-emerald-200 transition"
-        >
-          <Plus size={18} /> 新增任務
-        </button>
-      </FadeIn>
+      {editMode ? (
+        <FadeIn className="px-6 pb-5 pt-2 bg-white/95 backdrop-blur border-t border-gray-100 shadow-[0_-12px_30px_-28px_rgba(15,23,42,0.45)]">
+          {confirmBulkDelete ? (
+            <div className="rounded-2xl bg-rose-50 border border-rose-100 p-3">
+              <p className="text-sm font-semibold text-rose-600 text-center">確定移除 {selectedCount} 個任務？</p>
+              <div className="flex gap-2 mt-3">
+                <button
+                  disabled={bulkDeleting}
+                  onClick={() => setConfirmBulkDelete(false)}
+                  className="flex-1 rounded-full border border-gray-200 bg-white py-2.5 text-sm font-semibold text-gray-500 disabled:opacity-50"
+                >
+                  取消
+                </button>
+                <button
+                  disabled={bulkDeleting}
+                  onClick={handleBulkDelete}
+                  className="flex-1 rounded-full bg-rose-500 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  {bulkDeleting ? "移除中..." : "確定移除"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={toggleSelectAllVisible}
+                className="shrink-0 rounded-full border border-gray-200 bg-white px-3 py-2.5 text-xs font-semibold text-gray-500"
+              >
+                {allVisibleSelected ? "取消全選" : "全選"}
+              </button>
+              <div className="flex-1 text-center text-xs text-gray-400">
+                已選取 <span className="font-semibold text-emerald-600">{selectedCount}</span> 個
+              </div>
+              <button
+                disabled={selectedCount === 0}
+                onClick={handleBulkDelete}
+                className={`shrink-0 rounded-full px-4 py-2.5 text-xs font-semibold flex items-center gap-1.5 transition ${
+                  selectedCount === 0 ? "bg-gray-100 text-gray-300" : "bg-rose-500 text-white shadow-sm shadow-rose-100"
+                }`}
+              >
+                <Trash2 size={14} /> 刪除
+              </button>
+            </div>
+          )}
+        </FadeIn>
+      ) : (
+        <FadeIn className="px-6 pb-6 pt-2">
+          <button
+            onClick={() => router.push("/create")}
+            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-3 font-semibold flex items-center justify-center gap-2 shadow-md shadow-emerald-200 transition"
+          >
+            <Plus size={18} /> 新增任務
+          </button>
+        </FadeIn>
+      )}
 
       {toast && (
         <Toast className="bottom-24">
