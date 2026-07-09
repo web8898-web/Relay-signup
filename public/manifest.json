@@ -1,0 +1,11 @@
+{
+  "name": "接龍報名小助手",
+  "short_name": "接龍報名小助手",
+  "description": "在 LINE 上分享、免登入即可完成報名的接龍小工具",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#10B981",
+  "lang": "zh-Hant"
+}
