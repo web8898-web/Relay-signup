@@ -4,6 +4,36 @@ import { notifySignupActivity } from "@/lib/smartNotify";
 import { isHeadcountUnit } from "@/lib/utils";
 
 const DUPLICATE_WINDOW_MS = 30_000;
+const TASK_FIELDS = "id, title, categories, end_date, creator_id, notify_enabled, max_signups, quantity_unit, task_mode";
+const LEGACY_TASK_FIELDS = "id, title, categories, end_date, creator_id, notify_enabled, max_signups, quantity_unit";
+
+function isMissingTaskModeColumn(error) {
+  if (!error) return false;
+  const message = String(error.message || "");
+  return error.code === "PGRST204" || error.code === "42703" || message.includes("task_mode");
+}
+
+async function findTask(supabase, taskId) {
+  let { data, error } = await supabase
+    .from("tasks")
+    .select(TASK_FIELDS)
+    .eq("id", taskId)
+    .single();
+
+  // Some existing Supabase projects may not have applied sql/task_mode.sql yet.
+  // A missing column must not make a valid task look like it does not exist.
+  if (isMissingTaskModeColumn(error)) {
+    ({ data, error } = await supabase
+      .from("tasks")
+      .select(LEGACY_TASK_FIELDS)
+      .eq("id", taskId)
+      .single());
+
+    if (data) data.task_mode = "normal";
+  }
+
+  return { task: data, error };
+}
 
 export async function POST(request) {
   try {
@@ -16,15 +46,13 @@ export async function POST(request) {
     }
 
     const supabase = getSupabaseAdmin();
+    const { task, error: taskErr } = await findTask(supabase, task_id);
 
-    const { data: task, error: taskErr } = await supabase
-      .from("tasks")
-      .select("id, title, categories, end_date, creator_id, notify_enabled, max_signups, quantity_unit, task_mode")
-      .eq("id", task_id)
-      .single();
     if (taskErr || !task) {
+      console.warn("signup task lookup failed", { task_id, taskErr });
       return NextResponse.json({ error: "找不到這個任務" }, { status: 404 });
     }
+
     const selectedCategories =
       task.categories?.length > 0 && Array.isArray(categories)
         ? categories.filter((c) => task.categories.includes(c))
@@ -95,7 +123,8 @@ export async function POST(request) {
       ? names.map((n) => String(n || "").trim()).filter(Boolean).slice(0, 50)
       : [];
     const isMultiEligible =
-      (!task.categories || task.categories.length === 0) && !task.quantity_unit;
+      task.task_mode !== "queue" && (!task.categories || task.categories.length === 0) && !task.quantity_unit;
+
     if (isMultiEligible && cleanNames.length >= 2) {
       if (task.max_signups) {
         const { count } = await supabase
@@ -113,7 +142,7 @@ export async function POST(request) {
           );
         }
       }
-      const batchId = (globalThis.crypto?.randomUUID?.() ) || null;
+      const batchId = globalThis.crypto?.randomUUID?.() || null;
       const rows = cleanNames.map((nm) => ({
         task_id,
         categories: [],
