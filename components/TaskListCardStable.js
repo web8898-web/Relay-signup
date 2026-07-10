@@ -39,8 +39,6 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
   const [checkedIds, setCheckedIds] = useState(() => new Set());
   const cardRef = useRef(null);
 
-  const checkinStorageKey = `relay_checkin_${task.id}`;
-
   useEffect(() => {
     function closeOtherCard(event) {
       if (event.detail?.taskId === task.id) return;
@@ -55,15 +53,8 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
 
   useEffect(() => {
     if (!expanded) return;
-    try {
-      const saved = JSON.parse(localStorage.getItem(checkinStorageKey) || "null");
-      if (Array.isArray(saved)) {
-        setCheckedIds(new Set(saved));
-        return;
-      }
-    } catch (e) {}
     setCheckedIds(new Set(signups.filter((s) => s.checked_in).map((s) => s.id)));
-  }, [expanded, checkinStorageKey, signups]);
+  }, [expanded, signups]);
 
   useEffect(() => {
     if (!expanded) {
@@ -75,12 +66,6 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
     }, 120);
     return () => clearTimeout(t);
   }, [expanded]);
-
-  function persistCheckedIds(ids) {
-    try {
-      localStorage.setItem(checkinStorageKey, JSON.stringify([...ids]));
-    } catch (e) {}
-  }
 
   function toggleExpand(e) {
     e?.stopPropagation?.();
@@ -146,11 +131,18 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
   }
 
   async function saveCheckin(signupId, checkedIn) {
-    await fetch(`/api/signups/${signupId}/checkin`, {
+    const headers = { "Content-Type": "application/json" };
+    if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+    const res = await fetch(`/api/signups/${signupId}/checkin`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ owner_token: getOwnerToken(), checked_in: checkedIn }),
     });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || "處理失敗");
+    }
+    return res.json();
   }
 
   async function toggleCheckin(s) {
@@ -159,20 +151,30 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
       const n = new Set(prev);
       if (next) n.add(s.id);
       else n.delete(s.id);
-      persistCheckedIds(n);
       return n;
     });
     try {
       await saveCheckin(s.id, next);
-    } catch (e) {}
+    } catch (e) {
+      setCheckedIds((prev) => {
+        const n = new Set(prev);
+        if (next) n.delete(s.id);
+        else n.add(s.id);
+        return n;
+      });
+    }
   }
 
   async function setAllCheckin(value) {
     const targets = signups.filter((s) => checkedIds.has(s.id) !== value);
+    const original = checkedIds;
     const nextIds = value ? new Set(signups.map((s) => s.id)) : new Set();
     setCheckedIds(nextIds);
-    persistCheckedIds(nextIds);
-    await Promise.all(targets.map((s) => saveCheckin(s.id, value).catch(() => {})));
+    try {
+      await Promise.all(targets.map((s) => saveCheckin(s.id, value)));
+    } catch (e) {
+      setCheckedIds(original);
+    }
   }
 
   function copyAbsentList(e) {
@@ -184,10 +186,17 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
 
   const st = taskStatus(task);
   const signupCount = signups.length;
+  const isQueueTask = task.task_mode === "queue";
   const orderNumber = {};
+  const waitingOrderNumber = {};
   signups.forEach((s, i) => {
     orderNumber[s.id] = i + 1;
   });
+  signups
+    .filter((s) => !checkedIds.has(s.id))
+    .forEach((s, i) => {
+      waitingOrderNumber[s.id] = i + 1;
+    });
 
   const batchInfoList = batchInfoFor(signups);
   const batchColorById = {};
@@ -202,6 +211,11 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
   const isFull = !isClosed && !!task.max_signups && headcount >= task.max_signups;
   const iconBg = isClosed ? "bg-gray-400" : isFull ? "bg-rose-500" : "bg-emerald-500";
   const checkedCount = checkedIds.size;
+  const waitingCount = Math.max(0, signups.length - checkedCount);
+  const canProcessList = signups.length > 0 && (isClosed || isQueueTask);
+  const processButtonText = isQueueTask ? "開始處理名單" : "開始點名報到";
+  const processSummaryText = isQueueTask ? "已完成" : "已報到";
+  const remainingText = isQueueTask ? "等待" : "未到";
 
   const NO_CATEGORY = "__no_category__";
   const categoryCounts = {};
@@ -225,20 +239,29 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
         ? signups.filter((s) => !s.categories || s.categories.length === 0)
         : signups.filter((s) => s.categories?.includes(filter));
 
-    if (!keyword) return byCategory;
-    return byCategory.filter((s) => {
-      const text = [
-        s.name,
-        s.note,
-        ...(s.categories || []),
-        String(orderNumber[s.id] || ""),
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return text.includes(keyword);
+    const bySearch = !keyword
+      ? byCategory
+      : byCategory.filter((s) => {
+          const text = [
+            s.name,
+            s.note,
+            ...(s.categories || []),
+            String(orderNumber[s.id] || ""),
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+          return text.includes(keyword);
+        });
+
+    if (!isQueueTask || !checkinMode) return bySearch;
+    return [...bySearch].sort((a, b) => {
+      const aDone = checkedIds.has(a.id) ? 1 : 0;
+      const bDone = checkedIds.has(b.id) ? 1 : 0;
+      if (aDone !== bDone) return aDone - bDone;
+      return new Date(a.created_at) - new Date(b.created_at);
     });
-  }, [filter, searchText, signups]);
+  }, [filter, searchText, signups, checkedIds, checkinMode, isQueueTask]);
 
   return (
     <div ref={cardRef} className="relative scroll-mt-4">
@@ -302,6 +325,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
                   <span className={`text-[10px] px-2 py-0.5 rounded-full border ${isFull ? "bg-rose-100 text-rose-600 border-rose-200" : st.cls}`}>
                     {isFull ? "已額滿" : st.label}
                   </span>
+                  {isQueueTask && <span className="text-[10px] px-2 py-0.5 rounded-full border border-sky-100 bg-sky-50 text-sky-600">現場排隊</span>}
                 </div>
                 {task.description && <p className="text-sm text-gray-600 leading-relaxed mb-2 whitespace-pre-wrap">{task.description}</p>}
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-400">
@@ -335,18 +359,18 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
                   </div>
                 )}
 
-                {isClosed && signups.length > 0 && !checkinMode && (
+                {canProcessList && !checkinMode && (
                   <button onClick={(e) => { e.stopPropagation(); setCheckinMode(true); }} className="w-full mb-2.5 flex items-center justify-center gap-1.5 text-xs font-semibold text-white bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] rounded-full py-2.5 shadow-sm shadow-emerald-200 transition">
-                    <ClipboardCheck size={15} /> 開始點名報到
+                    <ClipboardCheck size={15} /> {processButtonText}
                   </button>
                 )}
 
-                {isClosed && checkinMode && (
+                {canProcessList && checkinMode && (
                   <div className="bg-white border border-emerald-200 rounded-xl p-2.5 mb-2 shadow-sm">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-[11px] font-semibold text-gray-700">
-                        已報到 <span className="text-emerald-600">{checkedCount}</span> / {signups.length} 位
-                        {signups.length - checkedCount > 0 && <span className="text-gray-400 font-normal">（未到 {signups.length - checkedCount}）</span>}
+                        {processSummaryText} <span className="text-emerald-600">{checkedCount}</span> / {signups.length} 位
+                        {waitingCount > 0 && <span className="text-gray-400 font-normal">（{remainingText} {waitingCount}）</span>}
                       </span>
                       <button onClick={(e) => { e.stopPropagation(); setCheckinMode(false); }} className="text-[11px] text-gray-400 hover:text-gray-600 px-1">完成</button>
                     </div>
@@ -354,10 +378,11 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
                       <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${signups.length ? (checkedCount / signups.length) * 100 : 0}%` }} />
                     </div>
                     <div className="flex flex-wrap gap-1.5">
-                      <button onClick={(e) => { e.stopPropagation(); setAllCheckin(true); }} className="text-[10px] text-emerald-600 border border-emerald-200 rounded-full px-2 py-0.5 hover:bg-emerald-50 flex items-center gap-1"><CheckCircle2 size={11} /> 全部已到</button>
+                      <button onClick={(e) => { e.stopPropagation(); setAllCheckin(true); }} className="text-[10px] text-emerald-600 border border-emerald-200 rounded-full px-2 py-0.5 hover:bg-emerald-50 flex items-center gap-1"><CheckCircle2 size={11} /> {isQueueTask ? "全部完成" : "全部已到"}</button>
                       <button onClick={(e) => { e.stopPropagation(); setAllCheckin(false); }} className="text-[10px] text-gray-500 border border-gray-200 rounded-full px-2 py-0.5 hover:bg-gray-50 flex items-center gap-1"><RotateCcw size={11} /> 重設</button>
-                      <button onClick={copyAbsentList} className="text-[10px] text-gray-500 border border-gray-200 rounded-full px-2 py-0.5 hover:bg-gray-50 flex items-center gap-1"><Copy size={11} /> 複製未到名單</button>
+                      {!isQueueTask && <button onClick={copyAbsentList} className="text-[10px] text-gray-500 border border-gray-200 rounded-full px-2 py-0.5 hover:bg-gray-50 flex items-center gap-1"><Copy size={11} /> 複製未到名單</button>}
                     </div>
+                    {isQueueTask && <p className="text-[10px] text-gray-400 mt-2 px-0.5">點擊名單即可標記完成，等待中的順位會自動往前。</p>}
                   </div>
                 )}
 
@@ -383,38 +408,45 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
                   <p className="text-xs text-gray-300 text-center py-4">{signups.length === 0 ? "還沒有人報名" : searchText ? "找不到符合的報名者" : "這個分類還沒有人報名"}</p>
                 ) : (
                   <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto pr-0.5">
-                    {filteredSignups.map((s, i) => (
-                      <div key={s.id || i} onClick={checkinMode ? (e) => { e.stopPropagation(); toggleCheckin(s); } : undefined} className={`relative overflow-hidden flex items-start gap-2 border rounded-xl px-3 py-2 transition ${batchColorById[s.id] ? "pl-3.5" : ""} ${checkinMode ? `cursor-pointer select-none active:scale-[0.99] ${checkedIds.has(s.id) ? "bg-emerald-50 border-emerald-200" : "bg-gray-50 border-gray-100"}` : "bg-gray-50 border-gray-100"}`}>
-                        {batchColorById[s.id] && <span className={`absolute left-0 top-0 bottom-0 w-1 rounded-r-full opacity-60 ${batchColorById[s.id]}`} aria-hidden="true" />}
-                        {checkinMode ? (
-                          <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border-2 transition ${checkedIds.has(s.id) ? "bg-emerald-500 border-emerald-500 text-white" : "bg-white border-gray-300 text-transparent"}`} aria-hidden="true">
-                            <Check size={13} strokeWidth={3} />
+                    {filteredSignups.map((s, i) => {
+                      const done = checkedIds.has(s.id);
+                      return (
+                        <div key={s.id || i} onClick={checkinMode ? (e) => { e.stopPropagation(); toggleCheckin(s); } : undefined} className={`relative overflow-hidden flex items-start gap-2 border rounded-xl px-3 py-2 transition ${batchColorById[s.id] ? "pl-3.5" : ""} ${checkinMode ? `cursor-pointer select-none active:scale-[0.99] ${done ? "bg-emerald-50 border-emerald-200" : "bg-gray-50 border-gray-100"}` : "bg-gray-50 border-gray-100"}`}>
+                          {batchColorById[s.id] && <span className={`absolute left-0 top-0 bottom-0 w-1 rounded-r-full opacity-60 ${batchColorById[s.id]}`} aria-hidden="true" />}
+                          {checkinMode ? (
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border-2 transition ${done ? "bg-emerald-500 border-emerald-500 text-white" : "bg-white border-gray-300 text-transparent"}`} aria-hidden="true">
+                              <Check size={13} strokeWidth={3} />
+                            </div>
+                          ) : (
+                            <div className={`w-6 h-6 rounded-full ${avatarClass(s.name)} text-white flex items-center justify-center text-[10px] font-bold shrink-0`}>
+                              {s.name?.[0] || "?"}
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {checkinMode && isQueueTask && done ? (
+                                <span className="shrink-0 inline-flex items-center justify-center h-[16px] px-1.5 rounded-full bg-emerald-100 text-emerald-700 text-[9px] font-bold">完成</span>
+                              ) : (
+                                <span className="shrink-0 inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-emerald-100 text-emerald-700 text-[9px] font-bold">{checkinMode && isQueueTask ? waitingOrderNumber[s.id] : orderNumber[s.id]}</span>
+                              )}
+                              <span className="text-xs font-medium text-gray-700 truncate">{s.name}</span>
+                              {s.categories?.map((c) => (
+                                <span key={c} className={`text-[10px] px-1.5 py-0.5 rounded-full border whitespace-nowrap ${chipClass(c)}`}>
+                                  {c}{s.category_quantities?.[c] != null && ` · ${s.category_quantities[c]}${task.quantity_unit || ""}`}
+                                </span>
+                              ))}
+                              {s.quantity != null && !(s.category_quantities && Object.keys(s.category_quantities).length > 0) && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 whitespace-nowrap">
+                                  {s.quantity} {task.quantity_unit || ""}
+                                </span>
+                              )}
+                              <span className="text-[10px] text-gray-300 ml-auto shrink-0">{checkinMode && isQueueTask && done ? "已完成" : relTime(s.created_at)}</span>
+                            </div>
+                            {s.note && <p className="text-xs text-gray-500 mt-0.5 break-words">{s.note}</p>}
                           </div>
-                        ) : (
-                          <div className={`w-6 h-6 rounded-full ${avatarClass(s.name)} text-white flex items-center justify-center text-[10px] font-bold shrink-0`}>
-                            {s.name?.[0] || "?"}
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="shrink-0 inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-emerald-100 text-emerald-700 text-[9px] font-bold">{orderNumber[s.id]}</span>
-                            <span className="text-xs font-medium text-gray-700 truncate">{s.name}</span>
-                            {s.categories?.map((c) => (
-                              <span key={c} className={`text-[10px] px-1.5 py-0.5 rounded-full border whitespace-nowrap ${chipClass(c)}`}>
-                                {c}{s.category_quantities?.[c] != null && ` · ${s.category_quantities[c]}${task.quantity_unit || ""}`}
-                              </span>
-                            ))}
-                            {s.quantity != null && !(s.category_quantities && Object.keys(s.category_quantities).length > 0) && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 whitespace-nowrap">
-                                {s.quantity} {task.quantity_unit || ""}
-                              </span>
-                            )}
-                            <span className="text-[10px] text-gray-300 ml-auto shrink-0">{relTime(s.created_at)}</span>
-                          </div>
-                          {s.note && <p className="text-xs text-gray-500 mt-0.5 break-words">{s.note}</p>}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
