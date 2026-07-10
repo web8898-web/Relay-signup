@@ -147,6 +147,15 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
     else onLeave();
   }
 
+  function handleTaskModeChange(value) {
+    setTaskMode(value);
+    if (value === "queue") {
+      setCategories([]);
+      setCatInput("");
+      setQuantityUnit("");
+    }
+  }
+
   function addCategoryValue(value) {
     const v = String(value || "").trim();
     if (v && !categories.includes(v)) setCategories((prev) => [...prev, v]);
@@ -179,11 +188,11 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
         body: JSON.stringify({
           title: title.trim(),
           description: description.trim(),
-          categories,
+          categories: taskMode === "queue" ? [] : categories,
           start_date: startDate,
           end_date: endDate,
           max_signups: maxSignups,
-          quantity_unit: quantityUnit,
+          quantity_unit: taskMode === "queue" ? "" : quantityUnit,
           task_mode: taskMode,
           note: note.trim(),
         }),
@@ -298,7 +307,7 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
                       <button
                         key={mode.value}
                         type="button"
-                        onClick={() => setTaskMode(mode.value)}
+                        onClick={() => handleTaskModeChange(mode.value)}
                         className={`rounded-2xl border p-3 text-left transition active:scale-[0.98] ${
                           selected
                             ? "border-emerald-400 bg-emerald-50 ring-2 ring-emerald-100"
@@ -318,78 +327,89 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
                 </div>
               </Field>
 
-              <Field label="報名類別">
-                <p className="text-[11px] text-gray-400 mb-2 px-0.5 leading-relaxed">
-                  讓報名者選擇項目，例如：帶小孩、帶朋友、素食、葷食。
-                </p>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {CATEGORY_EXAMPLES.map((item) => (
-                    <button
-                      key={item}
-                      type="button"
-                      onClick={() => addCategoryValue(item)}
-                      className="text-xs px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 active:scale-95 transition"
-                    >
-                      + {item}
-                    </button>
-                  ))}
+              {taskMode === "queue" ? (
+                <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-3.5 py-3">
+                  <p className="text-xs font-semibold text-emerald-700">現場排隊已簡化表單</p>
+                  <p className="text-[11px] text-emerald-700/70 mt-0.5 leading-relaxed">
+                    現場排隊只收姓名，不使用報名類別與數量單位，避免排隊流程變複雜。
+                  </p>
                 </div>
-                <div className="flex gap-2">
-                  <input
-                    value={catInput}
-                    onChange={(e) => setCatInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCategory())}
-                    placeholder="自訂類別，例如：早上場"
-                    className={`flex-1 ${fieldClass} py-2.5`}
-                  />
-                  <button
-                    type="button"
-                    onClick={addCategory}
-                    className="px-4 rounded-2xl bg-white border border-emerald-500 text-emerald-500 text-sm font-medium hover:bg-emerald-50 transition shrink-0"
-                  >
-                    新增
-                  </button>
-                </div>
-                <p className="text-[11px] text-gray-400 mt-1.5 px-0.5">輸入文字後，按「新增」或按 Enter 加入一個分類</p>
-                {categories.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {categories.map((c) => (
-                      <span key={c} className={`text-xs px-3 py-1 rounded-full border flex items-center gap-1 ${chipClass(c)}`}>
-                        {c}
-                        <button type="button" onClick={() => removeCategory(c)}><X size={12} /></button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </Field>
+              ) : (
+                <>
+                  <Field label="報名類別">
+                    <p className="text-[11px] text-gray-400 mb-2 px-0.5 leading-relaxed">
+                      讓報名者選擇項目，例如：帶小孩、帶朋友、素食、葷食。
+                    </p>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {CATEGORY_EXAMPLES.map((item) => (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => addCategoryValue(item)}
+                          className="text-xs px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 active:scale-95 transition"
+                        >
+                          + {item}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        value={catInput}
+                        onChange={(e) => setCatInput(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCategory())}
+                        placeholder="自訂類別，例如：早上場"
+                        className={`flex-1 ${fieldClass} py-2.5`}
+                      />
+                      <button
+                        type="button"
+                        onClick={addCategory}
+                        className="px-4 rounded-2xl bg-white border border-emerald-500 text-emerald-500 text-sm font-medium hover:bg-emerald-50 transition shrink-0"
+                      >
+                        新增
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-gray-400 mt-1.5 px-0.5">輸入文字後，按「新增」或按 Enter 加入一個分類</p>
+                    {categories.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {categories.map((c) => (
+                          <span key={c} className={`text-xs px-3 py-1 rounded-full border flex items-center gap-1 ${chipClass(c)}`}>
+                            {c}
+                            <button type="button" onClick={() => removeCategory(c)}><X size={12} /></button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </Field>
 
-              <Field label="數量單位">
-                <p className="text-[11px] text-gray-400 mb-2 px-0.5 leading-relaxed">
-                  如果一個人可以報名多份才需要填，例如：盒、份、張、包、人、個。
-                </p>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {UNIT_EXAMPLES.map((item) => (
-                    <button
-                      key={item}
-                      type="button"
-                      onClick={() => setQuantityUnit(item)}
-                      className={`text-xs px-3 py-1.5 rounded-full border active:scale-95 transition ${
-                        quantityUnit === item
-                          ? "bg-emerald-500 text-white border-emerald-500"
-                          : "bg-gray-50 text-gray-500 border-gray-100"
-                      }`}
-                    >
-                      {item}
-                    </button>
-                  ))}
-                </div>
-                <input
-                  value={quantityUnit}
-                  onChange={(e) => setQuantityUnit(e.target.value)}
-                  placeholder="例如：份"
-                  className={fieldClass}
-                />
-              </Field>
+                  <Field label="數量單位">
+                    <p className="text-[11px] text-gray-400 mb-2 px-0.5 leading-relaxed">
+                      如果一個人可以報名多份才需要填，例如：盒、份、張、包、人、個。
+                    </p>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {UNIT_EXAMPLES.map((item) => (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => setQuantityUnit(item)}
+                          className={`text-xs px-3 py-1.5 rounded-full border active:scale-95 transition ${
+                            quantityUnit === item
+                              ? "bg-emerald-500 text-white border-emerald-500"
+                              : "bg-gray-50 text-gray-500 border-gray-100"
+                          }`}
+                        >
+                          {item}
+                        </button>
+                      ))}
+                    </div>
+                    <input
+                      value={quantityUnit}
+                      onChange={(e) => setQuantityUnit(e.target.value)}
+                      placeholder="例如：份"
+                      className={fieldClass}
+                    />
+                  </Field>
+                </>
+              )}
             </div>
           )}
         </div>
