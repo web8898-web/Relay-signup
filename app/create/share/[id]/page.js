@@ -13,7 +13,7 @@ import OnboardingTour, {
   setOnboardingState,
 } from "@/components/OnboardingTour";
 import { supabase } from "@/lib/supabaseClient";
-import { buildShareText, lineShareUrl, buildFlexMessage } from "@/lib/utils";
+import { buildShareText, lineShareUrl, buildFlexMessage, isQueueTask } from "@/lib/utils";
 import { liff } from "@/lib/liff";
 
 export default function ShareTaskPage() {
@@ -60,12 +60,16 @@ export default function ShareTaskPage() {
   }
 
   function taskUrl() {
-    return `${window.location.origin}/tasks/${id}`;
+    const url = new URL(`${window.location.origin}/tasks/${id}`);
+    if (isQueueTask(task)) url.searchParams.set("queue", "1");
+    return url.toString();
   }
 
   function shareUrl() {
-    if (task?.short_code) return `${window.location.origin}/s/${task.short_code}`;
-    return taskUrl();
+    const base = task?.short_code ? `${window.location.origin}/s/${task.short_code}` : `${window.location.origin}/tasks/${id}`;
+    const url = new URL(base);
+    if (isQueueTask(task)) url.searchParams.set("queue", "1");
+    return url.toString();
   }
 
   function handlePreviewToggle() {
@@ -152,7 +156,7 @@ export default function ShareTaskPage() {
               <p className="text-xs text-gray-400 mt-1">{task.start_date} ~ {task.end_date}</p>
             </div>
             <div className="shrink-0 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[11px] font-semibold">
-              {signupCount} 人報名
+              {signupCount} 人{isQueueTask(task) ? "排隊" : "報名"}
             </div>
           </div>
 
@@ -207,7 +211,7 @@ export default function ShareTaskPage() {
               previewOnly
               onPreviewTap={() =>
                 showToast(
-                  <span className="whitespace-nowrap">這是卡片預覽畫面，「我要報名」按鈕無法操作！</span>
+                  <span className="whitespace-nowrap">這是卡片預覽畫面，「{isQueueTask(task) ? "我要排隊" : "我要報名"}」按鈕無法操作！</span>
                 )
               }
             />
