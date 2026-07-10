@@ -10,24 +10,19 @@ function ensureStyles() {
   const style = document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = `
-    @keyframes queueReferenceBreathe {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-2px); }
-    }
     @keyframes queueReferenceFirst {
       0%, 100% { transform: translateY(0) scale(1); }
       38% { transform: translateY(-5px) scale(1.04); }
       72% { transform: translateY(0) scale(.99); }
     }
     .queue-reference-mascot {
-      width: 104px;
-      height: 86px;
+      width: 112px;
+      height: 94px;
       margin: 0 auto 8px;
       transform-origin: center bottom;
-      animation: queueReferenceBreathe 3.2s ease-in-out infinite;
     }
     .queue-reference-mascot.queue-reference-first {
-      animation: queueReferenceFirst 560ms ease-out 1, queueReferenceBreathe 3.2s ease-in-out 560ms infinite;
+      animation: queueReferenceFirst 560ms ease-out 1;
     }
     .queue-reference-mascot .queue-reference-eye {
       transform-box: fill-box;
@@ -38,7 +33,6 @@ function ensureStyles() {
       transform: scaleY(.08);
     }
     @media (prefers-reduced-motion: reduce) {
-      .queue-reference-mascot,
       .queue-reference-mascot.queue-reference-first {
         animation: none;
       }
@@ -52,32 +46,29 @@ function ensureStyles() {
 
 function mascotSvg() {
   return `
-    <svg viewBox="0 0 180 145" width="104" height="86" role="img" aria-label="坐著等待的可愛人物">
-      <ellipse cx="88" cy="137" rx="61" ry="7" fill="#E9EEF8" opacity=".75"/>
+    <svg viewBox="0 0 180 150" width="112" height="94" role="img" aria-label="坐著等待的可愛人物">
+      <ellipse cx="88" cy="142" rx="61" ry="7" fill="#E9EEF4" opacity=".65"/>
 
-      <rect x="37" y="82" width="101" height="31" rx="13" fill="#CFE8D8" stroke="#67B68F" stroke-width="5"/>
-      <rect x="27" y="105" width="121" height="13" rx="7" fill="#CFE8D8" stroke="#67B68F" stroke-width="5"/>
-      <path d="M39 116v19M136 116v19" stroke="#67B68F" stroke-width="5" stroke-linecap="round"/>
+      <rect x="37" y="84" width="101" height="31" rx="13" fill="#D9EEE1" stroke="#72B993" stroke-width="4"/>
+      <rect x="27" y="107" width="121" height="13" rx="7" fill="#D9EEE1" stroke="#72B993" stroke-width="4"/>
+      <path d="M39 118v18M136 118v18" stroke="#72B993" stroke-width="4" stroke-linecap="round"/>
 
-      <circle cx="87" cy="48" r="39" fill="#FFFDFC" stroke="#5A463F" stroke-width="5"/>
-      <path d="M57 76c6-8 17-13 30-13s24 5 30 13v27H57V76Z" fill="#FFFDFC" stroke="#5A463F" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M57 77c6-8 17-13 30-13s24 5 30 13v28H57V77Z" fill="#FFFDFC" stroke="#6A574F" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M64 86c7 0 13 5 17 11M110 86c-7 0-13 5-17 11" fill="none" stroke="#6A574F" stroke-width="4" stroke-linecap="round"/>
+      <path d="M81 97c2 3 4 4 6 4s4-1 6-4" fill="none" stroke="#6A574F" stroke-width="3.5" stroke-linecap="round"/>
 
-      <ellipse cx="61" cy="55" rx="10" ry="8" fill="#FFC9D1" opacity=".82"/>
-      <ellipse cx="113" cy="55" rx="10" ry="8" fill="#FFC9D1" opacity=".82"/>
-      <circle class="queue-reference-eye" cx="72" cy="45" r="4" fill="#5A463F"/>
-      <circle class="queue-reference-eye" cx="102" cy="45" r="4" fill="#5A463F"/>
-      <path d="M79 56c4.2 4.6 11.8 4.6 16 0" fill="none" stroke="#5A463F" stroke-width="4" stroke-linecap="round"/>
+      <rect x="69" y="99" width="17" height="38" rx="9" fill="#FFFDFC" stroke="#6A574F" stroke-width="4"/>
+      <rect x="88" y="99" width="17" height="38" rx="9" fill="#FFFDFC" stroke="#6A574F" stroke-width="4"/>
 
-      <path d="M64 85c7 0 13 5 17 11M110 85c-7 0-13 5-17 11" fill="none" stroke="#5A463F" stroke-width="5" stroke-linecap="round"/>
-      <path d="M81 96c2 3 4 4 6 4s4-1 6-4" fill="none" stroke="#5A463F" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="87" cy="48" r="40" fill="#FFFDFC" stroke="#6A574F" stroke-width="4"/>
+      <ellipse cx="61" cy="56" rx="10" ry="8" fill="#F8C8D0" opacity=".82"/>
+      <ellipse cx="113" cy="56" rx="10" ry="8" fill="#F8C8D0" opacity=".82"/>
+      <circle class="queue-reference-eye" cx="72" cy="45" r="3.7" fill="#6A574F"/>
+      <circle class="queue-reference-eye" cx="102" cy="45" r="3.7" fill="#6A574F"/>
+      <path d="M79 56c4.2 4.6 11.8 4.6 16 0" fill="none" stroke="#6A574F" stroke-width="3.5" stroke-linecap="round"/>
 
-      <rect x="69" y="98" width="17" height="37" rx="9" fill="#FFFDFC" stroke="#5A463F" stroke-width="5"/>
-      <rect x="88" y="98" width="17" height="37" rx="9" fill="#FFFDFC" stroke="#5A463F" stroke-width="5"/>
-
-      <path d="M132 16c0-7 6-13 13-13h14c7 0 13 6 13 13v19c0 7-6 13-13 13h-10l-9 7 1-8c-5-2-9-7-9-12V16Z" fill="#FFFDFC" stroke="#67B68F" stroke-width="5" stroke-linejoin="round"/>
-      <circle cx="152" cy="25" r="12" fill="none" stroke="#67B68F" stroke-width="4"/>
-      <path d="M152 17v9l6 4" fill="none" stroke="#67B68F" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M163 0l4-8M174 7l8-4" stroke="#67B68F" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="151" cy="25" r="17" fill="#FFFDFC" stroke="#72B993" stroke-width="4"/>
+      <path d="M151 14v12l8 5" fill="none" stroke="#72B993" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
   `;
 }
