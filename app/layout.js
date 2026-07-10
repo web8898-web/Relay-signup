@@ -2,6 +2,7 @@ import "./globals.css";
 import LiffBootstrap from "@/components/LiffBootstrap";
 import LiffTransitionOverlay from "@/components/LiffTransitionOverlay";
 import QueueLiveStatusLabel from "@/components/QueueLiveStatusLabel";
+import QueueMascotExact from "@/components/QueueMascotExact";
 
 const APP_TITLE = "接龍報名小助手";
 const APP_DESCRIPTION = "在 LINE 上分享、免登入即可完成報名的接龍小工具";
@@ -88,6 +89,7 @@ export default function RootLayout({ children }) {
         <LiffBootstrap />
         <LiffTransitionOverlay />
         <QueueLiveStatusLabel />
+        <QueueMascotExact />
         <div className="w-full max-w-md mx-auto min-h-screen bg-white shadow-xl relative flex flex-col">
           {children}
         </div>
