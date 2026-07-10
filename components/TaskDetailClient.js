@@ -85,12 +85,8 @@ export default function TaskDetailClient() {
     setTimeout(() => setShowConfetti(false), 1700);
   }
 
-  async function load() {
-    setLoading(true);
-    const startedAt = Date.now();
-    const { data: taskData } = await supabase.from("tasks").select("*").eq("id", id).single();
-    setTask(taskData || null);
-
+  async function refreshSignups() {
+    if (!id) return;
     const { data: signupData } = await supabase
       .from("signups")
       .select("*")
@@ -98,6 +94,15 @@ export default function TaskDetailClient() {
       .order("created_at", { ascending: true });
     setSignups(signupData || []);
     setMyIds(getMySignupIds());
+  }
+
+  async function load() {
+    setLoading(true);
+    const startedAt = Date.now();
+    const { data: taskData } = await supabase.from("tasks").select("*").eq("id", id).single();
+    setTask(taskData || null);
+
+    await refreshSignups();
 
     const MIN_TRANSITION_MS = 500;
     const elapsed = Date.now() - startedAt;
@@ -113,24 +118,34 @@ export default function TaskDetailClient() {
   }, [id]);
 
   const closed = task ? taskStatus(task).label === "已截止" : false;
+  const isQueueTask = !!task && (task.task_mode === "queue" || String(task.title || "").includes("排隊"));
   const headcountMode = isHeadcountUnit(task?.quantity_unit);
+  const waitingSignups = signups.filter((s) => !s.checked_in);
+  const completedSignups = signups.filter((s) => s.checked_in);
+  const countableSignups = isQueueTask ? waitingSignups : signups;
   const totalHeadcount = headcountMode
-    ? signups.reduce((sum, s) => sum + (s.quantity ?? 1), 0)
-    : signups.length;
+    ? countableSignups.reduce((sum, s) => sum + (s.quantity ?? 1), 0)
+    : countableSignups.length;
   const full = task?.max_signups ? totalHeadcount >= task.max_signups : false;
-  const allowMulti = task ? (!task.categories || task.categories.length === 0) && !task.quantity_unit : false;
+  const allowMulti = task ? !isQueueTask && (!task.categories || task.categories.length === 0) && !task.quantity_unit : false;
   const filledNames = names.map((n) => n.trim()).filter(Boolean);
   const isMultiActive = allowMulti && filledNames.length >= 2;
   const taskHasCategories = task?.categories?.length > 0;
   const usesPerCategoryQuantity = !!task?.quantity_unit && taskHasCategories;
-  const isQueueTask = !!task && (task.task_mode === "queue" || String(task.title || "").includes("排隊"));
-  const waitingSignups = signups.filter((s) => !s.checked_in);
-  const completedSignups = signups.filter((s) => s.checked_in);
   const queueDisplaySignups = isQueueTask ? [...waitingSignups, ...completedSignups] : signups;
   const mySignups = signups.filter((s) => myIds.includes(s.id));
   const myWaitingSignup = mySignups.find((s) => !s.checked_in);
   const myQueueNumber = myWaitingSignup ? waitingSignups.findIndex((s) => s.id === myWaitingSignup.id) + 1 : 0;
+  const peopleAhead = myQueueNumber > 0 ? myQueueNumber - 1 : 0;
   const myAllCompleted = isQueueTask && mySignups.length > 0 && mySignups.every((s) => s.checked_in);
+
+  useEffect(() => {
+    if (!id || !isQueueTask) return;
+    const timer = setInterval(() => {
+      refreshSignups();
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [id, isQueueTask]);
 
   function toggleCategory(c) {
     setCategories((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
@@ -194,14 +209,9 @@ export default function TaskDetailClient() {
       setQuantity(1);
       setCategoryQuantities({});
       setCategories([]);
-      playSuccess(data.count && data.count > 1 ? `這次共完成 ${data.count} 位的報名！` : "已成功接龍！");
+      playSuccess(isQueueTask ? "已加入排隊！" : data.count && data.count > 1 ? `這次共完成 ${data.count} 位的報名！` : "已成功接龍！");
       startCooldown(30);
-      const { data: signupData } = await supabase
-        .from("signups")
-        .select("*")
-        .eq("task_id", id)
-        .order("created_at", { ascending: true });
-      setSignups(signupData || []);
+      await refreshSignups();
       requestAnimationFrame(() => {
         listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
       });
@@ -289,12 +299,12 @@ export default function TaskDetailClient() {
         ) : (
           <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-4 mb-2 pl-11">
             <Users size={13} />
-            {totalHeadcount} 人已接龍
+            {isQueueTask ? `${waitingSignups.length} 人等待中` : `${totalHeadcount} 人已接龍`}
           </div>
         )}
 
-        {isQueueTask && mySignups.length > 0 && (
-          <div className={`mt-3 mb-3 rounded-3xl border px-4 py-3 ${myAllCompleted ? "border-emerald-100 bg-emerald-50" : "border-sky-100 bg-sky-50"}`}>
+        {isQueueTask && (
+          <div className={`mt-3 mb-3 rounded-3xl border px-4 py-3 ${myAllCompleted ? "border-emerald-100 bg-emerald-50" : myWaitingSignup ? "border-sky-100 bg-sky-50" : "border-emerald-100 bg-emerald-50/60"}`}>
             {myAllCompleted ? (
               <div className="flex items-start gap-3">
                 <div className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
@@ -302,7 +312,7 @@ export default function TaskDetailClient() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-emerald-700">已完成</p>
-                  <p className="text-xs text-emerald-700/70 mt-0.5 leading-relaxed">主辦人已完成此筆報名處理。</p>
+                  <p className="text-xs text-emerald-700/70 mt-0.5 leading-relaxed">主辦人已完成此筆報名處理。目前等待中 {waitingSignups.length} 位。</p>
                 </div>
               </div>
             ) : myWaitingSignup ? (
@@ -312,10 +322,22 @@ export default function TaskDetailClient() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-sky-700">目前等待順位：第 {myQueueNumber} 位</p>
-                  <p className="text-xs text-sky-700/70 mt-0.5 leading-relaxed">請等待主辦人處理，完成後這裡會顯示已完成。</p>
+                  <p className="text-xs text-sky-700/70 mt-0.5 leading-relaxed">
+                    等待中 {waitingSignups.length} 位，你前面還有 {peopleAhead} 位。系統會每 5 秒同步更新。
+                  </p>
                 </div>
               </div>
-            ) : null}
+            ) : (
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+                  <Users size={18} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-emerald-700">目前等待中 {waitingSignups.length} 位</p>
+                  <p className="text-xs text-emerald-700/70 mt-0.5 leading-relaxed">查看名單時會自動同步排隊狀態。</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -349,7 +371,7 @@ export default function TaskDetailClient() {
             className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-3.5 font-semibold flex items-center justify-center gap-2 shadow-md shadow-emerald-200 transition"
           >
             <Send size={18} />
-            我要報名
+            {isQueueTask ? "我要排隊" : "我要報名"}
           </button>
         </div>
       ) : (
@@ -426,11 +448,14 @@ export default function TaskDetailClient() {
                   setName(e.target.value);
                   if (error) setError("");
                 }}
-                placeholder="你的姓名"
+                placeholder={isQueueTask ? "你的姓名（現場排隊限本人）" : "你的姓名"}
                 className={`w-full border rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition ${
                   error ? "border-rose-300 focus:ring-rose-200" : "border-gray-200 focus:ring-emerald-300"
                 }`}
               />
+            )}
+            {isQueueTask && (
+              <p className="text-[11px] text-emerald-600 px-2 -mt-0.5">現場排隊僅限本人報名，不能幫別人報名。</p>
             )}
             {error && (
               <p className="text-xs text-rose-500 flex items-center gap-1 px-2 -mt-1">
@@ -475,7 +500,7 @@ export default function TaskDetailClient() {
             >
               {sending ? (
                 <>
-                  報名中
+                  {isQueueTask ? "排隊中" : "報名中"}
                   <span className="flex gap-1 ml-0.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-white animate-bounce [animation-delay:-0.3s]" />
                     <span className="w-1.5 h-1.5 rounded-full bg-white animate-bounce [animation-delay:-0.15s]" />
@@ -484,7 +509,7 @@ export default function TaskDetailClient() {
                 </>
               ) : cooldown > 0 ? (
                 <>
-                  {cooldown} 秒後可再次報名
+                  {cooldown} 秒後可再次{isQueueTask ? "排隊" : "報名"}
                   <span className="flex gap-1 ml-0.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-white animate-bounce [animation-delay:-0.3s]" />
                     <span className="w-1.5 h-1.5 rounded-full bg-white animate-bounce [animation-delay:-0.15s]" />
@@ -494,7 +519,7 @@ export default function TaskDetailClient() {
               ) : (
                 <>
                   <Send size={18} />
-                  送出報名
+                  {isQueueTask ? "加入排隊" : "送出報名"}
                 </>
               )}
             </button>
@@ -503,7 +528,7 @@ export default function TaskDetailClient() {
       )}
     </FadeIn>
 
-    <ConfettiSuccess show={showConfetti} message="報名成功！" />
+    <ConfettiSuccess show={showConfetti} message={isQueueTask ? "已加入排隊！" : "報名成功！"} />
 
     {toast && (
       <Toast className="bottom-28">
