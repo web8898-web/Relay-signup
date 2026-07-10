@@ -328,9 +328,12 @@ export default function TaskDetailClient() {
                     <p className="text-[11px] text-gray-400 font-semibold">等待中</p>
                     <p className="text-2xl font-black text-sky-700">{waitingSignups.length}<span className="text-sm ml-1">位</span></p>
                   </div>
-                  <div className="rounded-2xl bg-white/80 border border-emerald-100 px-3 py-2">
-                    <p className="text-[11px] text-gray-400 font-semibold">更新頻率</p>
-                    <p className="text-2xl font-black text-emerald-700">5<span className="text-sm ml-1">秒</span></p>
+                  <div className="rounded-2xl bg-white/80 border border-emerald-100 px-3 py-2 flex flex-col items-center justify-center">
+                    <span className="relative flex h-3 w-3 mb-2" aria-hidden="true">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                      <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-500" />
+                    </span>
+                    <p className="text-sm font-bold text-emerald-700">即時更新中</p>
                   </div>
                 </div>
               </div>
