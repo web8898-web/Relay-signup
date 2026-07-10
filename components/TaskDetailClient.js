@@ -131,8 +131,8 @@ export default function TaskDetailClient() {
   const allowMulti = task ? !isQueueTask && (!task.categories || task.categories.length === 0) && !task.quantity_unit : false;
   const filledNames = names.map((n) => n.trim()).filter(Boolean);
   const isMultiActive = allowMulti && filledNames.length >= 2;
-  const taskHasCategories = task?.categories?.length > 0;
-  const usesPerCategoryQuantity = !!task?.quantity_unit && taskHasCategories;
+  const taskHasCategories = !isQueueTask && task?.categories?.length > 0;
+  const usesPerCategoryQuantity = !isQueueTask && !!task?.quantity_unit && taskHasCategories;
   const queueDisplaySignups = isQueueTask ? [...waitingSignups, ...completedSignups] : signups;
   const mySignups = signups.filter((s) => myIds.includes(s.id));
   const myWaitingSignup = mySignups.find((s) => !s.checked_in);
@@ -174,7 +174,7 @@ export default function TaskDetailClient() {
       nameInputRef.current?.focus();
       return;
     }
-    if (task.quantity_unit && taskHasCategories && categories.length === 0) {
+    if (!isQueueTask && task.quantity_unit && taskHasCategories && categories.length === 0) {
       setCategoryError("請至少選擇一個分類");
       return;
     }
@@ -187,12 +187,12 @@ export default function TaskDetailClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           task_id: task.id,
-          categories: task.categories?.length > 0 ? categories : [],
+          categories: !isQueueTask && task.categories?.length > 0 ? categories : [],
           name: allowMulti ? names[0].trim() : name.trim(),
           names: allowMulti && filledNames.length >= 2 ? filledNames : undefined,
-          note: isMultiActive ? "" : note.trim(),
-          quantity: task.quantity_unit && !usesPerCategoryQuantity ? quantity : undefined,
-          category_quantities: usesPerCategoryQuantity ? categoryQuantities : undefined,
+          note: isQueueTask || isMultiActive ? "" : note.trim(),
+          quantity: !isQueueTask && task.quantity_unit && !usesPerCategoryQuantity ? quantity : undefined,
+          category_quantities: !isQueueTask && usesPerCategoryQuantity ? categoryQuantities : undefined,
           owner_token: getOwnerToken(),
         }),
       });
@@ -377,7 +377,7 @@ export default function TaskDetailClient() {
         </div>
       ) : (
         <div ref={formSectionRef} className="px-6 pb-6 pt-3 border-t-2 border-emerald-100 bg-emerald-50/40 min-w-0 overflow-hidden">
-          {task.categories?.length > 0 && (
+          {!isQueueTask && task.categories?.length > 0 && (
             <>
               <p className="text-[11px] font-semibold text-emerald-700 mb-1.5 px-0.5">👉 選擇您要報名的類別（可複選）</p>
               <div className={`relative -mx-1 ${categoryError ? "ring-1 ring-rose-300 rounded-xl" : ""}`}>
@@ -463,7 +463,7 @@ export default function TaskDetailClient() {
                 <AlertCircle size={12} className="shrink-0" /> {error}
               </p>
             )}
-            {task.quantity_unit && (
+            {!isQueueTask && task.quantity_unit && (
               usesPerCategoryQuantity ? (
                 categories.length > 0 && (
                   <div className="flex flex-col gap-2">
@@ -485,15 +485,17 @@ export default function TaskDetailClient() {
                 />
               )
             )}
-            <input
-              value={isMultiActive ? "" : note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder={isMultiActive ? "幫多人報名時暫不支援備註" : "備註（選填）"}
-              disabled={isMultiActive}
-              className={`w-full border rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 transition ${
-                isMultiActive ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed" : "border-gray-200"
-              }`}
-            />
+            {!isQueueTask && (
+              <input
+                value={isMultiActive ? "" : note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder={isMultiActive ? "幫多人報名時暫不支援備註" : "備註（選填）"}
+                disabled={isMultiActive}
+                className={`w-full border rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 transition ${
+                  isMultiActive ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed" : "border-gray-200"
+                }`}
+              />
+            )}
             <button
               onClick={handleSend}
               disabled={sending || cooldown > 0}
