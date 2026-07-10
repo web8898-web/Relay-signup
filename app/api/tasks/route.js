@@ -41,7 +41,7 @@ export async function POST(request) {
       const payload = {
         title: String(title).slice(0, 200),
         description: String(description || "").slice(0, 2000),
-        categories: Array.isArray(categories) ? categories.slice(0, 30) : [],
+        categories: mode === "queue" ? [] : Array.isArray(categories) ? categories.slice(0, 30) : [],
         start_date,
         end_date,
         note: String(note || "").slice(0, 1000),
@@ -49,8 +49,9 @@ export async function POST(request) {
         creator_name: profile.displayName,
         short_code: generateShortCode(),
         max_signups: parseMaxSignups(max_signups),
-        quantity_unit: trimmedUnit,
+        quantity_unit: mode === "queue" ? null : trimmedUnit,
         task_mode: mode,
+        notify_enabled: mode === "queue" ? false : true,
       };
 
       ({ data, error } = await supabase
@@ -59,8 +60,6 @@ export async function POST(request) {
         .select()
         .single());
 
-      // Before sql/task_mode.sql is applied in Supabase, older databases do not
-      // have the task_mode column. Fall back gracefully so creating tasks still works.
       if (shouldRetryWithoutTaskMode(error)) {
         const { task_mode: _taskMode, ...fallbackPayload } = payload;
         ({ data, error } = await supabase
