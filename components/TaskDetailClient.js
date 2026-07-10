@@ -305,38 +305,43 @@ export default function TaskDetailClient() {
         )}
 
         {isQueueTask && (
-          <div className={`mt-3 mb-3 rounded-3xl border px-4 py-3 ${myAllCompleted ? "border-emerald-100 bg-emerald-50" : myWaitingSignup ? "border-sky-100 bg-sky-50" : "border-emerald-100 bg-emerald-50/60"}`}>
+          <div className={`mt-3 mb-3 overflow-hidden rounded-[28px] border shadow-sm ${myAllCompleted ? "border-emerald-100 bg-emerald-50" : myWaitingSignup ? "border-sky-100 bg-sky-50" : "border-emerald-100 bg-emerald-50/70"}`}>
             {myAllCompleted ? (
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
-                  <CheckCircle2 size={19} />
+              <div className="px-5 py-5 text-center">
+                <div className="mx-auto mb-3 w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm shadow-emerald-200">
+                  <CheckCircle2 size={24} />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-emerald-700">已完成</p>
-                  <p className="text-xs text-emerald-700/70 mt-0.5 leading-relaxed">主辦人已完成此筆報名處理。目前等待中 {waitingSignups.length} 位。</p>
-                </div>
+                <p className="text-3xl font-black tracking-tight text-emerald-700">已完成</p>
+                <p className="text-sm font-semibold text-emerald-800 mt-2">主辦人已完成此筆排隊處理。</p>
+                <p className="text-xs text-emerald-700/70 mt-1 leading-relaxed">謝謝您的耐心等待。</p>
               </div>
             ) : myWaitingSignup ? (
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-full bg-sky-500 text-white flex items-center justify-center shrink-0 text-sm font-bold">
+              <div className="px-5 py-5 text-center bg-gradient-to-br from-sky-50 via-white to-emerald-50">
+                <div className="mx-auto mb-3 w-12 h-12 rounded-full bg-sky-500 text-white flex items-center justify-center text-xl font-black shadow-sm shadow-sky-200">
                   {myQueueNumber}
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-sky-700">目前等待順位：第 {myQueueNumber} 位</p>
-                  <p className="text-xs text-sky-700/70 mt-0.5 leading-relaxed">
-                    等待中 {waitingSignups.length} 位，你前面還有 {peopleAhead} 位。系統會每 5 秒同步更新。
-                  </p>
+                <p className="text-[12px] font-bold tracking-wider text-sky-600 mb-1">目前等待順位</p>
+                <p className="text-4xl font-black tracking-tight text-sky-700 leading-tight">第 {myQueueNumber} 位</p>
+                <p className="text-base font-bold text-gray-700 mt-3">你前面還有 {peopleAhead} 位，請稍候。</p>
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="rounded-2xl bg-white/80 border border-sky-100 px-3 py-2">
+                    <p className="text-[11px] text-gray-400 font-semibold">等待中</p>
+                    <p className="text-2xl font-black text-sky-700">{waitingSignups.length}<span className="text-sm ml-1">位</span></p>
+                  </div>
+                  <div className="rounded-2xl bg-white/80 border border-emerald-100 px-3 py-2">
+                    <p className="text-[11px] text-gray-400 font-semibold">更新頻率</p>
+                    <p className="text-2xl font-black text-emerald-700">5<span className="text-sm ml-1">秒</span></p>
+                  </div>
                 </div>
               </div>
             ) : (
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
-                  <Users size={18} />
+              <div className="px-5 py-5 text-center">
+                <div className="mx-auto mb-3 w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm shadow-emerald-200">
+                  <Users size={23} />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-emerald-700">目前等待中 {waitingSignups.length} 位</p>
-                  <p className="text-xs text-emerald-700/70 mt-0.5 leading-relaxed">查看名單時會自動同步排隊狀態。</p>
-                </div>
+                <p className="text-[12px] font-bold tracking-wider text-emerald-600 mb-1">目前等待中</p>
+                <p className="text-4xl font-black tracking-tight text-emerald-700 leading-tight">{waitingSignups.length}<span className="text-xl ml-1">位</span></p>
+                <p className="text-xs text-emerald-700/70 mt-3 leading-relaxed">加入排隊後，會顯示你的等待順位。</p>
               </div>
             )}
           </div>
