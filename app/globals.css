@@ -268,3 +268,12 @@ input, textarea, select {
   margin-top: -5.25rem !important;
   padding-top: 5.25rem !important;
 }
+
+/*
+  任務清單底部有固定的「新增任務」按鈕；最後一張卡片開啟右上選單時，
+  移除確認區容易被底部按鈕蓋住。這裡鎖定任務清單的主要捲動容器，
+  永遠預留足夠底部空間，讓最後一張任務可以往上捲到完整露出。
+*/
+.flex-1.px-6.py-3.flex.flex-col.gap-3.overflow-y-auto {
+  padding-bottom: calc(11rem + env(safe-area-inset-bottom)) !important;
+}
