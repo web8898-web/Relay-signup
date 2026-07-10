@@ -17,6 +17,7 @@ create table if not exists tasks (
   notify_enabled boolean not null default true,
   max_signups integer,
   quantity_unit text,
+  task_mode text not null default 'normal' check (task_mode in ('normal', 'queue')),
   created_at timestamptz not null default now()
 );
 
