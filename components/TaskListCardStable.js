@@ -186,7 +186,9 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
 
   const st = taskStatus(task);
   const signupCount = signups.length;
-  const isQueueTask = task.task_mode === "queue";
+  const isClosed = st.label === "已截止";
+  const isQueueTask = task.task_mode === "queue" || String(task.title || "").includes("排隊") || !isClosed;
+
   const orderNumber = {};
   const waitingOrderNumber = {};
   signups.forEach((s, i) => {
@@ -207,12 +209,11 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
   const headcount = task.quantity_unit
     ? signups.reduce((sum, s) => sum + headcountOf(s), 0)
     : signups.length;
-  const isClosed = st.label === "已截止";
   const isFull = !isClosed && !!task.max_signups && headcount >= task.max_signups;
   const iconBg = isClosed ? "bg-gray-400" : isFull ? "bg-rose-500" : "bg-emerald-500";
   const checkedCount = checkedIds.size;
   const waitingCount = Math.max(0, signups.length - checkedCount);
-  const canProcessList = signups.length > 0 && (isClosed || isQueueTask);
+  const canProcessList = signups.length > 0;
   const processButtonText = isQueueTask ? "開始處理名單" : "開始點名報到";
   const processSummaryText = isQueueTask ? "已完成" : "已報到";
   const remainingText = isQueueTask ? "等待" : "未到";
