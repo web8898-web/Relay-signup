@@ -89,14 +89,14 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
       text: "設定最多幾人可以報名，額滿後就無法再報名。不填代表不限人數。",
     },
     {
-      target: "advanced",
-      title: "進階設定（選填）",
-      text: "需要調整任務模式、分類或統計數量時再展開，沒有需要可以略過。預設會用一般報名。",
-    },
-    {
       target: "note",
       title: "備註（選填）",
       text: "其他想提醒大家的事項，例如集合地點、付款方式。",
+    },
+    {
+      target: "advanced",
+      title: "進階設定（選填）",
+      text: "需要調整任務模式、分類或統計數量時再展開，沒有需要可以略過。預設會用一般報名。",
     },
     {
       target: "save",
@@ -257,6 +257,16 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
           />
         </Field>
 
+        <Field label="備註" tourId="note">
+          <AutoGrowTextarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="其他提醒事項"
+            minRows={3}
+            className={fieldClass}
+          />
+        </Field>
+
         <div data-tour="advanced" className="rounded-3xl border border-emerald-100 bg-emerald-50/35 overflow-hidden">
           <button
             type="button"
@@ -383,16 +393,6 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
             </div>
           )}
         </div>
-
-        <Field label="備註" tourId="note">
-          <AutoGrowTextarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="其他提醒事項"
-            minRows={3}
-            className={fieldClass}
-          />
-        </Field>
       </div>
 
       <div className="px-6 pb-6 pt-2" data-tour="save">
