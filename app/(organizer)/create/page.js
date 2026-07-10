@@ -89,14 +89,9 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
       text: "設定最多幾人可以報名，額滿後就無法再報名。不填代表不限人數。",
     },
     {
-      target: "mode",
-      title: "選擇任務模式",
-      text: "一般報名適合活動統計；現場排隊適合一邊報名、一邊完成處理的場景。預設一般報名即可。",
-    },
-    {
       target: "advanced",
       title: "進階設定（選填）",
-      text: "需要分類、統計數量時再設定，沒有需要可以略過。新手只要先完成基本設定就好。",
+      text: "需要調整任務模式、分類或統計數量時再展開，沒有需要可以略過。預設會用一般報名。",
     },
     {
       target: "note",
@@ -262,35 +257,6 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
           />
         </Field>
 
-        <div data-tour="mode">
-          <p className="text-xs text-gray-500 font-medium mb-2">這個任務是哪一種？</p>
-          <div className="grid grid-cols-2 gap-2">
-            {TASK_MODES.map((mode) => {
-              const selected = taskMode === mode.value;
-              return (
-                <button
-                  key={mode.value}
-                  type="button"
-                  onClick={() => setTaskMode(mode.value)}
-                  className={`rounded-2xl border p-3 text-left transition active:scale-[0.98] ${
-                    selected
-                      ? "border-emerald-400 bg-emerald-50 ring-2 ring-emerald-100"
-                      : "border-gray-100 bg-white hover:border-emerald-100"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className={`w-4 h-4 rounded-full border flex items-center justify-center ${selected ? "border-emerald-500 bg-emerald-500" : "border-gray-300"}`}>
-                      {selected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
-                    </span>
-                    <span className={`text-sm font-bold ${selected ? "text-emerald-700" : "text-gray-700"}`}>{mode.title}</span>
-                  </div>
-                  <p className="text-[11px] text-gray-400 leading-relaxed mt-2">{mode.desc}</p>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
         <div data-tour="advanced" className="rounded-3xl border border-emerald-100 bg-emerald-50/35 overflow-hidden">
           <button
             type="button"
@@ -300,7 +266,7 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
             <div className="min-w-0">
               <p className="text-sm font-bold text-emerald-700">進階設定</p>
               <p className="text-[11px] text-emerald-700/70 mt-0.5 leading-relaxed">
-                需要分類、統計數量時再設定，沒有需要可以略過。
+                需要調整任務模式、分類或統計數量時再設定，沒有需要可以略過。
               </p>
             </div>
             <ChevronDown
@@ -311,6 +277,37 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
 
           {advancedOpen && (
             <div className="border-t border-emerald-100 bg-white/75 px-4 py-4 flex flex-col gap-5">
+              <Field label="任務模式">
+                <p className="text-[11px] text-gray-400 mb-2 px-0.5 leading-relaxed">
+                  預設一般報名即可；現場排隊適合需要邊報名邊處理的情境。
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {TASK_MODES.map((mode) => {
+                    const selected = taskMode === mode.value;
+                    return (
+                      <button
+                        key={mode.value}
+                        type="button"
+                        onClick={() => setTaskMode(mode.value)}
+                        className={`rounded-2xl border p-3 text-left transition active:scale-[0.98] ${
+                          selected
+                            ? "border-emerald-400 bg-emerald-50 ring-2 ring-emerald-100"
+                            : "border-gray-100 bg-white hover:border-emerald-100"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className={`w-4 h-4 rounded-full border flex items-center justify-center ${selected ? "border-emerald-500 bg-emerald-500" : "border-gray-300"}`}>
+                            {selected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                          </span>
+                          <span className={`text-sm font-bold ${selected ? "text-emerald-700" : "text-gray-700"}`}>{mode.title}</span>
+                        </div>
+                        <p className="text-[11px] text-gray-400 leading-relaxed mt-2">{mode.desc}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </Field>
+
               <Field label="報名類別">
                 <p className="text-[11px] text-gray-400 mb-2 px-0.5 leading-relaxed">
                   讓報名者選擇項目，例如：帶小孩、帶朋友、素食、葷食。
