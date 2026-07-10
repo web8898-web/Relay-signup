@@ -104,6 +104,20 @@ function scheduleBlink(mascot) {
   scheduleNext();
 }
 
+function getCurrentRank(card) {
+  const text = card?.textContent || "";
+  const match = text.match(/第\s*(\d+)\s*位/);
+  return match ? Number(match[1]) : 0;
+}
+
+function playFirstPlaceAnimation(mascot) {
+  if (!(mascot instanceof HTMLElement)) return;
+  mascot.classList.remove("queue-reference-first");
+  void mascot.offsetWidth;
+  mascot.classList.add("queue-reference-first");
+  window.setTimeout(() => mascot.classList.remove("queue-reference-first"), 620);
+}
+
 function installReferenceMascot(root = document.body) {
   if (!root || !(root instanceof Element || root === document.body)) return;
   ensureStyles();
@@ -119,24 +133,36 @@ function installReferenceMascot(root = document.body) {
     if (!(slot instanceof HTMLElement)) return;
 
     const card = label.closest("div.bg-gradient-to-br") || label.parentElement;
-    const isFirst = card?.textContent?.includes("第 1 位");
+    const rank = getCurrentRank(card);
+    let mascot = slot.querySelector("[data-reference-queue-mascot]");
 
-    if (slot.dataset.referenceMascotInstalled !== "true") {
+    // React may rebuild the slot when live queue data changes. The old data
+    // attribute can survive even though its mascot child has disappeared, so
+    // always verify the actual mascot element instead of trusting the marker.
+    if (!(mascot instanceof HTMLElement)) {
       slot.dataset.referenceMascotInstalled = "true";
       slot.className = "";
       slot.removeAttribute("style");
       slot.innerHTML = `
-        <div class="queue-reference-mascot ${isFirst ? "queue-reference-first" : ""}" data-reference-queue-mascot>
+        <div class="queue-reference-mascot" data-reference-queue-mascot data-current-rank="${rank || ""}">
           ${mascotSvg()}
         </div>
       `;
+      mascot = slot.querySelector("[data-reference-queue-mascot]");
     }
 
-    const mascot = slot.querySelector("[data-reference-queue-mascot]");
-    if (mascot instanceof HTMLElement) {
-      mascot.classList.toggle("queue-reference-first", Boolean(isFirst));
-      scheduleBlink(mascot);
+    if (!(mascot instanceof HTMLElement)) return;
+
+    const previousRank = Number(mascot.dataset.currentRank || 0);
+    mascot.dataset.currentRank = rank ? String(rank) : "";
+
+    if (rank === 1 && previousRank !== 1) {
+      playFirstPlaceAnimation(mascot);
+    } else if (rank !== 1) {
+      mascot.classList.remove("queue-reference-first");
     }
+
+    scheduleBlink(mascot);
   });
 }
 
@@ -144,18 +170,34 @@ export default function QueueMascotReference() {
   useEffect(() => {
     installReferenceMascot();
 
+    let refreshFrame = 0;
+    const requestRefresh = (root = document.body) => {
+      window.cancelAnimationFrame(refreshFrame);
+      refreshFrame = window.requestAnimationFrame(() => installReferenceMascot(root));
+    };
+
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
+        if (mutation.type === "characterData") {
+          requestRefresh(document.body);
+          continue;
+        }
+
         mutation.addedNodes.forEach((node) => {
-          if (node.nodeType === Node.ELEMENT_NODE) installReferenceMascot(node);
+          if (node.nodeType === Node.ELEMENT_NODE) requestRefresh(document.body);
         });
       }
     });
 
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
 
     return () => {
       observer.disconnect();
+      window.cancelAnimationFrame(refreshFrame);
       document.querySelectorAll("[data-reference-queue-mascot]").forEach((mascot) => {
         const timer = Number(mascot.dataset.referenceBlinkTimer);
         if (timer) window.clearTimeout(timer);
