@@ -30,6 +30,7 @@ create table if not exists signups (
   quantity integer,
   category_quantities jsonb not null default '{}',
   owner_token text not null,
+  checked_in boolean not null default false,
   created_at timestamptz not null default now()
 );
 
