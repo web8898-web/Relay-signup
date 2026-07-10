@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Users, LogIn, MessageCircle, Download, FileSpreadsheet, FileText } from "lucide-react";
+import { Users, LogIn, MessageCircle, Download, FileSpreadsheet, FileText, CheckCircle2 } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import TaskAnnouncement from "@/components/TaskAnnouncement";
 import ThreadList from "@/components/ThreadList";
@@ -12,6 +12,7 @@ import { useLineProfile } from "@/lib/useLineProfile";
 import { supabase } from "@/lib/supabaseClient";
 import { getMySignupIds } from "@/lib/ownerToken";
 import { liff } from "@/lib/liff";
+import { taskStatus } from "@/lib/utils";
 
 export default function MyTaskDetailPage() {
   const { id } = useParams();
@@ -21,6 +22,7 @@ export default function MyTaskDetailPage() {
   const [signups, setSignups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [checkinMode, setCheckinMode] = useState(false);
 
   // LINE's in-app browser often silently fails to download client-generated
   // blob files, so we hit a real server URL instead and force it open in
@@ -62,6 +64,32 @@ export default function MyTaskDetailPage() {
       setLoading(false);
     })();
   }, [id]);
+
+  const pendingSignups = useMemo(() => signups.filter((s) => !s.checked_in), [signups]);
+  const completedSignups = useMemo(() => signups.filter((s) => !!s.checked_in), [signups]);
+
+  async function handleToggleCheckin(signup) {
+    if (!profile || !signup?.id) return;
+    const nextChecked = !signup.checked_in;
+    setError("");
+    setSignups((prev) => prev.map((s) => (s.id === signup.id ? { ...s, checked_in: nextChecked } : s)));
+    try {
+      const res = await fetch(`/api/signups/${signup.id}/checkin`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${profile.accessToken}`,
+        },
+        body: JSON.stringify({ checked_in: nextChecked }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "處理失敗");
+      setSignups((prev) => prev.map((s) => (s.id === signup.id ? data.signup : s)));
+    } catch (e) {
+      setSignups((prev) => prev.map((s) => (s.id === signup.id ? signup : s)));
+      setError(e.message || "處理失敗，請再試一次");
+    }
+  }
 
   if (authLoading || loading) {
     return (
@@ -110,6 +138,14 @@ export default function MyTaskDetailPage() {
   }
 
   const isOwner = task.creator_id === profile.userId;
+  const isQueueMode = task.task_mode === "queue";
+  const closed = taskStatus(task).label === "已截止";
+  const canUseCheckin = isOwner && signups.length > 0 && (isQueueMode || closed);
+  const checkinButtonText = checkinMode
+    ? "完成處理"
+    : isQueueMode
+    ? "開始處理名單"
+    : "開始點名報到";
 
   return (
     <div className="flex-1 flex flex-col">
@@ -119,6 +155,7 @@ export default function MyTaskDetailPage() {
         <TaskAnnouncement task={task} />
         <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-4 mb-2">
           <Users size={13} /> {signups.length} 人已接龍
+          {isQueueMode && <span className="text-emerald-500">· 現場排隊</span>}
         </div>
       </div>
 
@@ -150,14 +187,90 @@ export default function MyTaskDetailPage() {
         </div>
       )}
 
+      {canUseCheckin && (
+        <div className="mx-6 mb-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-emerald-700">
+                {isQueueMode ? "現場排隊處理" : "點名報到"}
+              </p>
+              <p className="text-[11px] text-emerald-700/70 mt-0.5 leading-relaxed">
+                {isQueueMode
+                  ? "按完成後會移到已完成區，等待名單會自動往前。"
+                  : "任務截止後可逐一確認已完成報到。"}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setCheckinMode((v) => !v)}
+              className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 ${
+                checkinMode ? "bg-gray-700 text-white" : "bg-emerald-500 text-white shadow-sm shadow-emerald-100"
+              }`}
+            >
+              <CheckCircle2 size={14} /> {checkinButtonText}
+            </button>
+          </div>
+          {isQueueMode && checkinMode && (
+            <div className="mt-3 grid grid-cols-2 gap-2 text-center text-[11px]">
+              <div className="rounded-xl bg-white px-2 py-2 text-gray-500">
+                等待中 <span className="font-bold text-emerald-600">{pendingSignups.length}</span>
+              </div>
+              <div className="rounded-xl bg-white px-2 py-2 text-gray-500">
+                已完成 <span className="font-bold text-gray-700">{completedSignups.length}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {isOwner && signups.length > 0 && !canUseCheckin && !isQueueMode && (
+        <p className="mx-6 mb-3 text-[11px] text-gray-400">一般報名任務會在截止後開放點名報到。</p>
+      )}
+
       <div className="flex-1 px-6 pb-6 overflow-y-auto">
-        <ThreadList
-          signups={signups}
-          myIds={getMySignupIds()}
-          categories={task.categories}
-          onUpdate={async () => {}}
-          onDelete={async () => {}}
-        />
+        {isQueueMode && checkinMode ? (
+          <div className="flex flex-col gap-5">
+            <section>
+              <p className="text-[11px] font-bold text-emerald-700 mb-2 px-1">等待中</p>
+              <ThreadList
+                signups={pendingSignups}
+                myIds={getMySignupIds()}
+                categories={task.categories}
+                quantityUnit={task.quantity_unit}
+                onUpdate={async () => {}}
+                onDelete={async () => {}}
+                checkinMode
+                onToggleCheckin={handleToggleCheckin}
+              />
+            </section>
+            {completedSignups.length > 0 && (
+              <section>
+                <p className="text-[11px] font-bold text-gray-400 mb-2 px-1">已完成</p>
+                <ThreadList
+                  signups={completedSignups}
+                  myIds={getMySignupIds()}
+                  categories={task.categories}
+                  quantityUnit={task.quantity_unit}
+                  onUpdate={async () => {}}
+                  onDelete={async () => {}}
+                  checkinMode
+                  onToggleCheckin={handleToggleCheckin}
+                />
+              </section>
+            )}
+          </div>
+        ) : (
+          <ThreadList
+            signups={signups}
+            myIds={getMySignupIds()}
+            categories={task.categories}
+            quantityUnit={task.quantity_unit}
+            onUpdate={async () => {}}
+            onDelete={async () => {}}
+            checkinMode={checkinMode}
+            onToggleCheckin={handleToggleCheckin}
+          />
+        )}
       </div>
     </div>
   );
