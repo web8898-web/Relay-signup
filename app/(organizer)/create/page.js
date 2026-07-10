@@ -16,6 +16,18 @@ const fieldClass =
 
 const CATEGORY_EXAMPLES = ["帶小孩", "帶朋友", "素食", "葷食"];
 const UNIT_EXAMPLES = ["盒", "份", "張", "包", "人", "個"];
+const TASK_MODES = [
+  {
+    value: "normal",
+    title: "一般報名",
+    desc: "適合活動、聚餐、課程，報名結束後再確認名單。",
+  },
+  {
+    value: "queue",
+    title: "現場排隊",
+    desc: "適合候位、推拿、現場服務，可邊報名邊處理。",
+  },
+];
 
 export default function CreateTaskPage() {
   const router = useRouter();
@@ -39,6 +51,7 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
   const [endDate, setEndDate] = useState(todayStr());
   const [maxSignups, setMaxSignups] = useState("");
   const [quantityUnit, setQuantityUnit] = useState("");
+  const [taskMode, setTaskMode] = useState("normal");
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -47,9 +60,6 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const titleRef = useRef(null);
 
-  // 首次操作教學導覽：本機沒有任何進度標記，代表第一次來到這個
-  // 頁面，稍微等版面穩定後自動開始導覽。看完建立頁的步驟後標記
-  // 為 "pending-share"，等任務建立完成、跳到分享頁時接續最後一步。
   const [showTour, setShowTour] = useState(false);
   useEffect(() => {
     if (getOnboardingState()) return;
@@ -79,6 +89,11 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
       text: "設定最多幾人可以報名，額滿後就無法再報名。不填代表不限人數。",
     },
     {
+      target: "mode",
+      title: "選擇任務模式",
+      text: "一般報名適合活動統計；現場排隊適合一邊報名、一邊完成處理的場景。預設一般報名即可。",
+    },
+    {
       target: "advanced",
       title: "進階設定（選填）",
       text: "需要分類、統計數量時再設定，沒有需要可以略過。新手只要先完成基本設定就好。",
@@ -106,6 +121,7 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
     catInput.trim() !== "" ||
     maxSignups.trim() !== "" ||
     quantityUnit.trim() !== "" ||
+    taskMode !== "normal" ||
     note.trim() !== "" ||
     startDate !== defaults.current.start_date ||
     endDate !== defaults.current.end_date;
@@ -173,6 +189,7 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
           end_date: endDate,
           max_signups: maxSignups,
           quantity_unit: quantityUnit,
+          task_mode: taskMode,
           note: note.trim(),
         }),
       });
@@ -244,6 +261,35 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
             className={fieldClass}
           />
         </Field>
+
+        <div data-tour="mode">
+          <p className="text-xs text-gray-500 font-medium mb-2">這個任務是哪一種？</p>
+          <div className="grid grid-cols-2 gap-2">
+            {TASK_MODES.map((mode) => {
+              const selected = taskMode === mode.value;
+              return (
+                <button
+                  key={mode.value}
+                  type="button"
+                  onClick={() => setTaskMode(mode.value)}
+                  className={`rounded-2xl border p-3 text-left transition active:scale-[0.98] ${
+                    selected
+                      ? "border-emerald-400 bg-emerald-50 ring-2 ring-emerald-100"
+                      : "border-gray-100 bg-white hover:border-emerald-100"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className={`w-4 h-4 rounded-full border flex items-center justify-center ${selected ? "border-emerald-500 bg-emerald-500" : "border-gray-300"}`}>
+                      {selected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                    </span>
+                    <span className={`text-sm font-bold ${selected ? "text-emerald-700" : "text-gray-700"}`}>{mode.title}</span>
+                  </div>
+                  <p className="text-[11px] text-gray-400 leading-relaxed mt-2">{mode.desc}</p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         <div data-tour="advanced" className="rounded-3xl border border-emerald-100 bg-emerald-50/35 overflow-hidden">
           <button
