@@ -40,6 +40,17 @@ export default function QueueRefreshCountdown() {
           delete section.dataset.queueOriginalDisplay;
         }
       });
+
+      // Keep queue actions clear and consistent for users.
+      Array.from(document.querySelectorAll("button")).forEach((button) => {
+        if (button.textContent?.trim() === "不排了") {
+          button.childNodes.forEach((node) => {
+            if (node.nodeType === Node.TEXT_NODE && node.textContent?.includes("不排了")) {
+              node.textContent = node.textContent.replace("不排了", "取消排隊");
+            }
+          });
+        }
+      });
     }
 
     syncQueueControls();
