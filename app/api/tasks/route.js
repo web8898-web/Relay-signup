@@ -14,6 +14,12 @@ function parseTaskMode(value) {
   return value === "queue" ? "queue" : "normal";
 }
 
+function shouldRetryWithoutTaskMode(error) {
+  if (!error) return false;
+  const message = String(error.message || "");
+  return error.code === "PGRST204" || error.code === "42703" || message.includes("task_mode");
+}
+
 export async function POST(request) {
   try {
     const token = getBearerToken(request);
@@ -32,24 +38,38 @@ export async function POST(request) {
 
     let data, error;
     for (let attempt = 0; attempt < 5; attempt++) {
+      const payload = {
+        title: String(title).slice(0, 200),
+        description: String(description || "").slice(0, 2000),
+        categories: Array.isArray(categories) ? categories.slice(0, 30) : [],
+        start_date,
+        end_date,
+        note: String(note || "").slice(0, 1000),
+        creator_id: profile.userId,
+        creator_name: profile.displayName,
+        short_code: generateShortCode(),
+        max_signups: parseMaxSignups(max_signups),
+        quantity_unit: trimmedUnit,
+        task_mode: mode,
+      };
+
       ({ data, error } = await supabase
         .from("tasks")
-        .insert({
-          title: String(title).slice(0, 200),
-          description: String(description || "").slice(0, 2000),
-          categories: Array.isArray(categories) ? categories.slice(0, 30) : [],
-          start_date,
-          end_date,
-          note: String(note || "").slice(0, 1000),
-          creator_id: profile.userId,
-          creator_name: profile.displayName,
-          short_code: generateShortCode(),
-          max_signups: parseMaxSignups(max_signups),
-          quantity_unit: trimmedUnit,
-          task_mode: mode,
-        })
+        .insert(payload)
         .select()
         .single());
+
+      // Before sql/task_mode.sql is applied in Supabase, older databases do not
+      // have the task_mode column. Fall back gracefully so creating tasks still works.
+      if (shouldRetryWithoutTaskMode(error)) {
+        const { task_mode: _taskMode, ...fallbackPayload } = payload;
+        ({ data, error } = await supabase
+          .from("tasks")
+          .insert(fallbackPayload)
+          .select()
+          .single());
+      }
+
       if (!error || error.code !== "23505") break;
     }
 
