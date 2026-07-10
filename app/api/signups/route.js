@@ -53,6 +53,30 @@ export async function POST(request) {
       return NextResponse.json({ error: "找不到這個任務" }, { status: 404 });
     }
 
+    const isQueueTask = task.task_mode === "queue";
+
+    // A device may hold only one active queue position for the same task.
+    // Once the host marks it completed, checked_in becomes true and the device
+    // may join the queue again.
+    if (isQueueTask) {
+      const { data: activeQueueEntry, error: activeQueueError } = await supabase
+        .from("signups")
+        .select("id")
+        .eq("task_id", task_id)
+        .eq("owner_token", owner_token)
+        .eq("checked_in", false)
+        .limit(1)
+        .maybeSingle();
+
+      if (activeQueueError) throw activeQueueError;
+      if (activeQueueEntry) {
+        return NextResponse.json(
+          { error: "你目前已在排隊中，完成後才能重新加入排隊" },
+          { status: 409 }
+        );
+      }
+    }
+
     const selectedCategories =
       task.categories?.length > 0 && Array.isArray(categories)
         ? categories.filter((c) => task.categories.includes(c))
@@ -86,13 +110,17 @@ export async function POST(request) {
     if (task.max_signups) {
       let currentHeadcount;
       if (headcountMode) {
-        const { data: existing } = await supabase.from("signups").select("quantity").eq("task_id", task_id);
+        let query = supabase.from("signups").select("quantity").eq("task_id", task_id);
+        if (isQueueTask) query = query.eq("checked_in", false);
+        const { data: existing } = await query;
         currentHeadcount = (existing || []).reduce((sum, s) => sum + (s.quantity ?? 1), 0);
       } else {
-        const { count } = await supabase
+        let query = supabase
           .from("signups")
           .select("id", { count: "exact", head: true })
           .eq("task_id", task_id);
+        if (isQueueTask) query = query.eq("checked_in", false);
+        const { count } = await query;
         currentHeadcount = count ?? 0;
       }
       if (currentHeadcount + incomingHeadcount > task.max_signups) {
@@ -123,7 +151,7 @@ export async function POST(request) {
       ? names.map((n) => String(n || "").trim()).filter(Boolean).slice(0, 50)
       : [];
     const isMultiEligible =
-      task.task_mode !== "queue" && (!task.categories || task.categories.length === 0) && !task.quantity_unit;
+      !isQueueTask && (!task.categories || task.categories.length === 0) && !task.quantity_unit;
 
     if (isMultiEligible && cleanNames.length >= 2) {
       if (task.max_signups) {
@@ -166,11 +194,11 @@ export async function POST(request) {
       .from("signups")
       .insert({
         task_id,
-        categories: selectedCategories,
+        categories: isQueueTask ? [] : selectedCategories,
         name: String(name).slice(0, 60),
-        note: String(note || "").slice(0, 500),
-        quantity: quantityValue,
-        category_quantities: categoryQuantitiesValue,
+        note: isQueueTask ? "" : String(note || "").slice(0, 500),
+        quantity: isQueueTask ? null : quantityValue,
+        category_quantities: isQueueTask ? {} : categoryQuantitiesValue,
         owner_token,
       })
       .select()
