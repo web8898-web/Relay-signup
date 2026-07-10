@@ -44,6 +44,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
   const signupCount = signups.length;
   const isClosed = st.label === "已截止";
   const isQueueTask = isQueueTaskConfig(task);
+  const showSearch = !isQueueTask && signups.length > 0;
 
   useEffect(() => {
     function closeOtherCard(event) {
@@ -61,6 +62,12 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
     if (!expanded) return;
     setCheckedIds(new Set(signups.filter((s) => s.checked_in).map((s) => s.id)));
   }, [expanded, signups]);
+
+  useEffect(() => {
+    if (!isQueueTask) return;
+    setSearchText("");
+    setFilter("全部");
+  }, [isQueueTask]);
 
   useEffect(() => {
     if (!expanded) {
@@ -266,9 +273,9 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
   }
 
   const filteredSignups = useMemo(() => {
-    const keyword = searchText.trim().toLowerCase();
+    const keyword = isQueueTask ? "" : searchText.trim().toLowerCase();
     const byCategory =
-      filter === "全部"
+      isQueueTask || filter === "全部"
         ? signups
         : filter === NO_CATEGORY
         ? signups.filter((s) => !s.categories || s.categories.length === 0)
@@ -277,12 +284,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
     const bySearch = !keyword
       ? byCategory
       : byCategory.filter((s) => {
-          const text = [
-            s.name,
-            s.note,
-            ...(s.categories || []),
-            String(orderNumber[s.id] || ""),
-          ]
+          const text = [s.name, s.note, ...(s.categories || []), String(orderNumber[s.id] || "")]
             .filter(Boolean)
             .join(" ")
             .toLowerCase();
@@ -375,10 +377,10 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
               <div className="mb-3">
                 <div className="flex items-center justify-between gap-2 mb-1.5 px-0.5">
                   <p className="text-[11px] font-medium text-gray-400">報名名單</p>
-                  {searchText && <p className="text-[11px] text-emerald-500">找到 {filteredSignups.length} 位</p>}
+                  {!isQueueTask && searchText && <p className="text-[11px] text-emerald-500">找到 {filteredSignups.length} 位</p>}
                 </div>
 
-                {signups.length > 0 && (
+                {showSearch && (
                   <div className="relative mb-2.5">
                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
                     <input
@@ -423,7 +425,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
                   </div>
                 )}
 
-                {task.categories?.length > 0 && (
+                {!isQueueTask && task.categories?.length > 0 && (
                   <div className="relative -mx-0.5">
                     <div className="flex gap-1.5 overflow-x-auto pb-2 px-0.5">
                       <button onClick={(e) => { e.stopPropagation(); setFilter("全部"); }} className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${filter === "全部" ? "bg-emerald-700 text-white border-emerald-700" : "bg-gray-50 text-gray-500 border-gray-200"}`}>
