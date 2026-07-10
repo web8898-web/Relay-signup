@@ -21,7 +21,7 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { taskStatus, chipClass, avatarClass, relTime, batchInfoFor } from "@/lib/utils";
+import { taskStatus, chipClass, avatarClass, relTime, batchInfoFor, isQueueTask as isQueueTaskConfig } from "@/lib/utils";
 import { getOwnerToken } from "@/lib/ownerToken";
 import { liff } from "@/lib/liff";
 
@@ -39,6 +39,11 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
   const [checkedIds, setCheckedIds] = useState(() => new Set());
   const [processingId, setProcessingId] = useState(null);
   const cardRef = useRef(null);
+
+  const st = taskStatus(task);
+  const signupCount = signups.length;
+  const isClosed = st.label === "已截止";
+  const isQueueTask = isQueueTaskConfig(task);
 
   useEffect(() => {
     function closeOtherCard(event) {
@@ -83,7 +88,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
 
   async function toggleNotify(e) {
     e.stopPropagation();
-    if (notifyBusy) return;
+    if (notifyBusy || isQueueTask) return;
     const next = !notifyEnabled;
     setNotifyEnabled(next);
     setNotifyBusy(true);
@@ -217,11 +222,6 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
     navigator.clipboard?.writeText(`未報到（${absent.length} 位）：\n${absent.join("、")}`);
   }
 
-  const st = taskStatus(task);
-  const signupCount = signups.length;
-  const isClosed = st.label === "已截止";
-  const isQueueTask = task.task_mode === "queue" || String(task.title || "").includes("排隊") || !isClosed;
-
   const orderNumber = {};
   const waitingOrderNumber = {};
   signups.forEach((s, i) => {
@@ -247,7 +247,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
   const iconBg = isClosed ? "bg-gray-400" : isFull ? "bg-rose-500" : "bg-emerald-500";
   const checkedCount = checkedIds.size;
   const waitingCount = Math.max(0, signups.length - checkedCount);
-  const canProcessList = signups.length > 0;
+  const canProcessList = signups.length > 0 && (isQueueTask || isClosed);
   const processButtonText = isQueueTask ? "開始處理名單" : "開始點名報到";
   const processSummaryText = isQueueTask ? "已完成" : "已報到";
   const remainingText = isQueueTask ? "等待" : "未到";
@@ -316,9 +316,11 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
             </div>
           </button>
 
-          <button onClick={toggleNotify} className={`w-7 h-7 flex items-center justify-center shrink-0 transition ${notifyEnabled ? "text-emerald-500" : "text-gray-300"}`} title={notifyEnabled ? "已開啟報名通知" : "已關閉報名通知"}>
-            {notifyEnabled ? <Bell size={16} /> : <BellOff size={16} />}
-          </button>
+          {!isQueueTask && (
+            <button onClick={toggleNotify} className={`w-7 h-7 flex items-center justify-center shrink-0 transition ${notifyEnabled ? "text-emerald-500" : "text-gray-300"}`} title={notifyEnabled ? "已開啟報名通知" : "已關閉報名通知"}>
+              {notifyEnabled ? <Bell size={16} /> : <BellOff size={16} />}
+            </button>
+          )}
 
           <button onClick={(e) => { e.stopPropagation(); onShare?.(); }} className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-emerald-500 shrink-0" title="分享">
             <Share2 size={16} />
