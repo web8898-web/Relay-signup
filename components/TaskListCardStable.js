@@ -37,6 +37,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
   const [notifyBusy, setNotifyBusy] = useState(false);
   const [checkinMode, setCheckinMode] = useState(false);
   const [checkedIds, setCheckedIds] = useState(() => new Set());
+  const [processingId, setProcessingId] = useState(null);
   const cardRef = useRef(null);
 
   useEffect(() => {
@@ -165,6 +166,38 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
     }
   }
 
+  async function completeFirstWaiting() {
+    if (processingId) return;
+    const firstWaiting = signups.find((s) => !checkedIds.has(s.id));
+    if (!firstWaiting) return;
+    setProcessingId(firstWaiting.id);
+    setCheckedIds((prev) => {
+      const n = new Set(prev);
+      n.add(firstWaiting.id);
+      return n;
+    });
+    try {
+      await saveCheckin(firstWaiting.id, true);
+    } catch (e) {
+      setCheckedIds((prev) => {
+        const n = new Set(prev);
+        n.delete(firstWaiting.id);
+        return n;
+      });
+    }
+    setProcessingId(null);
+  }
+
+  function handleSignupRowClick(e, s) {
+    e.stopPropagation();
+    if (!checkinMode) return;
+    if (isQueueTask) {
+      completeFirstWaiting();
+      return;
+    }
+    toggleCheckin(s);
+  }
+
   async function setAllCheckin(value) {
     const targets = signups.filter((s) => checkedIds.has(s.id) !== value);
     const original = checkedIds;
@@ -199,6 +232,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
     .forEach((s, i) => {
       waitingOrderNumber[s.id] = i + 1;
     });
+  const firstWaitingId = signups.find((s) => !checkedIds.has(s.id))?.id;
 
   const batchInfoList = batchInfoFor(signups);
   const batchColorById = {};
@@ -383,7 +417,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
                       <button onClick={(e) => { e.stopPropagation(); setAllCheckin(false); }} className="text-[10px] text-gray-500 border border-gray-200 rounded-full px-2 py-0.5 hover:bg-gray-50 flex items-center gap-1"><RotateCcw size={11} /> 重設</button>
                       {!isQueueTask && <button onClick={copyAbsentList} className="text-[10px] text-gray-500 border border-gray-200 rounded-full px-2 py-0.5 hover:bg-gray-50 flex items-center gap-1"><Copy size={11} /> 複製未到名單</button>}
                     </div>
-                    {isQueueTask && <p className="text-[10px] text-gray-400 mt-2 px-0.5">點擊名單即可標記完成，等待中的順位會自動往前。</p>}
+                    {isQueueTask && <p className="text-[10px] text-gray-400 mt-2 px-0.5">點擊名單任何位置，都只會完成目前第一位，避免誤觸其他人。</p>}
                   </div>
                 )}
 
@@ -411,11 +445,12 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
                   <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto pr-0.5">
                     {filteredSignups.map((s, i) => {
                       const done = checkedIds.has(s.id);
+                      const isFirstWaiting = firstWaitingId === s.id;
                       return (
-                        <div key={s.id || i} onClick={checkinMode ? (e) => { e.stopPropagation(); toggleCheckin(s); } : undefined} className={`relative overflow-hidden flex items-start gap-2 border rounded-xl px-3 py-2 transition ${batchColorById[s.id] ? "pl-3.5" : ""} ${checkinMode ? `cursor-pointer select-none active:scale-[0.99] ${done ? "bg-emerald-50 border-emerald-200" : "bg-gray-50 border-gray-100"}` : "bg-gray-50 border-gray-100"}`}>
+                        <div key={s.id || i} onClick={checkinMode ? (e) => handleSignupRowClick(e, s) : undefined} className={`relative overflow-hidden flex items-start gap-2 border rounded-xl px-3 py-2 transition ${batchColorById[s.id] ? "pl-3.5" : ""} ${checkinMode ? `cursor-pointer select-none active:scale-[0.99] ${done ? "bg-emerald-50 border-emerald-200" : isQueueTask && isFirstWaiting ? "bg-emerald-50 border-emerald-200 ring-1 ring-emerald-100" : "bg-gray-50 border-gray-100"}` : "bg-gray-50 border-gray-100"}`}>
                           {batchColorById[s.id] && <span className={`absolute left-0 top-0 bottom-0 w-1 rounded-r-full opacity-60 ${batchColorById[s.id]}`} aria-hidden="true" />}
                           {checkinMode ? (
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border-2 transition ${done ? "bg-emerald-500 border-emerald-500 text-white" : "bg-white border-gray-300 text-transparent"}`} aria-hidden="true">
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border-2 transition ${done ? "bg-emerald-500 border-emerald-500 text-white" : isQueueTask && isFirstWaiting ? "bg-emerald-500 border-emerald-500 text-white" : "bg-white border-gray-300 text-transparent"}`} aria-hidden="true">
                               <Check size={13} strokeWidth={3} />
                             </div>
                           ) : (
@@ -431,6 +466,11 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
                                 <span className="shrink-0 inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-emerald-100 text-emerald-700 text-[9px] font-bold">{checkinMode && isQueueTask ? waitingOrderNumber[s.id] : orderNumber[s.id]}</span>
                               )}
                               <span className="text-xs font-medium text-gray-700 truncate">{s.name}</span>
+                              {checkinMode && isQueueTask && isFirstWaiting && !done && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500 text-white whitespace-nowrap">
+                                  目前第一位
+                                </span>
+                              )}
                               {s.categories?.map((c) => (
                                 <span key={c} className={`text-[10px] px-1.5 py-0.5 rounded-full border whitespace-nowrap ${chipClass(c)}`}>
                                   {c}{s.category_quantities?.[c] != null && ` · ${s.category_quantities[c]}${task.quantity_unit || ""}`}
