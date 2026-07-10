@@ -1,8 +1,10 @@
 "use client";
 import { MessageCircle, PenLine, Calendar, Users, FileText, ClipboardEdit } from "lucide-react";
-import { chipClass } from "@/lib/utils";
+import { chipClass, isQueueTask } from "@/lib/utils";
 
 export default function TaskShareCard({ task, signupCount, onOpen, previewOnly, onPreviewTap }) {
+  const queue = isQueueTask(task);
+
   function handleButtonClick() {
     if (previewOnly) {
       onPreviewTap?.();
@@ -44,7 +46,7 @@ export default function TaskShareCard({ task, signupCount, onOpen, previewOnly, 
 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mb-4 text-[11px] text-gray-400">
           <span className="flex items-center gap-1"><Calendar size={12} />{task.start_date} ~ {task.end_date}</span>
-          <span className="flex items-center gap-1"><Users size={12} />{signupCount} 人已報名</span>
+          <span className="flex items-center gap-1"><Users size={12} />{signupCount} 人{queue ? "已排隊" : "已報名"}</span>
         </div>
         {task.categories?.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-4">
@@ -58,10 +60,10 @@ export default function TaskShareCard({ task, signupCount, onOpen, previewOnly, 
           onClick={handleButtonClick}
           className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full py-3 font-semibold flex items-center justify-center gap-2 shadow-md shadow-emerald-200 transition"
         >
-          <PenLine size={16} /> 我要報名
+          <PenLine size={16} /> {queue ? "我要排隊" : "我要報名"}
         </button>
         {previewOnly && (
-          <p className="text-center text-[11px] text-gray-300 mt-2">這是卡片預覽畫面，「我要報名」按鈕無法操作</p>
+          <p className="text-center text-[11px] text-gray-300 mt-2">這是卡片預覽畫面，「{queue ? "我要排隊" : "我要報名"}」按鈕無法操作</p>
         )}
       </div>
 
