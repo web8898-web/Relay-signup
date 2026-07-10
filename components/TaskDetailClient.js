@@ -12,7 +12,7 @@ import Toast from "@/components/Toast";
 import QuantityStepper from "@/components/QuantityStepper";
 import ConfettiSuccess from "@/components/ConfettiSuccess";
 import { supabase } from "@/lib/supabaseClient";
-import { taskStatus, isHeadcountUnit } from "@/lib/utils";
+import { taskStatus, isHeadcountUnit, isQueueTask as isQueueTaskConfig } from "@/lib/utils";
 import { getOwnerToken, getMySignupIds, rememberMySignup, forgetMySignup } from "@/lib/ownerToken";
 import { useScrollFadeRight } from "@/lib/useScrollFadeRight";
 
@@ -118,7 +118,8 @@ export default function TaskDetailClient() {
   }, [id]);
 
   const closed = task ? taskStatus(task).label === "已截止" : false;
-  const isQueueTask = !!task && (task.task_mode === "queue" || String(task.title || "").includes("排隊"));
+  const queueFromUrl = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("queue") === "1";
+  const isQueueTask = !!task && (isQueueTaskConfig(task) || queueFromUrl);
   const headcountMode = isHeadcountUnit(task?.quantity_unit);
   const waitingSignups = signups.filter((s) => !s.checked_in);
   const completedSignups = signups.filter((s) => s.checked_in);
