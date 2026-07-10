@@ -8,7 +8,6 @@ import QuantityStepper from "@/components/QuantityStepper";
 
 const PAGE_SIZE = 30;
 
-// 一筆報名的人頭數：分類各自數量加總（＋本人），或單一數量，否則 1。
 function headcountOf(s) {
   if (s.category_quantities && Object.keys(s.category_quantities).length > 0) {
     return Object.values(s.category_quantities).reduce((a, b) => a + (b || 0), 0);
@@ -16,7 +15,19 @@ function headcountOf(s) {
   return s.quantity ?? 1;
 }
 
-export default function ThreadList({ signups, myIds, categories, quantityUnit, nameOnly, closed, onUpdate, onDelete, checkinMode, onToggleCheckin }) {
+export default function ThreadList({
+  signups,
+  myIds,
+  categories,
+  quantityUnit,
+  nameOnly,
+  closed,
+  onUpdate,
+  onDelete,
+  checkinMode,
+  onToggleCheckin,
+  queueMode = false,
+}) {
   const [filter, setFilter] = useState("全部");
   const [editingId, setEditingId] = useState(null);
   const [confirmId, setConfirmId] = useState(null);
@@ -33,9 +44,16 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
 
   const NO_CATEGORY = "__no_category__";
   const orderNumber = {};
+  const waitingOrderNumber = {};
   signups.forEach((s, i) => {
     orderNumber[s.id] = i + 1;
   });
+  signups
+    .filter((s) => !s.checked_in)
+    .forEach((s, i) => {
+      waitingOrderNumber[s.id] = i + 1;
+    });
+
   const filtered =
     filter === "全部"
       ? signups
@@ -48,7 +66,6 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
   }, [filter]);
 
   const visibleSignups = filtered.slice(0, visibleCount);
-  // 同批多人報名的側標（依全體報名順序判斷頭尾，才能連續）
   const batchInfoList = batchInfoFor(signups);
   const batchById = {};
   signups.forEach((s, i) => {
@@ -88,9 +105,6 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
     }
   }
 
-  // Same "per-category quantity" mode logic as the signup form itself:
-  // determined by whether the task defines categories at all, not by the
-  // current toggle state.
   const usesPerCategoryQuantity = !!quantityUnit && categories?.length > 0;
 
   function startEdit(s) {
@@ -130,6 +144,15 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
 
   return (
     <div>
+      {queueMode && signups.length > 0 && (
+        <div className="mb-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 px-3 py-2.5">
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="font-semibold text-emerald-700">等待中 {signups.filter((s) => !s.checked_in).length} 位</span>
+            <span className="text-gray-400">已完成 {signups.filter((s) => s.checked_in).length} 位</span>
+          </div>
+        </div>
+      )}
+
       {categories?.length > 0 && !nameOnly && (
         <>
           <p className="text-[11px] text-gray-400 mb-1.5 px-0.5">瀏覽名單（點分類篩選）</p>
@@ -187,8 +210,9 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
             const mine = myIds.includes(s.id);
             const isEditing = editingId === s.id;
             const binfo = batchById[s.id];
+            const completed = queueMode && s.checked_in;
             return (
-              <div key={s.id} className="flex gap-2.5 items-start relative pl-2">
+              <div key={s.id} className={`flex gap-2.5 items-start relative pl-2 ${completed ? "opacity-75" : ""}`}>
                 {binfo && (
                   <span
                     className={`absolute left-0 w-[3px] rounded-full opacity-35 ${binfo.color}`}
@@ -207,25 +231,33 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
                         ? "bg-emerald-500 border-emerald-500 text-white"
                         : "bg-white border-gray-300 text-transparent"
                     }`}
-                    aria-label={s.checked_in ? "取消報到" : "標記報到"}
+                    aria-label={s.checked_in ? "取消完成" : "標記完成"}
                   >
                     <Check size={16} strokeWidth={3} />
                   </button>
                 ) : (
-                  <div className={`w-8 h-8 rounded-full ${avatarClass(s.name)} text-white flex items-center justify-center text-xs font-bold shrink-0 z-10`}>
-                    {s.name?.[0] || "?"}
+                  <div className={`w-8 h-8 rounded-full ${completed ? "bg-emerald-400" : avatarClass(s.name)} text-white flex items-center justify-center text-xs font-bold shrink-0 z-10`}>
+                    {completed ? <Check size={16} strokeWidth={3} /> : s.name?.[0] || "?"}
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <p className="text-xs font-medium text-gray-600 flex items-center gap-1.5 min-w-0">
-                      <span className="shrink-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold">
-                        {orderNumber[s.id]}
-                      </span>
+                      {completed ? (
+                        <span className="shrink-0 inline-flex items-center justify-center h-[18px] px-2 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold">
+                          完成
+                        </span>
+                      ) : (
+                        <span className="shrink-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold">
+                          {queueMode ? waitingOrderNumber[s.id] : orderNumber[s.id]}
+                        </span>
+                      )}
                       <span className="break-words min-w-0">{s.name}</span>
                     </p>
                     {checkinMode && quantityUnit ? (
                       <span className="text-[10px] text-gray-400 shrink-0 pt-0.5">{headcountOf(s)} {quantityUnit}</span>
+                    ) : completed ? (
+                      <span className="text-[10px] text-emerald-500 shrink-0 pt-0.5">已完成</span>
                     ) : (
                       <span className="text-[10px] text-gray-300 shrink-0 pt-0.5">{relTime(s.created_at)}</span>
                     )}
@@ -306,7 +338,7 @@ export default function ThreadList({ signups, myIds, categories, quantityUnit, n
                     </div>
                   ) : null}
 
-                  {mine && !isEditing && !nameOnly && !closed && !checkinMode && (
+                  {mine && !isEditing && !nameOnly && !closed && !checkinMode && !completed && (
                     <div className="flex gap-3 mt-1 ml-1">
                       <button onClick={() => startEdit(s)} className="text-[11px] text-gray-400 hover:text-emerald-500 flex items-center gap-0.5">
                         <Edit2 size={11} /> 編輯
