@@ -123,6 +123,14 @@ export default function TaskDetailClient() {
   const isMultiActive = allowMulti && filledNames.length >= 2;
   const taskHasCategories = task?.categories?.length > 0;
   const usesPerCategoryQuantity = !!task?.quantity_unit && taskHasCategories;
+  const isQueueTask = !!task && (task.task_mode === "queue" || String(task.title || "").includes("排隊"));
+  const waitingSignups = signups.filter((s) => !s.checked_in);
+  const completedSignups = signups.filter((s) => s.checked_in);
+  const queueDisplaySignups = isQueueTask ? [...waitingSignups, ...completedSignups] : signups;
+  const mySignups = signups.filter((s) => myIds.includes(s.id));
+  const myWaitingSignup = mySignups.find((s) => !s.checked_in);
+  const myQueueNumber = myWaitingSignup ? waitingSignups.findIndex((s) => s.id === myWaitingSignup.id) + 1 : 0;
+  const myAllCompleted = isQueueTask && mySignups.length > 0 && mySignups.every((s) => s.checked_in);
 
   function toggleCategory(c) {
     setCategories((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
@@ -284,11 +292,37 @@ export default function TaskDetailClient() {
             {totalHeadcount} 人已接龍
           </div>
         )}
+
+        {isQueueTask && mySignups.length > 0 && (
+          <div className={`mt-3 mb-3 rounded-3xl border px-4 py-3 ${myAllCompleted ? "border-emerald-100 bg-emerald-50" : "border-sky-100 bg-sky-50"}`}>
+            {myAllCompleted ? (
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+                  <CheckCircle2 size={19} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-emerald-700">已完成</p>
+                  <p className="text-xs text-emerald-700/70 mt-0.5 leading-relaxed">主辦人已完成此筆報名處理。</p>
+                </div>
+              </div>
+            ) : myWaitingSignup ? (
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-full bg-sky-500 text-white flex items-center justify-center shrink-0 text-sm font-bold">
+                  {myQueueNumber}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-sky-700">目前等待順位：第 {myQueueNumber} 位</p>
+                  <p className="text-xs text-sky-700/70 mt-0.5 leading-relaxed">請等待主辦人處理，完成後這裡會顯示已完成。</p>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
 
       <div ref={listRef} className="flex-1 px-6 pb-3 overflow-y-auto scroll-smooth min-w-0">
         <ThreadList
-          signups={signups}
+          signups={queueDisplaySignups}
           myIds={myIds}
           categories={task.categories}
           quantityUnit={task.quantity_unit}
@@ -296,6 +330,7 @@ export default function TaskDetailClient() {
           closed={closed}
           onUpdate={handleUpdate}
           onDelete={handleDelete}
+          queueMode={isQueueTask}
         />
       </div>
 
