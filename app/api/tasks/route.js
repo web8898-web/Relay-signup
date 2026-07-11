@@ -3,6 +3,8 @@ import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { verifyLineAccessToken, getBearerToken } from "@/lib/lineAuth";
 import { generateShortCode } from "@/lib/shortCode";
 
+const QUEUE_MODE_MARKER = "__relay_queue_mode__";
+
 function parseMaxSignups(value) {
   if (value === undefined || value === null || value === "") return null;
   const n = parseInt(value, 10);
@@ -14,10 +16,10 @@ function parseTaskMode(value) {
   return value === "queue" ? "queue" : "normal";
 }
 
-function shouldRetryWithoutTaskMode(error) {
+function isMissingTaskModeColumn(error) {
   if (!error) return false;
-  const message = String(error.message || "");
-  return error.code === "PGRST204" || error.code === "42703" || message.includes("task_mode");
+  const message = String(error.message || "").toLowerCase();
+  return message.includes("task_mode") && (error.code === "PGRST204" || error.code === "42703" || message.includes("column"));
 }
 
 export async function POST(request) {
@@ -32,7 +34,6 @@ export async function POST(request) {
     }
 
     const supabase = getSupabaseAdmin();
-
     const trimmedUnit = String(quantity_unit || "").trim().slice(0, 20) || null;
     const mode = parseTaskMode(task_mode);
 
@@ -54,19 +55,12 @@ export async function POST(request) {
         notify_enabled: mode === "queue" ? false : true,
       };
 
-      ({ data, error } = await supabase
-        .from("tasks")
-        .insert(payload)
-        .select()
-        .single());
+      ({ data, error } = await supabase.from("tasks").insert(payload).select().single());
 
-      if (shouldRetryWithoutTaskMode(error)) {
+      if (isMissingTaskModeColumn(error)) {
         const { task_mode: _taskMode, ...fallbackPayload } = payload;
-        ({ data, error } = await supabase
-          .from("tasks")
-          .insert(fallbackPayload)
-          .select()
-          .single());
+        fallbackPayload.categories = mode === "queue" ? [QUEUE_MODE_MARKER] : fallbackPayload.categories;
+        ({ data, error } = await supabase.from("tasks").insert(fallbackPayload).select().single());
       }
 
       if (!error || error.code !== "23505") break;
