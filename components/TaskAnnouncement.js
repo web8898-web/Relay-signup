@@ -2,11 +2,21 @@
 import { MessageCircle, Calendar } from "lucide-react";
 import { taskStatus } from "@/lib/utils";
 
+function visibleNote(value = "") {
+  return String(value)
+    .split(/\r?\n/)
+    .filter((line) => line.trim() !== "__relay_queue_mode__")
+    .join("\n")
+    .trim();
+}
+
 export default function TaskAnnouncement({ task, full }) {
   const st = taskStatus(task);
   // Only override when the task is otherwise "進行中" — if it's already
   // "已截止" or "尚未開始", that status takes priority over capacity.
   const label = full && st.label === "進行中" ? "已額滿" : st.label;
+  const note = visibleNote(task.note);
+
   return (
     <div className="flex gap-2 items-start">
       <div className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
@@ -30,7 +40,7 @@ export default function TaskAnnouncement({ task, full }) {
               ))}
             </div>
           )}
-          {task.note && <p className="text-xs text-emerald-50/90 mt-2 border-t border-white/20 pt-2 whitespace-pre-wrap">備註：{task.note}</p>}
+          {note && <p className="text-xs text-emerald-50/90 mt-2 border-t border-white/20 pt-2 whitespace-pre-wrap">備註：{note}</p>}
         </div>
       </div>
     </div>
