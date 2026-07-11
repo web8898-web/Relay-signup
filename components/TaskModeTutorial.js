@@ -82,13 +82,40 @@ function ensureStyles() {
     .task-mode-help-link{font-size:11px;font-weight:800;color:#16946a;margin-top:8px}
     .task-mode-help-tip{font-size:11px;line-height:1.55;color:#718079;margin-top:10px}
     @media(max-width:350px){.task-mode-help-grid{grid-template-columns:1fr}}
+
+    @keyframes taskTutorialBackdropIn{from{opacity:0}to{opacity:1}}
+    @keyframes taskTutorialBackdropOut{from{opacity:1}to{opacity:0}}
+    @keyframes taskTutorialSheetIn{from{transform:translate3d(0,100%,0);opacity:.96}to{transform:translate3d(0,0,0);opacity:1}}
+    @keyframes taskTutorialSheetOut{from{transform:translate3d(0,0,0);opacity:1}to{transform:translate3d(0,100%,0);opacity:.96}}
+    .task-tutorial-backdrop-open{animation:taskTutorialBackdropIn 260ms ease-out both}
+    .task-tutorial-backdrop-close{animation:taskTutorialBackdropOut 300ms ease-in both}
+    .task-tutorial-sheet-open{animation:taskTutorialSheetIn 360ms cubic-bezier(.22,.8,.3,1) both;will-change:transform,opacity}
+    .task-tutorial-sheet-close{animation:taskTutorialSheetOut 320ms cubic-bezier(.4,0,.8,.2) both;will-change:transform,opacity}
+    @media(prefers-reduced-motion:reduce){
+      .task-tutorial-backdrop-open,.task-tutorial-backdrop-close,.task-tutorial-sheet-open,.task-tutorial-sheet-close{animation-duration:1ms!important}
+    }
   `;
   document.head.appendChild(style);
 }
 
 export default function TaskModeTutorial() {
   const [type, setType] = useState(null);
+  const [closing, setClosing] = useState(false);
   const tutorial = useMemo(() => (type ? tutorials[type] : null), [type]);
+
+  function openTutorial(nextType) {
+    setClosing(false);
+    setType(nextType);
+  }
+
+  function closeTutorial() {
+    if (!type || closing) return;
+    setClosing(true);
+    window.setTimeout(() => {
+      setType(null);
+      setClosing(false);
+    }, 320);
+  }
 
   useEffect(() => {
     const apply = () => {
@@ -112,7 +139,7 @@ export default function TaskModeTutorial() {
       document.querySelectorAll("[data-task-tutorial]").forEach((button) => {
         if (!(button instanceof HTMLElement) || button.dataset.bound === "true") return;
         button.dataset.bound = "true";
-        button.addEventListener("click", () => setType(button.dataset.taskTutorial));
+        button.addEventListener("click", () => openTutorial(button.dataset.taskTutorial));
       });
     };
 
@@ -126,11 +153,17 @@ export default function TaskModeTutorial() {
   return (
     <>
       {tutorial && (
-        <div className="fixed inset-0 z-[2147483000] bg-black/60 flex items-end sm:items-center justify-center" onClick={() => setType(null)}>
-          <div className="w-full max-w-md max-h-[88vh] overflow-y-auto rounded-t-[30px] sm:rounded-[30px] bg-white p-6 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+        <div
+          className={`fixed inset-0 z-[2147483000] bg-black/60 flex items-end sm:items-center justify-center ${closing ? "task-tutorial-backdrop-close" : "task-tutorial-backdrop-open"}`}
+          onClick={closeTutorial}
+        >
+          <div
+            className={`w-full max-w-md max-h-[88vh] overflow-y-auto rounded-t-[30px] sm:rounded-[30px] bg-white p-6 shadow-2xl ${closing ? "task-tutorial-sheet-close" : "task-tutorial-sheet-open"}`}
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="flex items-start justify-between gap-4">
               <div><p className="text-lg font-bold text-gray-800">{tutorial.title}</p><p className="text-xs text-gray-500 mt-1">{tutorial.subtitle}</p></div>
-              <button onClick={() => setType(null)} className="w-9 h-9 rounded-full bg-gray-100 text-gray-500">✕</button>
+              <button onClick={closeTutorial} className="w-9 h-9 rounded-full bg-gray-100 text-gray-500">✕</button>
             </div>
             <div className="mt-5 space-y-3">
               {tutorial.steps.map(([number, title, copy]) => (
@@ -140,8 +173,8 @@ export default function TaskModeTutorial() {
                 </div>
               ))}
             </div>
-            <button onClick={() => setType(type === "general" ? "queue" : "general")} className="w-full mt-5 rounded-full border border-emerald-200 bg-white py-3 text-sm font-bold text-emerald-600">查看{type === "general" ? "現場排隊" : "一般報名"}教學</button>
-            <button onClick={() => setType(null)} className="w-full mt-2 rounded-full bg-emerald-500 py-3 text-sm font-bold text-white">看完了</button>
+            <button onClick={() => openTutorial(type === "general" ? "queue" : "general")} className="w-full mt-5 rounded-full border border-emerald-200 bg-white py-3 text-sm font-bold text-emerald-600">查看{type === "general" ? "現場排隊" : "一般報名"}教學</button>
+            <button onClick={closeTutorial} className="w-full mt-2 rounded-full bg-emerald-500 py-3 text-sm font-bold text-white">看完了</button>
           </div>
         </div>
       )}
