@@ -48,6 +48,37 @@ function findSection(element, requiredTexts = []) {
   return null;
 }
 
+function findInteractiveAncestor(element) {
+  let current = element;
+  for (let depth = 0; current instanceof HTMLElement && depth < 6; depth += 1) {
+    if (current.matches("button,[role='button'],summary") || current.onclick) return current;
+    current = current.parentElement;
+  }
+  return element instanceof HTMLElement ? element : null;
+}
+
+function scrollAdvancedIntoComfortableView(section) {
+  if (!(section instanceof HTMLElement)) return;
+  const fixedHeaderOffset = window.innerWidth <= 480 ? 188 : 128;
+  const top = window.scrollY + section.getBoundingClientRect().top - fixedHeaderOffset;
+  window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+}
+
+function bindAdvancedAutoPosition(advanced, section) {
+  if (!(advanced instanceof HTMLElement) || !(section instanceof HTMLElement)) return;
+  const toggle = findInteractiveAncestor(advanced);
+  if (!(toggle instanceof HTMLElement) || toggle.dataset.advancedAutoPositionBound === "true") return;
+
+  toggle.dataset.advancedAutoPositionBound = "true";
+  toggle.addEventListener("click", () => {
+    const beforeHeight = section.getBoundingClientRect().height;
+    window.setTimeout(() => {
+      const afterHeight = section.getBoundingClientRect().height;
+      if (afterHeight > beforeHeight + 24) scrollAdvancedIntoComfortableView(section);
+    }, 220);
+  });
+}
+
 function modeHelpHtml() {
   return `
     <div class="task-mode-help-card">
@@ -138,6 +169,12 @@ export default function TaskModeTutorial() {
           holder.innerHTML = modeHelpHtml();
           section.insertAdjacentElement("afterend", holder);
         }
+      }
+
+      const advanced = findLeaf("進階設定");
+      if (advanced) {
+        const advancedSection = findSection(advanced, ["進階設定"]) || advanced.parentElement;
+        if (advancedSection instanceof HTMLElement) bindAdvancedAutoPosition(advanced, advancedSection);
       }
 
       document.querySelectorAll("[data-task-tutorial]").forEach((button) => {
