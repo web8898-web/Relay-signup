@@ -48,6 +48,8 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
   const [confirmCompleteAll, setConfirmCompleteAll] = useState(false);
   const [showResetAction, setShowResetAction] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [menuUp, setMenuUp] = useState(false);
+  const menuAnchorRef = useRef(null);
   const cardRef = useRef(null);
 
   const st = taskStatus(task);
@@ -102,6 +104,21 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
     setMenuOpen(false);
     setConfirmDelete(false);
     setExpanded(true);
+  }
+
+  function toggleMenu(e) {
+    e.stopPropagation();
+    if (menuOpen) {
+      setMenuOpen(false);
+      return;
+    }
+    // 靠近畫面底部、下方空間不足時，選單改為往上展開，避免被截掉。
+    const rect = menuAnchorRef.current?.getBoundingClientRect();
+    if (rect && typeof window !== "undefined") {
+      setMenuUp(window.innerHeight - rect.bottom < 160);
+    }
+    setConfirmDelete(false);
+    setMenuOpen(true);
   }
 
   async function toggleNotify(e) {
@@ -269,9 +286,9 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
           </button>
           {!isQueueTask && <button onClick={toggleNotify} className={`w-7 h-7 flex items-center justify-center ${notifyEnabled ? "text-emerald-500" : "text-gray-300"}`}>{notifyEnabled ? <Bell size={16} /> : <BellOff size={16} />}</button>}
           <button onClick={(e) => { e.stopPropagation(); onShare?.(); }} className="w-7 h-7 flex items-center justify-center text-gray-400"><Share2 size={16} /></button>
-          <div className="relative">
-            <button onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v); }} className="w-7 h-7 flex items-center justify-center text-gray-400"><MoreVertical size={17} /></button>
-            {menuOpen && <div className="absolute right-0 top-9 z-30 w-36 rounded-xl border border-gray-100 bg-white p-1.5 shadow-xl">
+          <div className="relative" ref={menuAnchorRef}>
+            <button onClick={toggleMenu} className="w-7 h-7 flex items-center justify-center text-gray-400"><MoreVertical size={17} /></button>
+            {menuOpen && <div className={`absolute right-0 z-30 w-36 rounded-xl border border-gray-100 bg-white p-1.5 shadow-xl ${menuUp ? "bottom-9" : "top-9"}`}>
               <button onClick={(e) => { e.stopPropagation(); onEdit?.(); setMenuOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50"><Edit2 size={14} /> 編輯任務</button>
               {!confirmDelete ? <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }} className="w-full px-3 py-2 text-sm text-rose-500 rounded-lg hover:bg-rose-50">移除</button> : <div className="p-2 text-center"><p className="text-xs text-gray-500 mb-2">確定移除？</p><div className="flex gap-2"><button onClick={(e) => { e.stopPropagation(); onDelete?.(); setMenuOpen(false); }} className="flex-1 text-sm text-rose-500">是</button><button onClick={(e) => { e.stopPropagation(); setConfirmDelete(false); }} className="flex-1 text-sm text-gray-500">否</button></div></div>}
             </div>}
