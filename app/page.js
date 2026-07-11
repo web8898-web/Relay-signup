@@ -239,24 +239,16 @@ export default function HomePage() {
               <ChevronRight size={18} className="text-gray-300 group-hover:text-emerald-400" />
             </button>
 
-            <div className="mt-2">
-              <p className="text-xs font-semibold text-gray-400 mb-2 px-1">使用教學</p>
-              <button
-                onClick={() => {
-                  // 清掉本機的教學進度標記，並立刻從首頁重新開始導覽
-                  resetOnboarding();
-                  setShowTour(true);
-                }}
-                className="group w-full bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-3 text-left shadow-sm hover:shadow-md hover:border-emerald-300 active:scale-[0.98] active:border-emerald-400 transition"
-              >
-                <RotateCcw size={15} className="text-emerald-500 shrink-0" />
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-gray-800">播放建立任務教學</p>
-                  <p className="text-[11px] text-gray-400 mt-0.5">示範基本欄位，進階設定有需要再展開</p>
-                </div>
-                <ChevronRight size={16} className="text-gray-300 group-hover:text-emerald-400 shrink-0" />
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                // 清掉本機的教學進度標記，並立刻從首頁重新開始導覽
+                resetOnboarding();
+                setShowTour(true);
+              }}
+              className="mt-1 mx-auto flex items-center gap-1.5 text-xs text-gray-400 hover:text-emerald-600 active:text-emerald-600 py-2 px-3 transition"
+            >
+              <RotateCcw size={13} className="shrink-0" /> 播放建立任務教學
+            </button>
           </FadeIn>
         )}
 
