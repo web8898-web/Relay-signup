@@ -11,57 +11,73 @@ function normalize(value = "") {
   return String(value).replace(/\s+/g, "").trim();
 }
 
-function findExactText(text) {
-  const wanted = normalize(text);
-  return Array.from(document.querySelectorAll("body *")).find((element) => {
+function findModeSection() {
+  const headings = Array.from(document.querySelectorAll("body *")).filter((element) => {
     if (!(element instanceof HTMLElement)) return false;
-    if (normalize(element.textContent) !== wanted) return false;
-    return !Array.from(element.children).some((child) => normalize(child.textContent) === wanted);
+    return normalize(element.textContent) === "任務模式";
   });
+
+  for (const heading of headings) {
+    let current = heading.parentElement;
+    for (let depth = 0; current instanceof HTMLElement && depth < 7; depth += 1) {
+      const text = normalize(current.textContent);
+      if (text.includes("一般報名") && text.includes("現場排隊")) return current;
+      current = current.parentElement;
+    }
+  }
+
+  return null;
 }
 
-function updateModeCopy(title, nextCopy) {
-  const titleElement = findExactText(title);
-  if (!(titleElement instanceof HTMLElement)) return;
+function updateCardCopy(section, title, nextCopy) {
+  const buttons = Array.from(section.querySelectorAll("button"));
+  const card = buttons.find((button) => {
+    const text = normalize(button.textContent);
+    return text.includes(normalize(title));
+  });
 
-  let card = titleElement.parentElement;
-  for (let depth = 0; card instanceof HTMLElement && depth < 6; depth += 1) {
-    const text = normalize(card.textContent);
-    const hasThisMode = text.includes(normalize(title));
-    const hasOtherMode = text.includes(normalize(title === "一般報名" ? "現場排隊" : "一般報名"));
+  if (!(card instanceof HTMLElement)) return;
 
-    if (hasThisMode && !hasOtherMode) {
-      const candidates = Array.from(card.querySelectorAll("p,span,div")).filter((element) => {
-        if (!(element instanceof HTMLElement)) return false;
-        if (element.children.length > 0) return false;
-        const value = normalize(element.textContent);
-        return value.startsWith("適合") && value !== normalize(nextCopy);
-      });
+  const copyElement = Array.from(card.querySelectorAll("p")).find((element) => {
+    if (!(element instanceof HTMLElement)) return false;
+    const text = normalize(element.textContent);
+    return text.startsWith("適合") || element.dataset.taskModeCopy === title;
+  });
 
-      const copyElement = candidates[0];
-      if (copyElement instanceof HTMLElement) {
-        copyElement.textContent = nextCopy;
-        copyElement.dataset.taskModeCopyUpdated = "true";
-      }
-      return;
-    }
+  if (!(copyElement instanceof HTMLElement)) return;
+  if (copyElement.textContent !== nextCopy) copyElement.textContent = nextCopy;
+  copyElement.dataset.taskModeCopy = title;
+}
 
-    card = card.parentElement;
-  }
+function applyModeCopy() {
+  if (!window.location.pathname.startsWith("/create") || window.location.pathname.startsWith("/create/share")) return;
+
+  const section = findModeSection();
+  if (!(section instanceof HTMLElement)) return;
+
+  Object.entries(MODE_COPY).forEach(([title, copy]) => updateCardCopy(section, title, copy));
 }
 
 export default function TaskModeCopyFix() {
   useEffect(() => {
-    const apply = () => {
-      if (!window.location.pathname.startsWith("/create")) return;
-      Object.entries(MODE_COPY).forEach(([title, copy]) => updateModeCopy(title, copy));
-    };
+    const apply = () => window.requestAnimationFrame(applyModeCopy);
 
     apply();
-    const observer = new MutationObserver(() => window.requestAnimationFrame(apply));
-    observer.observe(document.body, { childList: true, subtree: true });
+    const observer = new MutationObserver(apply);
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
 
-    return () => observer.disconnect();
+    const fallback = window.setInterval(applyModeCopy, 500);
+    const stopFallback = window.setTimeout(() => window.clearInterval(fallback), 8000);
+
+    return () => {
+      observer.disconnect();
+      window.clearInterval(fallback);
+      window.clearTimeout(stopFallback);
+    };
   }, []);
 
   return null;
