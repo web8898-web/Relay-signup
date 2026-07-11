@@ -14,36 +14,61 @@ function findTaskTabs() {
   const listButton = controls.find((element) => normalizeText(element.textContent) === "任務清單");
   if (!(createButton instanceof HTMLElement) || !(listButton instanceof HTMLElement)) return null;
 
+  // Find the real shared tab-bar wrapper. The previous implementation could
+  // accidentally select only one active pill, which caused the large oval
+  // distortion shown on mobile.
   let current = createButton.parentElement;
   while (current && current !== document.body) {
     if (current.contains(listButton)) {
-      const classes = String(current.className || "");
-      if (classes.includes("rounded") || classes.includes("grid") || classes.includes("flex")) {
+      const matchingControls = Array.from(current.querySelectorAll("button,a")).filter((element) => {
+        const text = normalizeText(element.textContent);
+        return text === "建立任務" || text === "任務清單";
+      });
+
+      if (matchingControls.includes(createButton) && matchingControls.includes(listButton)) {
         return current;
       }
     }
     current = current.parentElement;
   }
+
   return null;
 }
 
 function ensureStyles() {
   const styleId = "relay-task-tabs-scroll-fix-styles";
-  if (document.getElementById(styleId)) return;
-  const style = document.createElement("style");
-  style.id = styleId;
+  let style = document.getElementById(styleId);
+  if (!style) {
+    style = document.createElement("style");
+    style.id = styleId;
+    document.head.appendChild(style);
+  }
+
   style.textContent = `
     .relay-task-tabs-in-scroll {
       position: static !important;
       inset: auto !important;
       top: auto !important;
+      left: auto !important;
+      right: auto !important;
       z-index: auto !important;
       width: 100% !important;
+      max-width: 100% !important;
+      height: auto !important;
+      min-height: 0 !important;
       margin: 0.25rem 0 0.75rem !important;
+      transform: none !important;
       flex-shrink: 0 !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+    }
+
+    .relay-task-tabs-in-scroll > * {
+      min-width: 0 !important;
+      max-width: 50% !important;
+      transform: none !important;
     }
   `;
-  document.head.appendChild(style);
 }
 
 export default function TaskTabsScrollFix() {
@@ -85,13 +110,19 @@ export default function TaskTabsScrollFix() {
       scrollArea.insertBefore(tabs, scrollArea.firstChild);
     };
 
-    const scheduleApply = () => window.requestAnimationFrame(apply);
+    let frame = 0;
+    const scheduleApply = () => {
+      cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(apply);
+    };
+
     scheduleApply();
     const observer = new MutationObserver(scheduleApply);
     observer.observe(document.body, { childList: true, subtree: true });
     window.addEventListener("popstate", scheduleApply);
 
     return () => {
+      cancelAnimationFrame(frame);
       observer.disconnect();
       window.removeEventListener("popstate", scheduleApply);
       restore();
