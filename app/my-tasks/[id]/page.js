@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Users, LogIn, MessageCircle, Download, FileSpreadsheet, FileText, CheckCircle2 } from "lucide-react";
+import { Users, LogIn, MessageCircle, Download, FileSpreadsheet, FileText, CheckCircle2, ChevronDown } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import TaskAnnouncement from "@/components/TaskAnnouncement";
 import ThreadList from "@/components/ThreadList";
@@ -23,6 +23,7 @@ export default function MyTaskDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [checkinMode, setCheckinMode] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
 
   // LINE's in-app browser often silently fails to download client-generated
   // blob files, so we hit a real server URL instead and force it open in
@@ -153,9 +154,22 @@ export default function MyTaskDetailPage() {
 
       <div className="px-6 pt-4">
         <TaskAnnouncement task={task} />
-        <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-4 mb-2">
-          <Users size={13} /> {signups.length} 人已接龍
-          {isQueueMode && <span className="text-emerald-500">· 現場排隊</span>}
+        <div className="flex items-center justify-between gap-2 mt-4 mb-2">
+          <div className="flex items-center gap-1.5 text-xs text-gray-400 min-w-0">
+            <Users size={13} className="shrink-0" /> {signups.length} 人已接龍
+            {isQueueMode && <span className="text-emerald-500 shrink-0">· 現場排隊</span>}
+          </div>
+          {signups.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setExportOpen((v) => !v)}
+              className="shrink-0 flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-[11px] font-medium text-gray-500 transition active:scale-95 hover:border-emerald-300 hover:text-emerald-600"
+              aria-expanded={exportOpen}
+            >
+              <Download size={12} /> 匯出名單
+              <ChevronDown size={12} className={`transition-transform ${exportOpen ? "rotate-180" : ""}`} />
+            </button>
+          )}
         </div>
       </div>
 
@@ -165,11 +179,8 @@ export default function MyTaskDetailPage() {
 
       {error && <p className="mx-6 mb-2 text-xs text-rose-500">{error}</p>}
 
-      {signups.length > 0 && (
+      {signups.length > 0 && exportOpen && (
         <div className="mx-6 mb-3 bg-gray-50 border border-gray-100 rounded-2xl p-3">
-          <p className="text-[11px] font-medium text-gray-400 mb-2 flex items-center gap-1">
-            <Download size={12} /> 匯出名單
-          </p>
           <div className="flex gap-2">
             <button
               onClick={handleExportCsv}
