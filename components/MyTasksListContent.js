@@ -368,25 +368,17 @@ export default function MyTasksListContent() {
         )}
 
         {tasks.length > 0 && (
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between gap-2 px-1">
-              <div className="relative flex-1">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
-                <input value={taskSearch} onChange={(e) => setTaskSearch(e.target.value)} placeholder="搜尋任務..." className="w-full rounded-full border border-gray-100 bg-gray-50 py-2 pl-9 pr-9 text-xs text-gray-600 outline-none focus:border-emerald-200 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition" />
-                {taskSearch && (
-                  <button onClick={() => setTaskSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full text-gray-300 hover:text-gray-500 flex items-center justify-center" aria-label="清除搜尋"><X size={13} /></button>
-                )}
-              </div>
-              <button onClick={editMode ? leaveEditMode : enterEditMode} className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold transition ${editMode ? "bg-gray-100 text-gray-500" : "bg-emerald-50 text-emerald-600 border border-emerald-100"}`}>
-                {editMode ? "完成" : "編輯"}
-              </button>
+          <div className="flex items-center justify-between gap-2 px-1">
+            <div className="relative flex-1">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
+              <input value={taskSearch} onChange={(e) => setTaskSearch(e.target.value)} placeholder="搜尋任務..." className="w-full rounded-full border border-gray-100 bg-gray-50 py-2 pl-9 pr-9 text-xs text-gray-600 outline-none focus:border-emerald-200 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition" />
+              {taskSearch && (
+                <button onClick={() => setTaskSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full text-gray-300 hover:text-gray-500 flex items-center justify-center" aria-label="清除搜尋"><X size={13} /></button>
+              )}
             </div>
-
-            <div className="flex items-center flex-wrap gap-x-3 gap-y-1 px-2">
-              <span className="flex items-center gap-1 text-[10px] text-gray-400"><span className="w-2 h-2 rounded-full bg-emerald-500" /> 進行中</span>
-              <span className="flex items-center gap-1 text-[10px] text-gray-400"><span className="w-2 h-2 rounded-full bg-rose-500" /> 已額滿</span>
-              <span className="flex items-center gap-1 text-[10px] text-gray-400"><span className="w-2 h-2 rounded-full bg-gray-400" /> 已結束</span>
-            </div>
+            <button onClick={editMode ? leaveEditMode : enterEditMode} className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold transition ${editMode ? "bg-gray-100 text-gray-500" : "bg-emerald-50 text-emerald-600 border border-emerald-100"}`}>
+              {editMode ? "完成" : "編輯"}
+            </button>
           </div>
         )}
 
@@ -399,12 +391,19 @@ export default function MyTasksListContent() {
           </div>
         )}
 
-        {filteredTasks.map((t) => {
+        {filteredTasks.map((t, index) => {
           const selected = selectedTaskIds.has(t.id);
           return (
             <div key={t.id} className="rounded-2xl bg-white transition" onClickCapture={(event) => handleTaskClickCapture(event, t.id)}>
-              <div className="mb-1.5 px-3 text-[11px] text-gray-400">
-                <span className="inline-flex items-center gap-1"><CalendarDays size={12} /> {formatDateRange(t)}</span>
+              <div className="mb-1.5 px-3 flex items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1 text-[11px] text-gray-400"><CalendarDays size={12} /> {formatDateRange(t)}</span>
+                {index === 0 && (
+                  <span className="flex items-center gap-x-2.5 gap-y-0.5 flex-wrap justify-end">
+                    <span className="flex items-center gap-1 text-[10px] text-gray-400"><span className="w-2 h-2 rounded-full bg-emerald-500" /> 進行中</span>
+                    <span className="flex items-center gap-1 text-[10px] text-gray-400"><span className="w-2 h-2 rounded-full bg-rose-500" /> 已額滿</span>
+                    <span className="flex items-center gap-1 text-[10px] text-gray-400"><span className="w-2 h-2 rounded-full bg-gray-400" /> 已結束</span>
+                  </span>
+                )}
               </div>
               <div className={`relative flex items-stretch gap-1.5 transition ${editMode ? "-ml-0.5" : ""}`}>
                 {editMode && (
