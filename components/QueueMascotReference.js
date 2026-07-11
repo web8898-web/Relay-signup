@@ -55,7 +55,8 @@ function ensureStyles() {
     .queue-reference-yawn .queue-reference-normal-mouth{opacity:0}
     .queue-reference-yawn .queue-reference-yawn-mouth,
     .queue-reference-yawn .queue-reference-yawn-hand{animation:queueReferenceHandsIn 3s ease-in-out 1}
-    .queue-reference-stretch svg{animation:queueReferenceStretch 3.2s ease-in-out 1}
+    .queue-reference-stretch .queue-reference-body,
+    .queue-reference-stretch .queue-reference-head{animation:queueReferenceStretch 3.2s ease-in-out 1;transform-box:fill-box;transform-origin:center bottom}
     .queue-reference-stretch .queue-reference-stretch-hands{animation:queueReferenceHandsIn 3.2s ease-in-out 1}
     .queue-reference-watch svg{animation:queueReferenceWatch 2.8s ease-in-out 1}
     .queue-reference-watch .queue-reference-watch-prop,
