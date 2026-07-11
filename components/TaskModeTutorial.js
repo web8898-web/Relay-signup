@@ -25,6 +25,31 @@ const tutorials = {
   },
 };
 
+function QueueTutorialMascot() {
+  return (
+    <svg
+      className="task-tutorial-queue-mascot"
+      viewBox="0 0 96 120"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <g fill="none" stroke="#6d5b54" strokeLinecap="round" strokeLinejoin="round" strokeWidth="5">
+        <circle cx="48" cy="35" r="29" fill="#fff" />
+        <path d="M28 58v24M68 58v24" />
+        <path d="M28 63c6 4 12 6 20 6s14-2 20-6" />
+        <rect x="34" y="68" width="13" height="40" rx="7" fill="#fff" />
+        <rect x="49" y="68" width="13" height="40" rx="7" fill="#fff" />
+        <path d="M27 55c2 8 8 13 16 16M69 55c-2 8-8 13-16 16" />
+      </g>
+      <circle cx="38" cy="33" r="3.4" fill="#6d5b54" />
+      <circle cx="58" cy="33" r="3.4" fill="#6d5b54" />
+      <path d="M40 43c5 5 11 5 16 0" fill="none" stroke="#6d5b54" strokeLinecap="round" strokeWidth="4" />
+      <ellipse cx="29" cy="43" rx="8" ry="5.5" fill="#f6b8c5" />
+      <ellipse cx="67" cy="43" rx="8" ry="5.5" fill="#f6b8c5" />
+    </svg>
+  );
+}
+
 function normalize(value = "") {
   return String(value).replace(/\s+/g, "").trim();
 }
@@ -155,11 +180,14 @@ function ensureStyles() {
     .task-tutorial-step-content{min-width:0;flex:1;overflow:visible}
     .task-tutorial-step-title{font-size:clamp(12px,3.7vw,14px);letter-spacing:-.045em}
     .task-tutorial-step-copy{font-size:clamp(9px,2.9vw,12px);letter-spacing:-.055em;line-height:1.35}
+    .task-tutorial-steps{position:relative}
+    .task-tutorial-queue-mascot{position:absolute;z-index:5;top:-47px;right:54px;width:58px;height:auto;overflow:visible;pointer-events:none}
     @media(max-width:360px){
       .task-tutorial-title{font-size:15px}
       .task-tutorial-subtitle{font-size:9px}
       .task-tutorial-step-title{font-size:11px}
       .task-tutorial-step-copy{font-size:8px;letter-spacing:-.07em}
+      .task-tutorial-queue-mascot{top:-43px;right:47px;width:52px}
     }
 
     @keyframes taskTutorialBackdropIn{from{opacity:0}to{opacity:1}}
@@ -259,7 +287,8 @@ export default function TaskModeTutorial() {
               </div>
               <button onClick={closeTutorial} className="w-9 h-9 shrink-0 rounded-full bg-gray-100 text-gray-500">✕</button>
             </div>
-            <div className="mt-5 space-y-3">
+            <div className="task-tutorial-steps mt-5 space-y-3">
+              {type === "queue" && <QueueTutorialMascot />}
               {tutorial.steps.map(([number, title, copy]) => (
                 <div key={number} className="flex items-center gap-3 rounded-2xl bg-emerald-50/70 p-4">
                   <div className="w-8 h-8 shrink-0 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-bold">{number}</div>
