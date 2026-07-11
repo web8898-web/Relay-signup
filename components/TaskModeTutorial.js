@@ -165,19 +165,19 @@ function ensureStyles() {
     @keyframes taskTutorialBackdropOut{from{opacity:1}to{opacity:0}}
     @keyframes taskTutorialSheetIn{from{transform:translate3d(0,100%,0);opacity:.96}to{transform:translate3d(0,0,0);opacity:1}}
     @keyframes taskTutorialSheetOut{from{transform:translate3d(0,0,0);opacity:1}to{transform:translate3d(0,100%,0);opacity:.96}}
-    @keyframes taskTutorialSwapOutLeft{from{transform:translate3d(0,0,0);opacity:1}to{transform:translate3d(-34px,0,0);opacity:0}}
-    @keyframes taskTutorialSwapInRight{from{transform:translate3d(34px,0,0);opacity:0}to{transform:translate3d(0,0,0);opacity:1}}
-    @keyframes taskTutorialSwapOutRight{from{transform:translate3d(0,0,0);opacity:1}to{transform:translate3d(34px,0,0);opacity:0}}
-    @keyframes taskTutorialSwapInLeft{from{transform:translate3d(-34px,0,0);opacity:0}to{transform:translate3d(0,0,0);opacity:1}}
+    @keyframes taskTutorialSwapOutLeft{from{transform:translate3d(0,0,0)}to{transform:translate3d(-108%,0,0)}}
+    @keyframes taskTutorialSwapInRight{from{transform:translate3d(108%,0,0)}to{transform:translate3d(0,0,0)}}
+    @keyframes taskTutorialSwapOutRight{from{transform:translate3d(0,0,0)}to{transform:translate3d(108%,0,0)}}
+    @keyframes taskTutorialSwapInLeft{from{transform:translate3d(-108%,0,0)}to{transform:translate3d(0,0,0)}}
     .task-tutorial-backdrop-open{animation:taskTutorialBackdropIn 260ms ease-out both}
     .task-tutorial-backdrop-close{animation:taskTutorialBackdropOut 300ms ease-in both}
     .task-tutorial-sheet-open{animation:taskTutorialSheetIn 360ms cubic-bezier(.22,.8,.3,1) both;will-change:transform,opacity}
     .task-tutorial-sheet-close{animation:taskTutorialSheetOut 320ms cubic-bezier(.4,0,.8,.2) both;will-change:transform,opacity}
-    .task-tutorial-content{will-change:transform,opacity}
-    .task-tutorial-swap-out-forward{animation:taskTutorialSwapOutLeft 160ms ease-in both}
-    .task-tutorial-swap-in-forward{animation:taskTutorialSwapInRight 240ms cubic-bezier(.22,.8,.3,1) both}
-    .task-tutorial-swap-out-backward{animation:taskTutorialSwapOutRight 160ms ease-in both}
-    .task-tutorial-swap-in-backward{animation:taskTutorialSwapInLeft 240ms cubic-bezier(.22,.8,.3,1) both}
+    .task-tutorial-content{width:100%;will-change:transform;backface-visibility:hidden;transform:translateZ(0)}
+    .task-tutorial-swap-out-forward{animation:taskTutorialSwapOutLeft 260ms cubic-bezier(.4,0,.8,.2) both}
+    .task-tutorial-swap-in-forward{animation:taskTutorialSwapInRight 300ms cubic-bezier(.22,.8,.3,1) both}
+    .task-tutorial-swap-out-backward{animation:taskTutorialSwapOutRight 260ms cubic-bezier(.4,0,.8,.2) both}
+    .task-tutorial-swap-in-backward{animation:taskTutorialSwapInLeft 300ms cubic-bezier(.22,.8,.3,1) both}
     @media(prefers-reduced-motion:reduce){
       .task-tutorial-backdrop-open,.task-tutorial-backdrop-close,.task-tutorial-sheet-open,.task-tutorial-sheet-close,.task-tutorial-swap-out-forward,.task-tutorial-swap-in-forward,.task-tutorial-swap-out-backward,.task-tutorial-swap-in-backward{animation-duration:1ms!important}
       .task-mode-help-option{transition-duration:1ms!important}
@@ -216,8 +216,8 @@ export default function TaskModeTutorial() {
       window.setTimeout(() => {
         setSwapPhase("idle");
         setSwitching(false);
-      }, 240);
-    }, 160);
+      }, 300);
+    }, 260);
   }
 
   function closeTutorial() {
