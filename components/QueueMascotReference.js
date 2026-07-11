@@ -19,9 +19,7 @@ function ensureStyles() {
   const style = document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = `
-    @keyframes queueReferenceFirst {
-      0%,100%{transform:translateY(0) scale(1)}38%{transform:translateY(-5px) scale(1.04)}72%{transform:translateY(0) scale(.99)}
-    }
+    @keyframes queueReferenceFirst {0%,100%{transform:translateY(0) scale(1)}38%{transform:translateY(-5px) scale(1.04)}72%{transform:translateY(0) scale(.99)}}
     @keyframes queueReferencePhone {0%,100%{transform:rotate(0)}25%,75%{transform:rotate(2deg)}}
     @keyframes queueReferenceLook {0%,100%{transform:rotate(0)}25%,42%{transform:rotate(-7deg)}60%,78%{transform:rotate(7deg)}}
     @keyframes queueReferenceYawn {0%,100%{transform:translateY(0)}30%,70%{transform:translateY(2px)}}
@@ -40,6 +38,14 @@ function ensureStyles() {
     .queue-reference-blink .queue-reference-eye{transform:scaleY(.08)}
     .queue-reference-prop,.queue-reference-action-hands,.queue-reference-yawn-mouth{opacity:0;transform-box:fill-box;transform-origin:center}
     .queue-reference-normal-mouth{opacity:1}
+    .queue-reference-rest-arm{opacity:1;transition:opacity 80ms ease}
+
+    .queue-reference-phone .queue-reference-rest-arm-left{opacity:0}
+    .queue-reference-yawn .queue-reference-rest-arm,
+    .queue-reference-stretch .queue-reference-rest-arm,
+    .queue-reference-watch .queue-reference-rest-arm,
+    .queue-reference-drink .queue-reference-rest-arm,
+    .queue-reference-read .queue-reference-rest-arm{opacity:0}
 
     .queue-reference-phone svg{animation:queueReferencePhone 4.6s ease-in-out 1}
     .queue-reference-phone .queue-reference-phone-prop,
@@ -78,7 +84,8 @@ function mascotSvg() {
       <path d="M39 118v18M136 118v18" stroke="#72B993" stroke-width="4" stroke-linecap="round"/>
       <g class="queue-reference-body">
         <path d="M57 77c6-8 17-13 30-13s24 5 30 13v28H57V77Z" fill="#FFFDFC" stroke="#6A574F" stroke-width="4"/>
-        <path d="M64 86c7 0 13 5 17 11M110 86c-7 0-13 5-17 11" fill="none" stroke="#6A574F" stroke-width="4" stroke-linecap="round"/>
+        <path class="queue-reference-rest-arm queue-reference-rest-arm-left" d="M64 86c7 0 13 5 17 11" fill="none" stroke="#6A574F" stroke-width="4" stroke-linecap="round"/>
+        <path class="queue-reference-rest-arm queue-reference-rest-arm-right" d="M110 86c-7 0-13 5-17 11" fill="none" stroke="#6A574F" stroke-width="4" stroke-linecap="round"/>
         <rect x="69" y="99" width="17" height="38" rx="9" fill="#FFFDFC" stroke="#6A574F" stroke-width="4"/>
         <rect x="88" y="99" width="17" height="38" rx="9" fill="#FFFDFC" stroke="#6A574F" stroke-width="4"/>
       </g>
@@ -94,19 +101,14 @@ function mascotSvg() {
 
       <g class="queue-reference-prop queue-reference-phone-prop"><rect x="78" y="78" width="19" height="30" rx="4" fill="#4B5563" stroke="#374151" stroke-width="3"/><rect x="82" y="82" width="11" height="18" rx="2" fill="#DDF3EA"/></g>
       <g class="queue-reference-action-hands queue-reference-phone-hands" fill="#FFFDFC" stroke="#6A574F" stroke-width="4"><circle cx="74" cy="91" r="8"/><circle cx="101" cy="91" r="8"/></g>
-
       <g class="queue-reference-action-hands queue-reference-yawn-hand" fill="#FFFDFC" stroke="#6A574F" stroke-width="4"><circle cx="101" cy="63" r="8"/></g>
       <g class="queue-reference-action-hands queue-reference-stretch-hands" fill="none" stroke="#6A574F" stroke-width="5" stroke-linecap="round"><path d="M67 85C52 65 50 48 56 34"/><path d="M107 85c15-20 17-37 11-51"/></g>
-
       <g class="queue-reference-prop queue-reference-watch-prop"><circle cx="66" cy="88" r="8" fill="#fff" stroke="#55B786" stroke-width="3"/><path d="M66 84v5l3 2" stroke="#55B786" stroke-width="2" fill="none" stroke-linecap="round"/></g>
       <g class="queue-reference-action-hands queue-reference-watch-hands" fill="#FFFDFC" stroke="#6A574F" stroke-width="4"><circle cx="74" cy="91" r="8"/></g>
-
       <g class="queue-reference-prop queue-reference-drink-prop"><rect x="78" y="75" width="22" height="31" rx="5" fill="#55B786" stroke="#3D8F6D" stroke-width="3"/><path d="M89 75V64" stroke="#6A574F" stroke-width="3" stroke-linecap="round"/></g>
       <g class="queue-reference-action-hands queue-reference-drink-hands" fill="#FFFDFC" stroke="#6A574F" stroke-width="4"><circle cx="74" cy="88" r="8"/><circle cx="104" cy="88" r="8"/></g>
-
       <g class="queue-reference-prop queue-reference-book-prop"><path d="M61 82q14-7 27 2v25q-13-8-27-2Z" fill="#55B786" stroke="#3D8F6D" stroke-width="3"/><path d="M115 82q-14-7-27 2v25q13-8 27-2Z" fill="#55B786" stroke="#3D8F6D" stroke-width="3"/></g>
       <g class="queue-reference-action-hands queue-reference-book-hands" fill="#FFFDFC" stroke="#6A574F" stroke-width="4"><circle cx="60" cy="96" r="7"/><circle cx="116" cy="96" r="7"/></g>
-
       <circle cx="151" cy="25" r="17" fill="#FFFDFC" stroke="#72B993" stroke-width="4"/>
       <path d="M151 14v12l8 5" fill="none" stroke="#72B993" stroke-width="4" stroke-linecap="round"/>
     </svg>`;
