@@ -3,6 +3,7 @@ import LiffBootstrap from "@/components/LiffBootstrap";
 import LiffTransitionOverlay from "@/components/LiffTransitionOverlay";
 import QueueLiveStatusLabel from "@/components/QueueLiveStatusLabel";
 import QueueMascotReference from "@/components/QueueMascotReference";
+import QueueMascotOverflowFix from "@/components/QueueMascotOverflowFix";
 import QueueJoinAutoFocus from "@/components/QueueJoinAutoFocus";
 
 const APP_TITLE = "接龍報名小助手";
@@ -91,6 +92,7 @@ export default function RootLayout({ children }) {
         <LiffTransitionOverlay />
         <QueueLiveStatusLabel />
         <QueueMascotReference />
+        <QueueMascotOverflowFix />
         <QueueJoinAutoFocus />
         <div className="w-full max-w-md mx-auto min-h-screen bg-white shadow-xl relative flex flex-col">
           {children}
