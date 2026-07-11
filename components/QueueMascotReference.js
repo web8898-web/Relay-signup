@@ -47,24 +47,29 @@ function ensureStyles() {
     .queue-reference-drink .queue-reference-rest-arm,
     .queue-reference-read .queue-reference-rest-arm{opacity:0}
 
-    .queue-reference-phone svg{animation:queueReferencePhone 4.6s ease-in-out 1}
+    .queue-reference-phone .queue-reference-body,
+    .queue-reference-phone .queue-reference-head{animation:queueReferencePhone 4.6s ease-in-out 1;transform-box:fill-box;transform-origin:center bottom}
     .queue-reference-phone .queue-reference-phone-prop,
     .queue-reference-phone .queue-reference-phone-hands{animation:queueReferenceItemIn 4.6s ease-in-out 1}
     .queue-reference-look .queue-reference-head{animation:queueReferenceLook 2.8s ease-in-out 1;transform-box:fill-box;transform-origin:center}
-    .queue-reference-yawn svg{animation:queueReferenceYawn 3s ease-in-out 1}
+    .queue-reference-yawn .queue-reference-body,
+    .queue-reference-yawn .queue-reference-head{animation:queueReferenceYawn 3s ease-in-out 1;transform-box:fill-box;transform-origin:center bottom}
     .queue-reference-yawn .queue-reference-normal-mouth{opacity:0}
     .queue-reference-yawn .queue-reference-yawn-mouth,
     .queue-reference-yawn .queue-reference-yawn-hand{animation:queueReferenceHandsIn 3s ease-in-out 1}
     .queue-reference-stretch .queue-reference-body,
     .queue-reference-stretch .queue-reference-head{animation:queueReferenceStretch 3.2s ease-in-out 1;transform-box:fill-box;transform-origin:center bottom}
     .queue-reference-stretch .queue-reference-stretch-hands{animation:queueReferenceHandsIn 3.2s ease-in-out 1}
-    .queue-reference-watch svg{animation:queueReferenceWatch 2.8s ease-in-out 1}
+    .queue-reference-watch .queue-reference-body,
+    .queue-reference-watch .queue-reference-head{animation:queueReferenceWatch 2.8s ease-in-out 1;transform-box:fill-box;transform-origin:center bottom}
     .queue-reference-watch .queue-reference-watch-prop,
     .queue-reference-watch .queue-reference-watch-hands{animation:queueReferenceHandsIn 2.8s ease-in-out 1}
-    .queue-reference-drink svg{animation:queueReferenceDrink 3.8s ease-in-out 1}
+    .queue-reference-drink .queue-reference-body,
+    .queue-reference-drink .queue-reference-head{animation:queueReferenceDrink 3.8s ease-in-out 1;transform-box:fill-box;transform-origin:center bottom}
     .queue-reference-drink .queue-reference-drink-prop,
     .queue-reference-drink .queue-reference-drink-hands{animation:queueReferenceItemIn 3.8s ease-in-out 1}
-    .queue-reference-read svg{animation:queueReferenceRead 4.2s ease-in-out 1}
+    .queue-reference-read .queue-reference-body,
+    .queue-reference-read .queue-reference-head{animation:queueReferenceRead 4.2s ease-in-out 1;transform-box:fill-box;transform-origin:center bottom}
     .queue-reference-read .queue-reference-book-prop,
     .queue-reference-read .queue-reference-book-hands{animation:queueReferenceItemIn 4.2s ease-in-out 1}
 
