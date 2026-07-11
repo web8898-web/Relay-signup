@@ -29,23 +29,23 @@ function QueueTutorialMascot() {
   return (
     <svg
       className="task-tutorial-queue-mascot"
-      viewBox="0 0 96 120"
+      viewBox="0 0 80 96"
       aria-hidden="true"
       focusable="false"
     >
-      <g fill="none" stroke="#6d5b54" strokeLinecap="round" strokeLinejoin="round" strokeWidth="5">
-        <circle cx="48" cy="35" r="29" fill="#fff" />
-        <path d="M28 58v24M68 58v24" />
-        <path d="M28 63c6 4 12 6 20 6s14-2 20-6" />
-        <rect x="34" y="68" width="13" height="40" rx="7" fill="#fff" />
-        <rect x="49" y="68" width="13" height="40" rx="7" fill="#fff" />
-        <path d="M27 55c2 8 8 13 16 16M69 55c-2 8-8 13-16 16" />
+      <g fill="none" stroke="#6d5b54" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4">
+        <circle cx="40" cy="27" r="22" fill="#fff" />
+        <path d="M25 48v20h30V48" fill="#fff" />
+        <path d="M25 51c4 5 9 8 15 8s11-3 15-8" />
+        <path d="M25 49c3 8 8 12 15 15M55 49c-3 8-8 12-15 15" />
+        <rect x="31" y="60" width="9" height="27" rx="5" fill="#fff" />
+        <rect x="40" y="60" width="9" height="27" rx="5" fill="#fff" />
       </g>
-      <circle cx="38" cy="33" r="3.4" fill="#6d5b54" />
-      <circle cx="58" cy="33" r="3.4" fill="#6d5b54" />
-      <path d="M40 43c5 5 11 5 16 0" fill="none" stroke="#6d5b54" strokeLinecap="round" strokeWidth="4" />
-      <ellipse cx="29" cy="43" rx="8" ry="5.5" fill="#f6b8c5" />
-      <ellipse cx="67" cy="43" rx="8" ry="5.5" fill="#f6b8c5" />
+      <circle cx="33" cy="26" r="2.6" fill="#6d5b54" />
+      <circle cx="47" cy="26" r="2.6" fill="#6d5b54" />
+      <path d="M34 34c4 4 8 4 12 0" fill="none" stroke="#6d5b54" strokeLinecap="round" strokeWidth="3" />
+      <ellipse cx="26" cy="34" rx="6" ry="4" fill="#f6b8c5" />
+      <ellipse cx="54" cy="34" rx="6" ry="4" fill="#f6b8c5" />
     </svg>
   );
 }
@@ -128,7 +128,6 @@ function bindAdvancedAutoPosition(advanced, section) {
         const afterHeight = section.getBoundingClientRect().height;
         const expanded = afterHeight > beforeHeight + 20;
         if (!expanded) return;
-
         scrollAdvancedIntoComfortableView(advanced);
       }, delay);
     });
@@ -181,13 +180,13 @@ function ensureStyles() {
     .task-tutorial-step-title{font-size:clamp(12px,3.7vw,14px);letter-spacing:-.045em}
     .task-tutorial-step-copy{font-size:clamp(9px,2.9vw,12px);letter-spacing:-.055em;line-height:1.35}
     .task-tutorial-steps{position:relative}
-    .task-tutorial-queue-mascot{position:absolute;z-index:5;top:-47px;right:54px;width:58px;height:auto;overflow:visible;pointer-events:none}
+    .task-tutorial-queue-mascot{position:absolute;z-index:5;top:-31px;right:62px;width:42px;height:auto;overflow:visible;pointer-events:none}
     @media(max-width:360px){
       .task-tutorial-title{font-size:15px}
       .task-tutorial-subtitle{font-size:9px}
       .task-tutorial-step-title{font-size:11px}
       .task-tutorial-step-copy{font-size:8px;letter-spacing:-.07em}
-      .task-tutorial-queue-mascot{top:-43px;right:47px;width:52px}
+      .task-tutorial-queue-mascot{top:-29px;right:55px;width:39px}
     }
 
     @keyframes taskTutorialBackdropIn{from{opacity:0}to{opacity:1}}
@@ -229,7 +228,6 @@ export default function TaskModeTutorial() {
     const apply = () => {
       if (!window.location.pathname.startsWith("/create") || window.location.pathname.startsWith("/create/share")) return;
       ensureStyles();
-
       document.querySelectorAll("[data-task-advanced-help]").forEach((element) => element.remove());
 
       const general = findLeaf("一般報名");
@@ -265,7 +263,6 @@ export default function TaskModeTutorial() {
     apply();
     const observer = new MutationObserver(() => window.requestAnimationFrame(apply));
     observer.observe(document.body, { childList: true, subtree: true });
-
     return () => observer.disconnect();
   }, []);
 
