@@ -5,6 +5,7 @@ import QueueLiveStatusLabel from "@/components/QueueLiveStatusLabel";
 import QueueMascotReference from "@/components/QueueMascotReference";
 import QueueMascotOverflowFix from "@/components/QueueMascotOverflowFix";
 import QueueMascotDetailFix from "@/components/QueueMascotDetailFix";
+import QueueSmallScreenFix from "@/components/QueueSmallScreenFix";
 import QueueJoinAutoFocus from "@/components/QueueJoinAutoFocus";
 import TaskShareImageActionFix from "@/components/TaskShareImageActionFix";
 
@@ -96,6 +97,7 @@ export default function RootLayout({ children }) {
         <QueueMascotReference />
         <QueueMascotOverflowFix />
         <QueueMascotDetailFix />
+        <QueueSmallScreenFix />
         <QueueJoinAutoFocus />
         <TaskShareImageActionFix />
         <div className="w-full max-w-md mx-auto min-h-screen bg-white shadow-xl relative flex flex-col">
