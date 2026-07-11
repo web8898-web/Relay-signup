@@ -46,6 +46,23 @@ function ensureStyles() {
       box-sizing: border-box !important;
     }
 
+    .queue-small-screen-position-message {
+      display: block !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      padding-inline: 4px !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
+      text-align: center !important;
+      white-space: nowrap !important;
+      word-break: keep-all !important;
+      overflow-wrap: normal !important;
+      line-height: 1.35 !important;
+      font-size: clamp(15px, 4.6vw, 21px) !important;
+      letter-spacing: -0.035em !important;
+      box-sizing: border-box !important;
+    }
+
     .queue-small-screen-action-row {
       display: grid !important;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
@@ -82,6 +99,11 @@ function ensureStyles() {
         letter-spacing: -0.04em !important;
       }
 
+      .queue-small-screen-position-message {
+        font-size: clamp(13px, 4.2vw, 16px) !important;
+        letter-spacing: -0.055em !important;
+      }
+
       .queue-small-screen-action-button {
         padding-left: 8px !important;
         padding-right: 8px !important;
@@ -99,6 +121,11 @@ function ensureStyles() {
       .queue-small-screen-sync-label {
         white-space: normal !important;
         text-overflow: initial !important;
+      }
+
+      .queue-small-screen-position-message {
+        font-size: 12px !important;
+        letter-spacing: -0.07em !important;
       }
     }
   `;
@@ -118,6 +145,15 @@ function isLeafTextElement(element, text) {
   );
 }
 
+function isPositionMessage(element) {
+  if (!(element instanceof HTMLElement)) return false;
+  const text = normalizedText(element);
+  if (!/^你前面(?:還)?有\d+位[，,]請稍(?:候|後)[。.]?$/.test(text)) return false;
+  return !Array.from(element.children).some(
+    (child) => child instanceof HTMLElement && normalizedText(child) === text
+  );
+}
+
 function findTwoColumnAncestor(element, requiredTexts) {
   let current = element?.parentElement;
   for (let depth = 0; current instanceof HTMLElement && depth < 5; depth += 1) {
@@ -132,13 +168,14 @@ function findTwoColumnAncestor(element, requiredTexts) {
 
 function clearOldMarks() {
   document.querySelectorAll(
-    ".queue-small-screen-stats-row,.queue-small-screen-stat-card,.queue-small-screen-sync-label,.queue-small-screen-action-row,.queue-small-screen-action-button"
+    ".queue-small-screen-stats-row,.queue-small-screen-stat-card,.queue-small-screen-sync-label,.queue-small-screen-position-message,.queue-small-screen-action-row,.queue-small-screen-action-button"
   ).forEach((element) => {
     if (!(element instanceof HTMLElement)) return;
     element.classList.remove(
       "queue-small-screen-stats-row",
       "queue-small-screen-stat-card",
       "queue-small-screen-sync-label",
+      "queue-small-screen-position-message",
       "queue-small-screen-action-row",
       "queue-small-screen-action-button"
     );
@@ -150,6 +187,11 @@ function applyFixes() {
   clearOldMarks();
 
   const elements = Array.from(document.querySelectorAll("body *"));
+
+  const positionMessage = elements.find((element) => isPositionMessage(element));
+  if (positionMessage instanceof HTMLElement) {
+    positionMessage.classList.add("queue-small-screen-position-message");
+  }
 
   const syncLabel = elements.find((element) => isLeafTextElement(element, "排隊狀態即時同步"));
   if (syncLabel instanceof HTMLElement) {
