@@ -12,6 +12,27 @@ import { liff } from "@/lib/liff";
 
 const EXPAND_EVENT = "relay-task-card-stable-expand";
 
+// 報名人數達到這個數量才顯示搜尋框與分類篩選，人少時保持卡片清爽。
+const SEARCH_MIN_SIGNUPS = 5;
+
+// 精簡日期區間：同一年只在開頭顯示一次年份，例如 2026/7/11 ~ 9/18。
+function formatRange(start, end) {
+  const parse = (v) => {
+    if (!v) return null;
+    const p = String(v).split("-");
+    if (p.length !== 3) return null;
+    return { y: Number(p[0]), m: Number(p[1]), d: Number(p[2]) };
+  };
+  const s = parse(start);
+  const e = parse(end);
+  if (!s && !e) return `${start ?? ""} ~ ${end ?? ""}`;
+  if (!s) return `${e.y}/${e.m}/${e.d}`;
+  if (!e) return `${s.y}/${s.m}/${s.d}`;
+  const left = `${s.y}/${s.m}/${s.d}`;
+  const right = s.y === e.y ? `${e.m}/${e.d}` : `${e.y}/${e.m}/${e.d}`;
+  return `${left} ~ ${right}`;
+}
+
 export default function TaskListCardStable({ task, signups = [], accessToken, onEdit, onDelete, onShare }) {
   const [expanded, setExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -33,7 +54,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
   const signupCount = signups.length;
   const isClosed = st.label === "已截止";
   const isQueueTask = isQueueTaskConfig(task);
-  const showSearch = !isQueueTask && signups.length > 0;
+  const showSearch = !isQueueTask && signups.length >= SEARCH_MIN_SIGNUPS;
 
   useEffect(() => {
     function closeOtherCard(event) {
@@ -230,8 +251,9 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
   for (const signup of signups) for (const category of signup.categories || []) categoryCounts[category] = (categoryCounts[category] || 0) + 1;
 
   const filteredSignups = useMemo(() => {
-    const keyword = isQueueTask ? "" : searchText.trim().toLowerCase();
-    let list = isQueueTask || filter === "全部" ? signups : signups.filter((s) => s.categories?.includes(filter));
+    const toolsActive = !isQueueTask && signups.length >= SEARCH_MIN_SIGNUPS;
+    const keyword = toolsActive ? searchText.trim().toLowerCase() : "";
+    let list = !toolsActive || filter === "全部" ? signups : signups.filter((s) => s.categories?.includes(filter));
     if (keyword) list = list.filter((s) => [s.name, s.note, ...(s.categories || [])].filter(Boolean).join(" ").toLowerCase().includes(keyword));
     if (isQueueTask && checkinMode) list = [...list].sort((a, b) => Number(checkedIds.has(a.id)) - Number(checkedIds.has(b.id)) || new Date(a.created_at) - new Date(b.created_at));
     return list;
@@ -260,7 +282,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
           <div className="bg-emerald-50/60 border border-emerald-100 rounded-xl px-3.5 py-3 mb-3">
             <div className="flex items-center justify-between mb-1.5"><span className={`text-[10px] px-2 py-0.5 rounded-full border ${isFull ? "bg-rose-100 text-rose-600 border-rose-200" : st.cls}`}>{isFull ? "已額滿" : st.label}</span>{isQueueTask && <span className="text-[10px] px-2 py-0.5 rounded-full border border-sky-100 bg-sky-50 text-sky-600">現場排隊</span>}</div>
             {task.description && <p className="text-sm text-gray-600 mb-2 whitespace-pre-wrap">{task.description}</p>}
-            <div className="flex flex-wrap items-center gap-x-3 text-[11px] text-gray-400"><span className="flex items-center gap-1"><Calendar size={12} />{task.start_date} ~ {task.end_date}</span><span className="flex items-center gap-1"><Users size={12} />{signupCount} 人已報名</span></div>
+            <div className="flex flex-wrap items-center gap-x-3 text-[11px] text-gray-400"><span className="flex items-center gap-1"><Calendar size={12} />{formatRange(task.start_date, task.end_date)}</span><span className="flex items-center gap-1"><Users size={12} />{signupCount} 人已報名</span></div>
             {task.note && <p className="text-xs text-gray-400 mt-2 border-t border-emerald-100 pt-2 whitespace-pre-wrap">備註：{task.note}</p>}
           </div>
 
@@ -295,7 +317,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
               </> : <div className="flex flex-wrap gap-1.5"><button onClick={(e) => { e.stopPropagation(); setAllCheckin(true); }} className="text-[10px] text-emerald-600 border border-emerald-200 rounded-full px-2 py-0.5">全部已到</button><button onClick={(e) => { e.stopPropagation(); setAllCheckin(false); }} className="text-[10px] text-gray-500 border border-gray-200 rounded-full px-2 py-0.5"><RotateCcw size={11} className="inline" /> 重設</button><button onClick={(e) => { e.stopPropagation(); const absent = signups.filter((s) => !checkedIds.has(s.id)).map((s) => s.name); navigator.clipboard?.writeText(`未報到（${absent.length} 位）：\n${absent.join("、")}`); }} className="text-[10px] text-gray-500 border border-gray-200 rounded-full px-2 py-0.5"><Copy size={11} className="inline" /> 複製未到名單</button></div>}
             </div>}
 
-            {!isQueueTask && task.categories?.length > 0 && <div className="flex gap-1.5 overflow-x-auto pb-2"><button onClick={(e) => { e.stopPropagation(); setFilter("全部"); }} className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${filter === "全部" ? "bg-emerald-700 text-white" : "bg-gray-50 text-gray-500"}`}>全部 {signupCount}</button>{task.categories.map((c) => <button key={c} onClick={(e) => { e.stopPropagation(); setFilter(c); }} className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${filter === c ? "bg-emerald-700 text-white" : "bg-gray-50 text-gray-500"}`}>{c} {categoryCounts[c] || 0}</button>)}</div>}
+            {!isQueueTask && task.categories?.length > 0 && signups.length >= SEARCH_MIN_SIGNUPS && <div className="flex gap-1.5 overflow-x-auto pb-2"><button onClick={(e) => { e.stopPropagation(); setFilter("全部"); }} className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${filter === "全部" ? "bg-emerald-700 text-white" : "bg-gray-50 text-gray-500"}`}>全部 {signupCount}</button>{task.categories.map((c) => <button key={c} onClick={(e) => { e.stopPropagation(); setFilter(c); }} className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${filter === c ? "bg-emerald-700 text-white" : "bg-gray-50 text-gray-500"}`}>{c} {categoryCounts[c] || 0}</button>)}</div>}
 
             {filteredSignups.length === 0 ? <p className="text-xs text-gray-300 text-center py-4">還沒有人報名</p> : <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto">{filteredSignups.map((s, i) => {
               const done = checkedIds.has(s.id);
