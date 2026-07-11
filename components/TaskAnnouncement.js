@@ -1,6 +1,6 @@
 "use client";
 import { MessageCircle, Calendar } from "lucide-react";
-import { taskStatus } from "@/lib/utils";
+import { taskStatus, getVisibleCategories } from "@/lib/utils";
 
 function visibleNote(value = "") {
   return String(value)
@@ -12,10 +12,9 @@ function visibleNote(value = "") {
 
 export default function TaskAnnouncement({ task, full }) {
   const st = taskStatus(task);
-  // Only override when the task is otherwise "進行中" — if it's already
-  // "已截止" or "尚未開始", that status takes priority over capacity.
   const label = full && st.label === "進行中" ? "已額滿" : st.label;
   const note = visibleNote(task.note);
+  const categories = getVisibleCategories(task.categories);
 
   return (
     <div className="flex gap-2 items-start">
@@ -33,9 +32,9 @@ export default function TaskAnnouncement({ task, full }) {
           <div className="flex items-center gap-1 text-[11px] text-emerald-50 mt-2">
             <Calendar size={12} /> {task.start_date} ~ {task.end_date}
           </div>
-          {task.categories?.length > 0 && (
+          {categories.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-2">
-              {task.categories.map((c) => (
+              {categories.map((c) => (
                 <span key={c} className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full">{c}</span>
               ))}
             </div>
