@@ -3,8 +3,6 @@ import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { verifyLineAccessToken, getBearerToken } from "@/lib/lineAuth";
 import { generateShortCode } from "@/lib/shortCode";
 
-const QUEUE_MODE_MARKER = "__relay_queue_mode__";
-
 function parseMaxSignups(value) {
   if (value === undefined || value === null || value === "") return null;
   const n = parseInt(value, 10);
@@ -58,9 +56,10 @@ export async function POST(request) {
       ({ data, error } = await supabase.from("tasks").insert(payload).select().single());
 
       if (isMissingTaskModeColumn(error)) {
-        const { task_mode: _taskMode, ...fallbackPayload } = payload;
-        fallbackPayload.categories = mode === "queue" ? [QUEUE_MODE_MARKER] : fallbackPayload.categories;
-        ({ data, error } = await supabase.from("tasks").insert(fallbackPayload).select().single());
+        return NextResponse.json(
+          { error: "資料庫尚未完成現場排隊模式升級，請先執行 sql/migration_task_mode.sql。" },
+          { status: 503 }
+        );
       }
 
       if (!error || error.code !== "23505") break;
