@@ -114,6 +114,7 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const isQueueMode = task.task_mode === "queue";
 
   const original = useRef({
     title: task.title,
@@ -136,7 +137,6 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
     quantityUnit !== original.current.quantity_unit ||
     note !== original.current.note;
 
-  // Warn on actual browser/tab close or refresh while there are unsaved changes.
   useEffect(() => {
     function handleBeforeUnload(e) {
       if (!dirty) return;
@@ -147,9 +147,6 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [dirty]);
 
-  // Intercept the browser/system back gesture (swipe back, back button) while
-  // there are unsaved changes, and show our own confirm dialog instead of
-  // silently navigating away.
   useEffect(() => {
     if (!dirty) return;
     window.history.pushState(null, "", window.location.href);
@@ -226,29 +223,31 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
             className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-300"
           />
         </Field>
-        <Field label="分類（自訂，選填）">
-          <div className="flex gap-2">
-            <input
-              value={catInput}
-              onChange={(e) => setCatInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCategory())}
-              placeholder="例如：職位分類、組別分類、產品分類"
-              className="flex-1 border border-gray-200 rounded-2xl px-4 py-2.5 text-sm placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-300"
-            />
-            <button onClick={addCategory} className="px-4 rounded-2xl bg-white border border-emerald-500 text-emerald-500 text-sm font-medium hover:bg-emerald-50 transition shrink-0">新增</button>
-          </div>
-          <p className="text-[11px] text-gray-400 mt-1.5 px-0.5">輸入文字後，按「新增」或按 Enter 加入一個分類</p>
-          {categories.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-3">
-              {categories.map((c) => (
-                <span key={c} className={`text-xs px-3 py-1 rounded-full border flex items-center gap-1 ${chipClass(c)}`}>
-                  {c}
-                  <button onClick={() => removeCategory(c)}><X size={12} /></button>
-                </span>
-              ))}
+        {!isQueueMode && (
+          <Field label="分類（自訂，選填）">
+            <div className="flex gap-2">
+              <input
+                value={catInput}
+                onChange={(e) => setCatInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCategory())}
+                placeholder="例如：職位分類、組別分類、產品分類"
+                className="flex-1 border border-gray-200 rounded-2xl px-4 py-2.5 text-sm placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              />
+              <button onClick={addCategory} className="px-4 rounded-2xl bg-white border border-emerald-500 text-emerald-500 text-sm font-medium hover:bg-emerald-50 transition shrink-0">新增</button>
             </div>
-          )}
-        </Field>
+            <p className="text-[11px] text-gray-400 mt-1.5 px-0.5">輸入文字後，按「新增」或按 Enter 加入一個分類</p>
+            {categories.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {categories.map((c) => (
+                  <span key={c} className={`text-xs px-3 py-1 rounded-full border flex items-center gap-1 ${chipClass(c)}`}>
+                    {c}
+                    <button onClick={() => removeCategory(c)}><X size={12} /></button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </Field>
+        )}
         <Field label="日期">
           <div className="flex items-center gap-2">
             <DatePickerField
@@ -279,14 +278,16 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
             className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-300"
           />
         </Field>
-        <Field label="數量單位（選填，例如：份、斤、個——填了報名的人才會看到數量欄位）">
-          <input
-            value={quantityUnit}
-            onChange={(e) => setQuantityUnit(e.target.value)}
-            placeholder="例如：份"
-            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-300"
-          />
-        </Field>
+        {!isQueueMode && (
+          <Field label="數量單位（選填，例如：份、斤、個——填了報名的人才會看到數量欄位）">
+            <input
+              value={quantityUnit}
+              onChange={(e) => setQuantityUnit(e.target.value)}
+              placeholder="例如：份"
+              className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-300"
+            />
+          </Field>
+        )}
         <Field label="備註">
           <AutoGrowTextarea
             value={note}
