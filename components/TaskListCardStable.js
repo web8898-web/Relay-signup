@@ -2,15 +2,16 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  MessageCircle, MoreVertical, Edit2, Share2, Calendar, Users, Download,
+  MessageCircle, MoreVertical, Edit2, Trash2, Share2, Calendar, Users, Download,
   FileSpreadsheet, FileText, Bell, BellOff, ClipboardCheck, Check,
-  RotateCcw, Copy, CheckCircle2, Search, X, Undo2, ChevronDown, ChevronRight,
+  RotateCcw, Copy, CheckCircle2, Search, X, Undo2, ChevronDown,
 } from "lucide-react";
 import { taskStatus, chipClass, avatarClass, relTime, batchInfoFor, isQueueTask as isQueueTaskConfig } from "@/lib/utils";
 import { getOwnerToken } from "@/lib/ownerToken";
 import { liff } from "@/lib/liff";
 
 const EXPAND_EVENT = "relay-task-card-stable-expand";
+const MENU_EVENT = "relay-task-card-stable-menu";
 
 // 報名人數達到這個數量才顯示搜尋框與分類篩選，人少時保持卡片清爽。
 const SEARCH_MIN_SIGNUPS = 5;
@@ -49,6 +50,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
   const [showResetAction, setShowResetAction] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const cardRef = useRef(null);
+  const menuAreaRef = useRef(null);
 
   const st = taskStatus(task);
   const signupCount = signups.length;
@@ -69,6 +71,27 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
     window.addEventListener(EXPAND_EVENT, closeOtherCard);
     return () => window.removeEventListener(EXPAND_EVENT, closeOtherCard);
   }, [task.id]);
+
+  useEffect(() => {
+    function closeOtherMenu(event) {
+      if (event.detail?.taskId === task.id) return;
+      setMenuOpen(false);
+      setConfirmDelete(false);
+    }
+    window.addEventListener(MENU_EVENT, closeOtherMenu);
+    return () => window.removeEventListener(MENU_EVENT, closeOtherMenu);
+  }, [task.id]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function closeMenuOnOutsidePress(event) {
+      if (menuAreaRef.current?.contains(event.target)) return;
+      setMenuOpen(false);
+      setConfirmDelete(false);
+    }
+    document.addEventListener("pointerdown", closeMenuOnOutsidePress);
+    return () => document.removeEventListener("pointerdown", closeMenuOnOutsidePress);
+  }, [menuOpen]);
 
   useEffect(() => {
     if (!expanded) return;
@@ -107,7 +130,11 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
   function toggleMenu(e) {
     e.stopPropagation();
     setConfirmDelete(false);
-    setMenuOpen((v) => !v);
+    setMenuOpen((current) => {
+      const next = !current;
+      if (next) window.dispatchEvent(new CustomEvent(MENU_EVENT, { detail: { taskId: task.id } }));
+      return next;
+    });
   }
 
   async function toggleNotify(e) {
@@ -273,28 +300,27 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
             <div className={`w-9 h-9 rounded-full ${isClosed ? "bg-gray-400" : isFull ? "bg-rose-500" : "bg-emerald-500"} text-white flex items-center justify-center shrink-0`}><MessageCircle size={16} /></div>
             <div className="flex-1 min-w-0"><p className="font-semibold text-gray-800 truncate">{task.title}</p>{!expanded && <p className="text-[11px] text-gray-400 mt-0.5 truncate">{st.label} · {signupCount} 人已報名</p>}</div>
           </button>
-          <div className="relative flex items-center gap-1.5 shrink-0">
+          <div ref={menuAreaRef} className="relative flex items-center gap-1.5 shrink-0">
             {!isQueueTask && <button onClick={toggleNotify} className={`w-7 h-7 flex items-center justify-center ${notifyEnabled ? "text-emerald-500" : "text-gray-300"}`}>{notifyEnabled ? <Bell size={16} /> : <BellOff size={16} />}</button>}
             <button onClick={(e) => { e.stopPropagation(); onShare?.(); }} className="w-7 h-7 flex items-center justify-center text-gray-400"><Share2 size={16} /></button>
-            <button onClick={toggleMenu} className="w-7 h-7 flex items-center justify-center text-gray-400" aria-label="更多操作"><MoreVertical size={17} /></button>
+            <button onClick={toggleMenu} className="w-7 h-7 flex items-center justify-center text-gray-400" aria-label={menuOpen ? "收回更多操作" : "更多操作"} aria-expanded={menuOpen}><MoreVertical size={17} /></button>
 
-            {/* 點「⋮」後從右側滑出，蓋住鈴鐺與分享圖示；按右邊的箭頭收回。
-                全程在卡片內橫向展開，不會有上下空間不足被截掉的問題。 */}
+            {/* 點「⋮」後從右側滑出；再點一次、點其他位置或開啟其他任務選單時收回。 */}
             {menuOpen && (
-              <div className="relay-actions-in absolute inset-y-0 right-0 w-max max-w-none flex items-center gap-0.5 rounded-full bg-white pl-2.5 pr-0.5 shadow-[0_2px_12px_rgba(15,23,42,0.15)] ring-1 ring-gray-100">
+              <div className="relay-actions-in absolute inset-y-0 right-0 w-max max-w-none flex items-center rounded-2xl border border-gray-100 bg-[#F7FAF8] px-1.5 shadow-[0_2px_8px_rgba(15,23,42,0.10)]" style={{ animationDuration: "200ms" }}>
                 {!confirmDelete ? (
                   <>
-                    <button onClick={(e) => { e.stopPropagation(); onEdit?.(); setMenuOpen(false); }} className="flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-medium text-gray-600 whitespace-nowrap active:scale-95 hover:bg-gray-50"><Edit2 size={13} className="shrink-0" /> 編輯</button>
-                    <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }} className="rounded-full px-2.5 py-1.5 text-xs font-medium text-rose-500 whitespace-nowrap active:scale-95 hover:bg-rose-50">移除</button>
+                    <button onClick={(e) => { e.stopPropagation(); onEdit?.(); setMenuOpen(false); }} className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium text-gray-600 whitespace-nowrap active:scale-95 hover:bg-white/80"><Edit2 size={14} className="shrink-0" /> 編輯</button>
+                    <span aria-hidden="true" className="h-5 w-px bg-gray-200" />
+                    <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }} className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium text-rose-500 whitespace-nowrap active:scale-95 hover:bg-rose-50"><Trash2 size={14} className="shrink-0" /> 刪除</button>
                   </>
                 ) : (
                   <>
-                    <span className="pl-1 text-xs text-gray-500 whitespace-nowrap">確定移除？</span>
-                    <button onClick={(e) => { e.stopPropagation(); onDelete?.(); setMenuOpen(false); }} className="rounded-full px-2.5 py-1.5 text-xs font-semibold text-rose-500 whitespace-nowrap active:scale-95 hover:bg-rose-50">是</button>
-                    <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(false); }} className="rounded-full px-2.5 py-1.5 text-xs font-medium text-gray-500 whitespace-nowrap active:scale-95 hover:bg-gray-50">否</button>
+                    <span className="pl-2 text-xs text-gray-500 whitespace-nowrap">確定刪除？</span>
+                    <button onClick={(e) => { e.stopPropagation(); onDelete?.(); setMenuOpen(false); }} className="rounded-xl px-3 py-2 text-xs font-semibold text-rose-500 whitespace-nowrap active:scale-95 hover:bg-rose-50">確定</button>
+                    <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(false); }} className="rounded-xl px-3 py-2 text-xs font-medium text-gray-500 whitespace-nowrap active:scale-95 hover:bg-white/80">取消</button>
                   </>
                 )}
-                <button onClick={(e) => { e.stopPropagation(); setMenuOpen(false); setConfirmDelete(false); }} className="w-7 h-7 flex items-center justify-center text-gray-400 shrink-0" aria-label="收回選單"><ChevronRight size={16} /></button>
               </div>
             )}
           </div>
