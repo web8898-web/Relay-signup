@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   MessageCircle, MoreVertical, Edit2, Share2, Calendar, Users, Download,
   FileSpreadsheet, FileText, Bell, BellOff, ClipboardCheck, Check,
-  RotateCcw, Copy, CheckCircle2, Search, X, Undo2,
+  RotateCcw, Copy, CheckCircle2, Search, X, Undo2, ChevronDown,
 } from "lucide-react";
 import { taskStatus, chipClass, avatarClass, relTime, batchInfoFor, isQueueTask as isQueueTaskConfig } from "@/lib/utils";
 import { getOwnerToken } from "@/lib/ownerToken";
@@ -26,6 +26,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
   const [lastCompletedId, setLastCompletedId] = useState(null);
   const [confirmCompleteAll, setConfirmCompleteAll] = useState(false);
   const [showResetAction, setShowResetAction] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const cardRef = useRef(null);
 
   const st = taskStatus(task);
@@ -62,6 +63,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
   useEffect(() => {
     if (!expanded) {
       setCheckinMode(false);
+      setExportOpen(false);
       return;
     }
     const timer = setTimeout(() => cardRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 120);
@@ -263,7 +265,17 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
           </div>
 
           <div className="mb-3">
-            <div className="flex items-center justify-between mb-1.5 px-0.5"><p className="text-[11px] font-medium text-gray-400">報名名單</p></div>
+            <div className="flex items-center justify-between mb-1.5 px-0.5">
+              <p className="text-[11px] font-medium text-gray-400">報名名單</p>
+              {signups.length > 0 && (
+                <button onClick={(e) => { e.stopPropagation(); setExportOpen((v) => !v); }} className="flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[10px] font-medium text-gray-500 transition active:scale-95" aria-expanded={exportOpen}>
+                  <Download size={11} /> 匯出名單 <ChevronDown size={11} className={`transition-transform ${exportOpen ? "rotate-180" : ""}`} />
+                </button>
+              )}
+            </div>
+            {signups.length > 0 && exportOpen && (
+              <div className="bg-gray-50 border border-gray-100 rounded-2xl p-2.5 mb-2.5"><div className="flex gap-2"><button onClick={(e) => { e.stopPropagation(); openExportUrl("csv"); }} className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-emerald-200 rounded-full py-2 text-xs text-emerald-600"><FileSpreadsheet size={14} /> CSV（Excel）</button><button onClick={(e) => { e.stopPropagation(); openExportUrl("txt"); }} className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-emerald-200 rounded-full py-2 text-xs text-emerald-600"><FileText size={14} /> 文字檔</button></div></div>
+            )}
             {showSearch && <div className="relative mb-2.5"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" /><input value={searchText} onClick={(e) => e.stopPropagation()} onChange={(e) => setSearchText(e.target.value)} placeholder="搜尋姓名、備註或分類" className="w-full rounded-full border border-gray-100 bg-gray-50 py-2 pl-9 pr-9 text-xs outline-none" />{searchText && <button onClick={(e) => { e.stopPropagation(); setSearchText(""); }} className="absolute right-2 top-1/2 -translate-y-1/2"><X size={13} /></button>}</div>}
 
             {canProcessList && !checkinMode && <button onClick={(e) => { e.stopPropagation(); setCheckinMode(true); }} className="w-full mb-2.5 flex items-center justify-center gap-1.5 text-xs font-semibold text-white bg-emerald-500 rounded-full py-2.5"><ClipboardCheck size={15} /> {isQueueTask ? "開始處理名單" : "開始點名報到"}</button>}
@@ -295,7 +307,6 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
             })}</div>}
           </div>
 
-          {signups.length > 0 && <div className="bg-gray-50 border border-gray-100 rounded-2xl p-3 mb-3"><p className="text-[11px] font-medium text-gray-400 mb-2 flex items-center gap-1"><Download size={12} /> 匯出名單</p><div className="flex gap-2"><button onClick={(e) => { e.stopPropagation(); openExportUrl("csv"); }} className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-emerald-200 rounded-full py-2 text-xs text-emerald-600"><FileSpreadsheet size={14} /> CSV（Excel）</button><button onClick={(e) => { e.stopPropagation(); openExportUrl("txt"); }} className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-emerald-200 rounded-full py-2 text-xs text-emerald-600"><FileText size={14} /> 文字檔</button></div></div>}
           <div className="flex gap-2"><button onClick={(e) => { e.stopPropagation(); onShare?.(); }} className="flex-1 border border-emerald-200 text-emerald-600 rounded-full py-2.5 font-semibold flex items-center justify-center gap-1.5"><Share2 size={16} /> 分享</button><button onClick={(e) => { e.stopPropagation(); onEdit?.(); }} className="flex-1 bg-emerald-500 text-white rounded-full py-2.5 font-semibold flex items-center justify-center gap-1.5"><Edit2 size={16} /> 編輯任務</button></div>
         </div></div></div>
       </div>
