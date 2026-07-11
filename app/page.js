@@ -195,7 +195,7 @@ export default function HomePage() {
               <MessageCircle size={24} />
             </div>
             <p className="font-semibold text-gray-800">使用前，請先用 LINE 登入</p>
-            <p className="text-xs text-gray-400 mt-1.5 whitespace-nowrap">
+            <p className="text-xs text-gray-400 mt-1.5">
               登入後即可建立任務、管理報名名單
             </p>
             <button
