@@ -270,14 +270,33 @@ input, textarea, select {
 }
 
 /*
-  任務卡「⋮」操作選單：從右側滑入、蓋住鈴鐺與分享圖示。
-  純橫向展開，避免像下拉選單那樣在畫面底部被截掉。
+  任務卡「⋮」操作選單：方案 B。
+  展開後與任務卡同高、約佔卡片右半部，最右側保留 ⋮ 可再次收回。
 */
 @keyframes relay-actions-in {
-  from { opacity: 0; transform: translateX(10px); }
+  from { opacity: 0; transform: translateX(14px); }
   to   { opacity: 1; transform: translateX(0); }
 }
 .relay-actions-in {
-  animation: relay-actions-in 0.18s ease-out;
+  animation: relay-actions-in 200ms ease-out;
   right: 2.25rem !important;
+  top: -0.75rem !important;
+  bottom: auto !important;
+  width: min(50vw, 12rem) !important;
+  height: calc(100% + 1.5rem) !important;
+  border-radius: 1rem !important;
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+  justify-content: stretch !important;
+}
+
+.relay-actions-in > button {
+  flex: 1 1 0 !important;
+  height: 100% !important;
+  justify-content: center !important;
+  border-radius: 0 !important;
+}
+
+.relay-actions-in > span[aria-hidden="true"] {
+  height: 60% !important;
 }
