@@ -2,8 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-const STORAGE_KEY = "relay-task-mode-tutorial-seen";
-
 const tutorials = {
   general: {
     title: "一般報名教學",
@@ -90,7 +88,6 @@ function ensureStyles() {
 
 export default function TaskModeTutorial() {
   const [type, setType] = useState(null);
-  const [showFirst, setShowFirst] = useState(false);
   const tutorial = useMemo(() => (type ? tutorials[type] : null), [type]);
 
   useEffect(() => {
@@ -123,33 +120,11 @@ export default function TaskModeTutorial() {
     const observer = new MutationObserver(() => window.requestAnimationFrame(apply));
     observer.observe(document.body, { childList: true, subtree: true });
 
-    try {
-      if (window.location.pathname.startsWith("/create") && !localStorage.getItem(STORAGE_KEY)) setShowFirst(true);
-    } catch {}
-
     return () => observer.disconnect();
   }, []);
 
-  function dismissFirst(openTutorial = false) {
-    try { localStorage.setItem(STORAGE_KEY, "1"); } catch {}
-    setShowFirst(false);
-    if (openTutorial) setType("general");
-  }
-
   return (
     <>
-      {showFirst && (
-        <div className="fixed inset-0 z-[2147482000] bg-black/45 flex items-center justify-center p-5" onClick={() => dismissFirst(false)}>
-          <div className="w-full max-w-sm rounded-[28px] bg-white p-6 shadow-2xl" onClick={(event) => event.stopPropagation()}>
-            <div className="text-3xl mb-3">👋</div>
-            <p className="text-lg font-bold text-gray-800">第一次使用？</p>
-            <p className="text-sm text-gray-500 leading-relaxed mt-2">不知道要選一般報名還是現場排隊？先看快速教學，就能選對模式。</p>
-            <button onClick={() => dismissFirst(true)} className="w-full mt-5 rounded-full bg-emerald-500 py-3 text-white font-bold">查看教學</button>
-            <button onClick={() => dismissFirst(false)} className="w-full mt-2 rounded-full py-2.5 text-sm font-semibold text-gray-500">我知道了</button>
-          </div>
-        </div>
-      )}
-
       {tutorial && (
         <div className="fixed inset-0 z-[2147483000] bg-black/60 flex items-end sm:items-center justify-center" onClick={() => setType(null)}>
           <div className="w-full max-w-md max-h-[88vh] overflow-y-auto rounded-t-[30px] sm:rounded-[30px] bg-white p-6 shadow-2xl" onClick={(event) => event.stopPropagation()}>
