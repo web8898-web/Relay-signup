@@ -281,17 +281,17 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
             {/* 點「⋮」後從右側滑出，蓋住鈴鐺與分享圖示；按右邊的箭頭收回。
                 全程在卡片內橫向展開，不會有上下空間不足被截掉的問題。 */}
             {menuOpen && (
-              <div className="relay-actions-in absolute inset-y-0 right-0 flex items-center gap-0.5 rounded-full bg-white pl-2.5 pr-0.5 shadow-[0_2px_12px_rgba(15,23,42,0.15)] ring-1 ring-gray-100">
+              <div className="relay-actions-in absolute inset-y-0 right-0 w-max max-w-none flex items-center gap-0.5 rounded-full bg-white pl-2.5 pr-0.5 shadow-[0_2px_12px_rgba(15,23,42,0.15)] ring-1 ring-gray-100">
                 {!confirmDelete ? (
                   <>
-                    <button onClick={(e) => { e.stopPropagation(); onEdit?.(); setMenuOpen(false); }} className="flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-medium text-gray-600 active:scale-95 hover:bg-gray-50"><Edit2 size={13} /> 編輯任務</button>
-                    <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }} className="rounded-full px-2.5 py-1.5 text-xs font-medium text-rose-500 active:scale-95 hover:bg-rose-50">移除</button>
+                    <button onClick={(e) => { e.stopPropagation(); onEdit?.(); setMenuOpen(false); }} className="flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-medium text-gray-600 whitespace-nowrap active:scale-95 hover:bg-gray-50"><Edit2 size={13} className="shrink-0" /> 編輯</button>
+                    <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }} className="rounded-full px-2.5 py-1.5 text-xs font-medium text-rose-500 whitespace-nowrap active:scale-95 hover:bg-rose-50">移除</button>
                   </>
                 ) : (
                   <>
                     <span className="pl-1 text-xs text-gray-500 whitespace-nowrap">確定移除？</span>
-                    <button onClick={(e) => { e.stopPropagation(); onDelete?.(); setMenuOpen(false); }} className="rounded-full px-2.5 py-1.5 text-xs font-semibold text-rose-500 active:scale-95 hover:bg-rose-50">是</button>
-                    <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(false); }} className="rounded-full px-2.5 py-1.5 text-xs font-medium text-gray-500 active:scale-95 hover:bg-gray-50">否</button>
+                    <button onClick={(e) => { e.stopPropagation(); onDelete?.(); setMenuOpen(false); }} className="rounded-full px-2.5 py-1.5 text-xs font-semibold text-rose-500 whitespace-nowrap active:scale-95 hover:bg-rose-50">是</button>
+                    <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(false); }} className="rounded-full px-2.5 py-1.5 text-xs font-medium text-gray-500 whitespace-nowrap active:scale-95 hover:bg-gray-50">否</button>
                   </>
                 )}
                 <button onClick={(e) => { e.stopPropagation(); setMenuOpen(false); setConfirmDelete(false); }} className="w-7 h-7 flex items-center justify-center text-gray-400 shrink-0" aria-label="收回選單"><ChevronRight size={16} /></button>
