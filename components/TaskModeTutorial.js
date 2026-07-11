@@ -74,7 +74,7 @@ function advancedHelpHtml() {
   return `
     <div class="task-advanced-tutorial">
       <div>
-        <p class="task-advanced-title">🎥 使用教學</p>
+        <p class="task-advanced-title">🎓 使用教學</p>
         <p class="task-advanced-copy">快速了解一般報名與現場排隊的操作差異。</p>
       </div>
       <div class="task-advanced-actions">
@@ -97,6 +97,7 @@ function ensureStyles() {
     .task-mode-help-copy{font-size:11px;line-height:1.55;color:#718079;margin-top:4px}
     .task-mode-help-link{font-size:11px;font-weight:800;color:#16946a;margin-top:8px}
     .task-mode-help-tip{font-size:11px;line-height:1.55;color:#718079;margin-top:10px}
+    [data-task-advanced-help][hidden]{display:none!important}
     .task-advanced-tutorial{margin-top:14px;padding:14px;border:1px solid #e5e7eb;border-radius:20px;background:#fff}
     .task-advanced-title{font-size:14px;font-weight:800;color:#334155}
     .task-advanced-copy{font-size:11px;color:#94a3b8;margin-top:3px}
@@ -105,6 +106,36 @@ function ensureStyles() {
     @media(max-width:350px){.task-mode-help-grid,.task-advanced-actions{grid-template-columns:1fr}}
   `;
   document.head.appendChild(style);
+}
+
+function findAdvancedToggle(advanced, section) {
+  if (!(advanced instanceof HTMLElement)) return null;
+  const direct = advanced.closest("button,[role='button'],summary");
+  if (direct instanceof HTMLElement) return direct;
+
+  let current = advanced.parentElement;
+  while (current instanceof HTMLElement && current !== section?.parentElement) {
+    if (current.matches("button,[role='button'],summary") || current.onclick) return current;
+    current = current.parentElement;
+  }
+  return advanced.parentElement instanceof HTMLElement ? advanced.parentElement : advanced;
+}
+
+function bindAdvancedToggle(toggle, holder) {
+  if (!(toggle instanceof HTMLElement) || !(holder instanceof HTMLElement)) return;
+  if (toggle.dataset.taskAdvancedBound === "true") return;
+
+  toggle.dataset.taskAdvancedBound = "true";
+  holder.hidden = true;
+  holder.dataset.open = "false";
+
+  toggle.addEventListener("click", () => {
+    window.setTimeout(() => {
+      const nextOpen = holder.dataset.open !== "true";
+      holder.dataset.open = nextOpen ? "true" : "false";
+      holder.hidden = !nextOpen;
+    }, 0);
+  });
 }
 
 export default function TaskModeTutorial() {
@@ -130,13 +161,21 @@ export default function TaskModeTutorial() {
       }
 
       const advanced = findLeaf("進階設定");
-      if (advanced && !document.querySelector("[data-task-advanced-help]")) {
+      if (advanced) {
         const section = findSection(advanced, ["進階設定"]) || advanced.parentElement;
-        if (section) {
-          const holder = document.createElement("div");
+        let holder = document.querySelector("[data-task-advanced-help]");
+
+        if (!holder && section) {
+          holder = document.createElement("div");
           holder.dataset.taskAdvancedHelp = "true";
           holder.innerHTML = advancedHelpHtml();
+          holder.hidden = true;
           section.appendChild(holder);
+        }
+
+        if (holder instanceof HTMLElement) {
+          const toggle = findAdvancedToggle(advanced, section);
+          bindAdvancedToggle(toggle, holder);
         }
       }
 
