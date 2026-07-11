@@ -148,6 +148,20 @@ function ensureStyles() {
     .task-mode-help-tip{width:100%;margin-top:10px;text-align:center;white-space:nowrap;font-size:clamp(8px,2.55vw,11px);line-height:1.45;letter-spacing:-.045em;color:#718079}
     @media(max-width:350px){.task-mode-help-grid{grid-template-columns:1fr}.task-mode-help-tip{font-size:8px;letter-spacing:-.06em}}
 
+    .task-tutorial-heading{min-width:0;overflow:hidden}
+    .task-tutorial-title,.task-tutorial-subtitle,.task-tutorial-step-title,.task-tutorial-step-copy{display:block;white-space:nowrap;overflow:visible;text-overflow:clip}
+    .task-tutorial-title{font-size:clamp(16px,4.7vw,18px);letter-spacing:-.035em}
+    .task-tutorial-subtitle{font-size:clamp(10px,3.05vw,12px);letter-spacing:-.045em}
+    .task-tutorial-step-content{min-width:0;flex:1;overflow:visible}
+    .task-tutorial-step-title{font-size:clamp(12px,3.7vw,14px);letter-spacing:-.045em}
+    .task-tutorial-step-copy{font-size:clamp(9px,2.9vw,12px);letter-spacing:-.055em;line-height:1.35}
+    @media(max-width:360px){
+      .task-tutorial-title{font-size:15px}
+      .task-tutorial-subtitle{font-size:9px}
+      .task-tutorial-step-title{font-size:11px}
+      .task-tutorial-step-copy{font-size:8px;letter-spacing:-.07em}
+    }
+
     @keyframes taskTutorialBackdropIn{from{opacity:0}to{opacity:1}}
     @keyframes taskTutorialBackdropOut{from{opacity:1}to{opacity:0}}
     @keyframes taskTutorialSheetIn{from{transform:translate3d(0,100%,0);opacity:.96}to{transform:translate3d(0,0,0);opacity:1}}
@@ -235,18 +249,24 @@ export default function TaskModeTutorial() {
           onClick={closeTutorial}
         >
           <div
-            className={`w-full max-w-md max-h-[88vh] overflow-y-auto rounded-t-[30px] sm:rounded-[30px] bg-white p-6 shadow-2xl ${closing ? "task-tutorial-sheet-close" : "task-tutorial-sheet-open"}`}
+            className={`w-full max-w-md max-h-[88vh] overflow-y-auto overflow-x-hidden rounded-t-[30px] sm:rounded-[30px] bg-white p-6 shadow-2xl ${closing ? "task-tutorial-sheet-close" : "task-tutorial-sheet-open"}`}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
-              <div><p className="text-lg font-bold text-gray-800">{tutorial.title}</p><p className="text-xs text-gray-500 mt-1">{tutorial.subtitle}</p></div>
-              <button onClick={closeTutorial} className="w-9 h-9 rounded-full bg-gray-100 text-gray-500">✕</button>
+              <div className="task-tutorial-heading">
+                <p className="task-tutorial-title font-bold text-gray-800">{tutorial.title}</p>
+                <p className="task-tutorial-subtitle text-gray-500 mt-1">{tutorial.subtitle}</p>
+              </div>
+              <button onClick={closeTutorial} className="w-9 h-9 shrink-0 rounded-full bg-gray-100 text-gray-500">✕</button>
             </div>
             <div className="mt-5 space-y-3">
               {tutorial.steps.map(([number, title, copy]) => (
-                <div key={number} className="flex gap-3 rounded-2xl bg-emerald-50/70 p-4">
+                <div key={number} className="flex items-center gap-3 rounded-2xl bg-emerald-50/70 p-4">
                   <div className="w-8 h-8 shrink-0 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-bold">{number}</div>
-                  <div><p className="text-sm font-bold text-gray-700">{title}</p><p className="text-xs leading-relaxed text-gray-500 mt-1">{copy}</p></div>
+                  <div className="task-tutorial-step-content">
+                    <p className="task-tutorial-step-title font-bold text-gray-700">{title}</p>
+                    <p className="task-tutorial-step-copy text-gray-500 mt-1">{copy}</p>
+                  </div>
                 </div>
               ))}
             </div>
