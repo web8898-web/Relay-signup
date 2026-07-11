@@ -12,7 +12,12 @@ function ensureFixStyles() {
   style.textContent = `
     @keyframes queueReferenceStretchBodySafe {
       0%, 100% { transform: translateY(0) scaleY(1); }
-      32%, 70% { transform: translateY(1px) scaleY(1.02); }
+      32%, 70% { transform: translateY(-3px) scaleY(1.035); }
+    }
+
+    @keyframes queueReferenceStretchHeadSafe {
+      0%, 100% { transform: translateY(0); }
+      32%, 70% { transform: translateY(-5px); }
     }
 
     .queue-reference-mascot,
@@ -27,8 +32,9 @@ function ensureFixStyles() {
     }
 
     .queue-reference-stretch .queue-reference-head {
-      animation: none !important;
-      transform: none !important;
+      animation: queueReferenceStretchHeadSafe 3.2s ease-in-out 1 !important;
+      transform-box: fill-box;
+      transform-origin: center bottom;
     }
   `;
   document.head.appendChild(style);
