@@ -145,27 +145,26 @@ function ensureStyles() {
     @keyframes taskTutorialBackdropOut{from{opacity:1}to{opacity:0}}
     @keyframes taskTutorialSheetIn{from{transform:translate3d(0,100%,0);opacity:.96}to{transform:translate3d(0,0,0);opacity:1}}
     @keyframes taskTutorialSheetOut{from{transform:translate3d(0,0,0);opacity:1}to{transform:translate3d(0,100%,0);opacity:.96}}
-
-    @keyframes flipOutForward{0%{transform:rotateX(0);opacity:1;filter:brightness(1)}55%{transform:rotateX(-44deg);opacity:.9;filter:brightness(.96)}100%{transform:rotateX(-90deg);opacity:0;filter:brightness(.88)}}
-    @keyframes flipInForward{0%{transform:rotateX(90deg);opacity:0;filter:brightness(.88)}58%{transform:rotateX(16deg);opacity:.94;filter:brightness(.98)}82%{transform:rotateX(-3deg);opacity:1}100%{transform:rotateX(0);opacity:1;filter:brightness(1)}}
-    @keyframes flipOutBackward{0%{transform:rotateX(0);opacity:1;filter:brightness(1)}55%{transform:rotateX(44deg);opacity:.9;filter:brightness(.96)}100%{transform:rotateX(90deg);opacity:0;filter:brightness(.88)}}
-    @keyframes flipInBackward{0%{transform:rotateX(-90deg);opacity:0;filter:brightness(.88)}58%{transform:rotateX(-16deg);opacity:.94;filter:brightness(.98)}82%{transform:rotateX(3deg);opacity:1}100%{transform:rotateX(0);opacity:1;filter:brightness(1)}}
+    @keyframes taskTutorialSoftOut{
+      0%{transform:translate3d(0,0,0) scale(1);opacity:1;filter:blur(0)}
+      100%{transform:translate3d(0,-8px,0) scale(.985);opacity:0;filter:blur(.4px)}
+    }
+    @keyframes taskTutorialSoftIn{
+      0%{transform:translate3d(0,10px,0) scale(.985);opacity:0;filter:blur(.5px)}
+      72%{transform:translate3d(0,-1px,0) scale(1.002);opacity:1;filter:blur(0)}
+      100%{transform:translate3d(0,0,0) scale(1);opacity:1;filter:blur(0)}
+    }
 
     .task-tutorial-backdrop-open{animation:taskTutorialBackdropIn 260ms ease-out both}
     .task-tutorial-backdrop-close{animation:taskTutorialBackdropOut 300ms ease-in both}
     .task-tutorial-sheet-open{animation:taskTutorialSheetIn 360ms cubic-bezier(.22,.8,.3,1) both}
     .task-tutorial-sheet-close{animation:taskTutorialSheetOut 320ms cubic-bezier(.4,0,.8,.2) both}
-
-    .task-tutorial-flip-unit{position:relative;transform-style:preserve-3d;backface-visibility:hidden;transform-origin:50% 50%;will-change:transform,opacity,filter}
-    .task-tutorial-flip-unit::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:linear-gradient(90deg,transparent,rgba(15,23,42,.11),transparent);opacity:0;pointer-events:none}
-    .task-tutorial-flip-out-forward{animation:flipOutForward 210ms cubic-bezier(.55,.02,.8,.45) both}
-    .task-tutorial-flip-in-forward{animation:flipInForward 320ms cubic-bezier(.18,.78,.26,1) both}
-    .task-tutorial-flip-out-backward{animation:flipOutBackward 210ms cubic-bezier(.55,.02,.8,.45) both}
-    .task-tutorial-flip-in-backward{animation:flipInBackward 320ms cubic-bezier(.18,.78,.26,1) both}
-    .task-tutorial-flip-out-forward::after,.task-tutorial-flip-in-forward::after,.task-tutorial-flip-out-backward::after,.task-tutorial-flip-in-backward::after{opacity:1}
+    .task-tutorial-transition-unit{will-change:transform,opacity,filter;transform-origin:50% 50%}
+    .task-tutorial-soft-out{animation:taskTutorialSoftOut 180ms cubic-bezier(.4,0,.7,.2) both}
+    .task-tutorial-soft-in{animation:taskTutorialSoftIn 280ms cubic-bezier(.22,.8,.3,1) both}
 
     @media(prefers-reduced-motion:reduce){
-      .task-tutorial-backdrop-open,.task-tutorial-backdrop-close,.task-tutorial-sheet-open,.task-tutorial-sheet-close,.task-tutorial-flip-out-forward,.task-tutorial-flip-in-forward,.task-tutorial-flip-out-backward,.task-tutorial-flip-in-backward{animation-duration:1ms!important;animation-delay:0ms!important}
+      .task-tutorial-backdrop-open,.task-tutorial-backdrop-close,.task-tutorial-sheet-open,.task-tutorial-sheet-close,.task-tutorial-soft-out,.task-tutorial-soft-in{animation-duration:1ms!important;animation-delay:0ms!important}
     }
   `;
   document.head.appendChild(style);
@@ -176,7 +175,6 @@ export default function TaskModeTutorial() {
   const [closing, setClosing] = useState(false);
   const [switching, setSwitching] = useState(false);
   const [swapPhase, setSwapPhase] = useState("idle");
-  const [swapDirection, setSwapDirection] = useState("forward");
   const tutorial = useMemo(() => (type ? tutorials[type] : null), [type]);
 
   function openTutorial(nextType) {
@@ -189,9 +187,7 @@ export default function TaskModeTutorial() {
   function switchTutorial() {
     if (!type || switching) return;
     const nextType = type === "general" ? "queue" : "general";
-    const direction = nextType === "queue" ? "forward" : "backward";
     setSwitching(true);
-    setSwapDirection(direction);
     setSwapPhase("out");
     window.setTimeout(() => {
       setType(nextType);
@@ -199,8 +195,8 @@ export default function TaskModeTutorial() {
       window.setTimeout(() => {
         setSwapPhase("idle");
         setSwitching(false);
-      }, 620);
-    }, 300);
+      }, 430);
+    }, 330);
   }
 
   function closeTutorial() {
@@ -253,13 +249,13 @@ export default function TaskModeTutorial() {
   }, []);
 
   const phaseClass = swapPhase === "out"
-    ? `task-tutorial-flip-out-${swapDirection}`
+    ? "task-tutorial-soft-out"
     : swapPhase === "in"
-      ? `task-tutorial-flip-in-${swapDirection}`
+      ? "task-tutorial-soft-in"
       : "";
 
   const staggerStyle = (index) => ({
-    animationDelay: swapPhase === "idle" ? "0ms" : `${index * 55}ms`,
+    animationDelay: swapPhase === "idle" ? "0ms" : `${index * 28}ms`,
   });
 
   return (
@@ -268,7 +264,7 @@ export default function TaskModeTutorial() {
         <div className={`fixed inset-0 z-[2147483000] bg-black/60 flex items-end sm:items-center justify-center ${closing ? "task-tutorial-backdrop-close" : "task-tutorial-backdrop-open"}`} onClick={closeTutorial}>
           <div className={`w-full max-w-md max-h-[88vh] overflow-y-auto overflow-x-hidden rounded-t-[30px] sm:rounded-[30px] bg-white p-6 shadow-2xl ${closing ? "task-tutorial-sheet-close" : "task-tutorial-sheet-open"}`} onClick={(event) => event.stopPropagation()}>
             <div className="flex items-start justify-between gap-4">
-              <div className={`task-tutorial-flip-unit ${phaseClass}`} style={staggerStyle(0)}>
+              <div className={`task-tutorial-transition-unit ${phaseClass}`} style={staggerStyle(0)}>
                 <p className="task-tutorial-title font-bold text-gray-800">{tutorial.title}</p>
                 <p className="task-tutorial-subtitle text-gray-500 mt-1">{tutorial.subtitle}</p>
               </div>
@@ -277,7 +273,7 @@ export default function TaskModeTutorial() {
 
             <div className="mt-5 space-y-3">
               {tutorial.steps.map(([number, title, copy], index) => (
-                <div key={number} className={`task-tutorial-flip-unit flex items-center gap-3 rounded-2xl bg-emerald-50/70 p-4 ${phaseClass}`} style={staggerStyle(index + 1)}>
+                <div key={number} className={`task-tutorial-transition-unit flex items-center gap-3 rounded-2xl bg-emerald-50/70 p-4 ${phaseClass}`} style={staggerStyle(index + 1)}>
                   <div className="w-8 h-8 shrink-0 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-bold">{number}</div>
                   <div className="task-tutorial-step-content">
                     <p className="task-tutorial-step-title font-bold text-gray-700">{title}</p>
@@ -287,7 +283,7 @@ export default function TaskModeTutorial() {
               ))}
             </div>
 
-            <button disabled={switching} onClick={switchTutorial} className={`task-tutorial-flip-unit w-full mt-5 rounded-full border border-emerald-200 bg-white py-3 text-sm font-bold text-emerald-600 disabled:opacity-70 ${phaseClass}`} style={staggerStyle(5)}>
+            <button disabled={switching} onClick={switchTutorial} className={`task-tutorial-transition-unit w-full mt-5 rounded-full border border-emerald-200 bg-white py-3 text-sm font-bold text-emerald-600 disabled:opacity-70 ${phaseClass}`} style={staggerStyle(5)}>
               查看{type === "general" ? "現場排隊" : "一般報名"}教學
             </button>
             <button onClick={closeTutorial} className="w-full mt-2 rounded-full bg-emerald-500 py-3 text-sm font-bold text-white">看完了</button>
