@@ -70,20 +70,6 @@ function modeHelpHtml() {
     </div>`;
 }
 
-function advancedHelpHtml() {
-  return `
-    <div class="task-advanced-tutorial">
-      <div>
-        <p class="task-advanced-title">🎓 使用教學</p>
-        <p class="task-advanced-copy">快速了解一般報名與現場排隊的操作差異。</p>
-      </div>
-      <div class="task-advanced-actions">
-        <button type="button" data-task-tutorial="general">一般報名教學</button>
-        <button type="button" data-task-tutorial="queue">現場排隊教學</button>
-      </div>
-    </div>`;
-}
-
 function ensureStyles() {
   if (document.getElementById("task-mode-tutorial-styles")) return;
   const style = document.createElement("style");
@@ -97,45 +83,9 @@ function ensureStyles() {
     .task-mode-help-copy{font-size:11px;line-height:1.55;color:#718079;margin-top:4px}
     .task-mode-help-link{font-size:11px;font-weight:800;color:#16946a;margin-top:8px}
     .task-mode-help-tip{font-size:11px;line-height:1.55;color:#718079;margin-top:10px}
-    [data-task-advanced-help][hidden]{display:none!important}
-    .task-advanced-tutorial{margin-top:14px;padding:14px;border:1px solid #e5e7eb;border-radius:20px;background:#fff}
-    .task-advanced-title{font-size:14px;font-weight:800;color:#334155}
-    .task-advanced-copy{font-size:11px;color:#94a3b8;margin-top:3px}
-    .task-advanced-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}
-    .task-advanced-actions button{padding:10px 8px;border-radius:999px;border:1px solid #bfe8d5;background:#f0fff8;color:#16815f;font-size:12px;font-weight:800}
-    @media(max-width:350px){.task-mode-help-grid,.task-advanced-actions{grid-template-columns:1fr}}
+    @media(max-width:350px){.task-mode-help-grid{grid-template-columns:1fr}}
   `;
   document.head.appendChild(style);
-}
-
-function findAdvancedToggle(advanced, section) {
-  if (!(advanced instanceof HTMLElement)) return null;
-  const direct = advanced.closest("button,[role='button'],summary");
-  if (direct instanceof HTMLElement) return direct;
-
-  let current = advanced.parentElement;
-  while (current instanceof HTMLElement && current !== section?.parentElement) {
-    if (current.matches("button,[role='button'],summary") || current.onclick) return current;
-    current = current.parentElement;
-  }
-  return advanced.parentElement instanceof HTMLElement ? advanced.parentElement : advanced;
-}
-
-function bindAdvancedToggle(toggle, holder) {
-  if (!(toggle instanceof HTMLElement) || !(holder instanceof HTMLElement)) return;
-  if (toggle.dataset.taskAdvancedBound === "true") return;
-
-  toggle.dataset.taskAdvancedBound = "true";
-  holder.hidden = true;
-  holder.dataset.open = "false";
-
-  toggle.addEventListener("click", () => {
-    window.setTimeout(() => {
-      const nextOpen = holder.dataset.open !== "true";
-      holder.dataset.open = nextOpen ? "true" : "false";
-      holder.hidden = !nextOpen;
-    }, 0);
-  });
 }
 
 export default function TaskModeTutorial() {
@@ -148,6 +98,8 @@ export default function TaskModeTutorial() {
       if (!window.location.pathname.startsWith("/create") || window.location.pathname.startsWith("/create/share")) return;
       ensureStyles();
 
+      document.querySelectorAll("[data-task-advanced-help]").forEach((element) => element.remove());
+
       const general = findLeaf("一般報名");
       const queue = findLeaf("現場排隊");
       if (general && queue && !document.querySelector("[data-task-mode-help]")) {
@@ -157,25 +109,6 @@ export default function TaskModeTutorial() {
           holder.dataset.taskModeHelp = "true";
           holder.innerHTML = modeHelpHtml();
           section.insertAdjacentElement("afterend", holder);
-        }
-      }
-
-      const advanced = findLeaf("進階設定");
-      if (advanced) {
-        const section = findSection(advanced, ["進階設定"]) || advanced.parentElement;
-        let holder = document.querySelector("[data-task-advanced-help]");
-
-        if (!holder && section) {
-          holder = document.createElement("div");
-          holder.dataset.taskAdvancedHelp = "true";
-          holder.innerHTML = advancedHelpHtml();
-          holder.hidden = true;
-          section.appendChild(holder);
-        }
-
-        if (holder instanceof HTMLElement) {
-          const toggle = findAdvancedToggle(advanced, section);
-          bindAdvancedToggle(toggle, holder);
         }
       }
 
