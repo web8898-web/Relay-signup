@@ -13,6 +13,15 @@ function ensureStyles() {
     .queue-reference-drink .queue-reference-normal-mouth{opacity:0!important}
     .queue-reference-drink-mouth{opacity:0}
     .queue-reference-drink .queue-reference-drink-mouth{opacity:1}
+
+    .queue-reference-phone .queue-reference-eye,
+    .queue-reference-read .queue-reference-eye{
+      transform:translateY(3px)!important;
+    }
+
+    .queue-reference-watch .queue-reference-eye{
+      transform:translate(-2px,2px)!important;
+    }
   `;
   document.head.appendChild(style);
 }
@@ -23,9 +32,9 @@ function refineMascot(mascot) {
   const phone = mascot.querySelector(".queue-reference-phone-prop");
   if (phone instanceof SVGElement && phone.dataset.backApplied !== "true") {
     phone.innerHTML = `
-      <rect x="78" y="78" width="19" height="30" rx="4" fill="#4B5563" stroke="#374151" stroke-width="3"/>
-      <circle cx="83.5" cy="84" r="2.8" fill="#111827" stroke="#D1D5DB" stroke-width="1"/>
-      <circle cx="83.5" cy="84" r="1" fill="#9CA3AF"/>
+      <rect x="78" y="78" width="19" height="30" rx="4" fill="#55B786" stroke="#3D8F6D" stroke-width="3"/>
+      <circle cx="83.5" cy="84" r="2.8" fill="#173D38" stroke="#DDF3EA" stroke-width="1"/>
+      <circle cx="83.5" cy="84" r="1" fill="#F8FAFC"/>
     `;
     phone.dataset.backApplied = "true";
   }
