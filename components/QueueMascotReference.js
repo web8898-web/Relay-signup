@@ -29,7 +29,7 @@ function ensureStyles() {
     @keyframes queueReferenceRead {0%,100%{transform:translateY(0)}30%,75%{transform:translateY(1px)}}
     @keyframes queueReferenceItemIn {0%,12%,90%,100%{opacity:0;transform:translate(12px,10px) scale(.65)}28%,76%{opacity:1;transform:translate(0,0) scale(1)}}
     @keyframes queueReferenceHandsIn {0%,12%,90%,100%{opacity:0;transform:translateY(8px)}28%,76%{opacity:1;transform:translateY(0)}}
-    @keyframes queueReferenceBubble {0%{opacity:0;transform:translateY(6px) scale(.92)}15%,80%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-4px) scale(.96)}}
+    @keyframes queueReferenceBubble {0%{opacity:0;transform:translate(-50%,6px) scale(.92)}15%,80%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-4px) scale(.96)}}
 
     .queue-reference-mascot{position:relative;width:112px;height:94px;margin:0 auto 8px;transform-origin:center bottom;will-change:transform}
     .queue-reference-mascot.queue-reference-first{animation:queueReferenceFirst 560ms ease-out 1}
@@ -41,7 +41,7 @@ function ensureStyles() {
     .queue-reference-rest-arm{opacity:1;transition:opacity 80ms ease}
 
     .queue-reference-phone .queue-reference-rest-arm-left{opacity:0}
-    .queue-reference-yawn .queue-reference-rest-arm,
+    .queue-reference-yawn .queue-reference-rest-arm-right{opacity:0}
     .queue-reference-stretch .queue-reference-rest-arm,
     .queue-reference-watch .queue-reference-rest-arm,
     .queue-reference-drink .queue-reference-rest-arm,
@@ -67,7 +67,7 @@ function ensureStyles() {
     .queue-reference-read .queue-reference-book-prop,
     .queue-reference-read .queue-reference-book-hands{animation:queueReferenceItemIn 4.2s ease-in-out 1}
 
-    .queue-reference-speech{position:absolute;left:50%;bottom:88%;transform:translateX(-50%);min-width:112px;max-width:180px;padding:7px 10px;border:1px solid #b7e4d2;border-radius:14px;background:#f0fff8;color:#16745b;font-size:12px;font-weight:700;line-height:1.35;white-space:nowrap;box-shadow:0 6px 16px rgba(15,118,90,.12);z-index:5;animation:queueReferenceBubble 2s ease both}
+    .queue-reference-speech{position:fixed;left:0;top:0;transform:translateX(-50%);min-width:112px;max-width:180px;padding:7px 10px;border:1px solid #b7e4d2;border-radius:14px;background:#f0fff8;color:#16745b;font-size:12px;font-weight:700;line-height:1.35;white-space:nowrap;box-shadow:0 6px 16px rgba(15,118,90,.12);z-index:2147483000;pointer-events:none;animation:queueReferenceBubble 2s ease both}
     .queue-reference-speech::after{content:"";position:absolute;left:50%;bottom:-6px;width:10px;height:10px;background:#f0fff8;border-right:1px solid #b7e4d2;border-bottom:1px solid #b7e4d2;transform:translateX(-50%) rotate(45deg)}
     .queue-reference-paused,.queue-reference-paused svg,.queue-reference-paused *{animation-play-state:paused!important}
     @media(prefers-reduced-motion:reduce){.queue-reference-mascot,.queue-reference-mascot svg,.queue-reference-mascot *{animation:none!important;transition:none!important}}
@@ -98,7 +98,6 @@ function mascotSvg() {
         <path class="queue-reference-normal-mouth" d="M79 56c4.2 4.6 11.8 4.6 16 0" fill="none" stroke="#6A574F" stroke-width="3.5" stroke-linecap="round"/>
         <ellipse class="queue-reference-yawn-mouth" cx="87" cy="59" rx="6" ry="8" fill="#7A4A46"/>
       </g>
-
       <g class="queue-reference-prop queue-reference-phone-prop"><rect x="78" y="78" width="19" height="30" rx="4" fill="#4B5563" stroke="#374151" stroke-width="3"/><rect x="82" y="82" width="11" height="18" rx="2" fill="#DDF3EA"/></g>
       <g class="queue-reference-action-hands queue-reference-phone-hands" fill="#FFFDFC" stroke="#6A574F" stroke-width="4"><circle cx="74" cy="91" r="8"/><circle cx="101" cy="91" r="8"/></g>
       <g class="queue-reference-action-hands queue-reference-yawn-hand" fill="#FFFDFC" stroke="#6A574F" stroke-width="4"><circle cx="101" cy="63" r="8"/></g>
@@ -169,11 +168,14 @@ function scheduleActions(mascot) {
 }
 
 function showSpeech(mascot) {
-  if (!mascot.isConnected || mascot.querySelector(".queue-reference-speech")) return;
+  if (!mascot.isConnected || document.querySelector(".queue-reference-speech")) return;
+  const rect = mascot.getBoundingClientRect();
   const bubble = document.createElement("div");
   bubble.className = "queue-reference-speech";
   bubble.textContent = BUBBLE_TEXTS[Math.floor(Math.random() * BUBBLE_TEXTS.length)];
-  mascot.appendChild(bubble);
+  bubble.style.left = `${rect.left + rect.width / 2}px`;
+  bubble.style.top = `${Math.max(8, rect.top - 44)}px`;
+  document.body.appendChild(bubble);
   window.setTimeout(() => bubble.remove(), 2000);
 }
 
@@ -250,6 +252,7 @@ export default function QueueMascotReference() {
       observer.disconnect();
       document.removeEventListener("visibilitychange", handleVisibility);
       window.cancelAnimationFrame(frame);
+      document.querySelectorAll(".queue-reference-speech").forEach((bubble) => bubble.remove());
       document.querySelectorAll("[data-reference-queue-mascot]").forEach((m) => {
         ["referenceBlinkTimer","referenceActionTimer","referenceActionScheduleTimer","referenceSpeechTimer"].forEach((key) => {
           const timer = Number(m.dataset[key]);
