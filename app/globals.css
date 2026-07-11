@@ -279,4 +279,5 @@ input, textarea, select {
 }
 .relay-actions-in {
   animation: relay-actions-in 0.18s ease-out;
+  right: 2.25rem !important;
 }
