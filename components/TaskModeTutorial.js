@@ -76,12 +76,15 @@ function ensureStyles() {
     .task-mode-help-card{margin-top:14px;padding:14px;border:1px solid #d9f1e5;border-radius:22px;background:linear-gradient(135deg,#f2fff8,#fff);box-shadow:0 8px 24px rgba(22,148,106,.06)}
     .task-mode-help-title{font-size:14px;font-weight:800;color:#256b55;margin-bottom:10px}
     .task-mode-help-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-    .task-mode-help-option{display:flex;flex-direction:column;align-items:flex-start;text-align:left;min-width:0;padding:12px;border:1px solid #dfeee7;border-radius:17px;background:#fff}
+    .task-mode-help-option{display:flex;flex-direction:column;align-items:flex-start;text-align:left;min-width:0;padding:12px;border:1px solid #dfeee7;border-radius:17px;background:#fff;cursor:pointer;touch-action:manipulation;transform:translateZ(0);transition:transform 120ms ease,background-color 120ms ease,border-color 120ms ease,box-shadow 120ms ease}
+    .task-mode-help-option:active,.task-mode-help-option.task-mode-help-pressed{transform:scale(.965) translateY(1px);background:#e9fbf2;border-color:#7ddbb6;box-shadow:inset 0 2px 7px rgba(22,148,106,.14)}
+    .task-mode-help-option:focus-visible{outline:3px solid rgba(16,185,129,.22);outline-offset:2px}
     .task-mode-help-name{font-size:13px;font-weight:800;color:#174c3d}
     .task-mode-help-copy{font-size:11px;line-height:1.55;color:#718079;margin-top:4px}
-    .task-mode-help-link{font-size:11px;font-weight:800;color:#16946a;margin-top:8px}
-    .task-mode-help-tip{font-size:11px;line-height:1.55;color:#718079;margin-top:10px}
-    @media(max-width:350px){.task-mode-help-grid{grid-template-columns:1fr}}
+    .task-mode-help-link{font-size:11px;font-weight:800;color:#16946a;margin-top:8px;transition:transform 120ms ease,color 120ms ease}
+    .task-mode-help-option:active .task-mode-help-link,.task-mode-help-option.task-mode-help-pressed .task-mode-help-link{transform:translateX(2px);color:#087a54}
+    .task-mode-help-tip{width:100%;margin-top:10px;text-align:center;white-space:nowrap;font-size:clamp(8px,2.55vw,11px);line-height:1.45;letter-spacing:-.045em;color:#718079}
+    @media(max-width:350px){.task-mode-help-grid{grid-template-columns:1fr}.task-mode-help-tip{font-size:8px;letter-spacing:-.06em}}
 
     @keyframes taskTutorialBackdropIn{from{opacity:0}to{opacity:1}}
     @keyframes taskTutorialBackdropOut{from{opacity:1}to{opacity:0}}
@@ -93,6 +96,7 @@ function ensureStyles() {
     .task-tutorial-sheet-close{animation:taskTutorialSheetOut 320ms cubic-bezier(.4,0,.8,.2) both;will-change:transform,opacity}
     @media(prefers-reduced-motion:reduce){
       .task-tutorial-backdrop-open,.task-tutorial-backdrop-close,.task-tutorial-sheet-open,.task-tutorial-sheet-close{animation-duration:1ms!important}
+      .task-mode-help-option{transition-duration:1ms!important}
     }
   `;
   document.head.appendChild(style);
@@ -139,6 +143,11 @@ export default function TaskModeTutorial() {
       document.querySelectorAll("[data-task-tutorial]").forEach((button) => {
         if (!(button instanceof HTMLElement) || button.dataset.bound === "true") return;
         button.dataset.bound = "true";
+        button.addEventListener("pointerdown", () => button.classList.add("task-mode-help-pressed"));
+        const release = () => button.classList.remove("task-mode-help-pressed");
+        button.addEventListener("pointerup", release);
+        button.addEventListener("pointercancel", release);
+        button.addEventListener("pointerleave", release);
         button.addEventListener("click", () => openTutorial(button.dataset.taskTutorial));
       });
     };
