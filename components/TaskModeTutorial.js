@@ -57,11 +57,35 @@ function findInteractiveAncestor(element) {
   return element instanceof HTMLElement ? element : null;
 }
 
-function scrollAdvancedIntoComfortableView(section) {
-  if (!(section instanceof HTMLElement)) return;
-  const fixedHeaderOffset = window.innerWidth <= 480 ? 188 : 128;
-  const top = window.scrollY + section.getBoundingClientRect().top - fixedHeaderOffset;
-  window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+function findScrollParent(element) {
+  let current = element?.parentElement;
+  while (current instanceof HTMLElement) {
+    const style = window.getComputedStyle(current);
+    const overflowY = style.overflowY;
+    if ((overflowY === "auto" || overflowY === "scroll") && current.scrollHeight > current.clientHeight + 4) {
+      return current;
+    }
+    current = current.parentElement;
+  }
+  return null;
+}
+
+function scrollAdvancedIntoComfortableView(anchor) {
+  if (!(anchor instanceof HTMLElement)) return;
+
+  const desiredTop = window.innerWidth <= 480 ? 218 : 150;
+  const scrollParent = findScrollParent(anchor);
+
+  if (scrollParent) {
+    const parentRect = scrollParent.getBoundingClientRect();
+    const anchorRect = anchor.getBoundingClientRect();
+    const nextTop = scrollParent.scrollTop + anchorRect.top - parentRect.top - desiredTop;
+    scrollParent.scrollTo({ top: Math.max(0, nextTop), behavior: "smooth" });
+    return;
+  }
+
+  const nextTop = window.scrollY + anchor.getBoundingClientRect().top - desiredTop;
+  window.scrollTo({ top: Math.max(0, nextTop), behavior: "smooth" });
 }
 
 function bindAdvancedAutoPosition(advanced, section) {
@@ -72,10 +96,17 @@ function bindAdvancedAutoPosition(advanced, section) {
   toggle.dataset.advancedAutoPositionBound = "true";
   toggle.addEventListener("click", () => {
     const beforeHeight = section.getBoundingClientRect().height;
-    window.setTimeout(() => {
-      const afterHeight = section.getBoundingClientRect().height;
-      if (afterHeight > beforeHeight + 24) scrollAdvancedIntoComfortableView(section);
-    }, 220);
+    const checks = [80, 180, 320, 520, 760];
+
+    checks.forEach((delay) => {
+      window.setTimeout(() => {
+        const afterHeight = section.getBoundingClientRect().height;
+        const expanded = afterHeight > beforeHeight + 20;
+        if (!expanded) return;
+
+        scrollAdvancedIntoComfortableView(advanced);
+      }, delay);
+    });
   });
 }
 
