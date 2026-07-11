@@ -41,9 +41,9 @@ function ensureStyles() {
     .queue-reference-rest-arm{opacity:1;transition:opacity 80ms ease}
 
     .queue-reference-phone .queue-reference-rest-arm-left{opacity:0}
-    .queue-reference-yawn .queue-reference-rest-arm-right{opacity:0}
+    .queue-reference-yawn .queue-reference-rest-arm-right,
+    .queue-reference-watch .queue-reference-rest-arm-right{opacity:0}
     .queue-reference-stretch .queue-reference-rest-arm,
-    .queue-reference-watch .queue-reference-rest-arm,
     .queue-reference-drink .queue-reference-rest-arm,
     .queue-reference-read .queue-reference-rest-arm{opacity:0}
 
