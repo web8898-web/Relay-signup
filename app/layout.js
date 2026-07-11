@@ -4,6 +4,7 @@ import LiffTransitionOverlay from "@/components/LiffTransitionOverlay";
 import QueueLiveStatusLabel from "@/components/QueueLiveStatusLabel";
 import QueueMascotReference from "@/components/QueueMascotReference";
 import QueueMascotOverflowFix from "@/components/QueueMascotOverflowFix";
+import QueueMascotDetailFix from "@/components/QueueMascotDetailFix";
 import QueueJoinAutoFocus from "@/components/QueueJoinAutoFocus";
 import TaskShareImageActionFix from "@/components/TaskShareImageActionFix";
 
@@ -63,7 +64,7 @@ const antiFlashScript = `
     el.innerHTML =
       '<div style="width:64px;height:64px;border-radius:9999px;background:#10b981;box-shadow:0 10px 25px -5px rgba(16,185,129,0.4);display:flex;align-items:center;justify-content:center;">' +
       '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>' +
-      '</div>' +
+      "</div>" +
       '<div style="font-size:14px;font-weight:700;color:#047857;letter-spacing:0.02em;">${APP_TITLE}</div>' +
       '<div style="display:flex;gap:6px;">' +
       '<span style="width:8px;height:8px;border-radius:9999px;background:#34d399;"></span>' +
@@ -94,6 +95,7 @@ export default function RootLayout({ children }) {
         <QueueLiveStatusLabel />
         <QueueMascotReference />
         <QueueMascotOverflowFix />
+        <QueueMascotDetailFix />
         <QueueJoinAutoFocus />
         <TaskShareImageActionFix />
         <div className="w-full max-w-md mx-auto min-h-screen bg-white shadow-xl relative flex flex-col">
