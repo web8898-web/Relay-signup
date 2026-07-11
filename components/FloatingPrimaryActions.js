@@ -13,6 +13,13 @@ function hasPrimaryButton(wrapper) {
   return classes.includes("w-full") && classes.includes("rounded-full");
 }
 
+function containsButtonText(element, text) {
+  if (!(element instanceof HTMLElement)) return false;
+  return Array.from(element.querySelectorAll("button, a")).some((button) =>
+    String(button.textContent || "").replace(/\s+/g, "").includes(text)
+  );
+}
+
 function applyFloatingActions() {
   const pathname = window.location.pathname;
 
@@ -24,13 +31,13 @@ function applyFloatingActions() {
 
   if (pathname.startsWith("/my-tasks") && !pathname.includes("/edit")) {
     const page = Array.from(document.querySelectorAll(".flex-1.flex.flex-col.relative.min-w-0")).find((element) =>
-      element.querySelector("button")?.textContent?.includes("新增任務")
+      containsButtonText(element, "新增任務")
     );
 
     if (page instanceof HTMLElement) {
       const scrollArea = page.querySelector(":scope > .flex-1.overflow-y-auto");
       const actionBar = Array.from(page.children).find((element) =>
-        element instanceof HTMLElement && element.textContent?.includes("新增任務")
+        element instanceof HTMLElement && containsButtonText(element, "新增任務")
       );
 
       if (scrollArea instanceof HTMLElement) scrollArea.classList.add("relay-task-list-scroll");
@@ -78,9 +85,10 @@ function ensureStyles() {
     .relay-floating-task-actions button:active,
     .relay-floating-task-actions a:active{transform:translateY(1px) scale(.985)!important}
 
-    .relay-task-list-scroll{
+    .relay-task-list-scroll,
+    .flex-1.px-6.py-3.flex.flex-col.gap-3.overflow-y-auto.relay-task-list-scroll{
       padding-bottom:calc(7rem + env(safe-area-inset-bottom))!important;
-      scroll-padding-bottom:calc(7rem + env(safe-area-inset-bottom));
+      scroll-padding-bottom:calc(7rem + env(safe-area-inset-bottom))!important;
     }
 
     .relay-floating-primary-actions{
