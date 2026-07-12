@@ -25,16 +25,10 @@ function smallestExact(root, text) {
     .sort((a, b) => a.querySelectorAll("*").length - b.querySelectorAll("*").length)[0] || null;
 }
 
-function nearestRoundedPanel(el) {
-  if (!(el instanceof HTMLElement)) return null;
-  let current = el;
-  for (let depth = 0; depth < 8 && current.parentElement; depth += 1) {
-    current = current.parentElement;
-    const style = window.getComputedStyle(current);
-    const radius = parseFloat(style.borderTopLeftRadius) || 0;
-    if (radius >= 20 && current.getBoundingClientRect().width >= 240) return current;
-  }
-  return null;
+function show(el, display = "block") {
+  if (!(el instanceof HTMLElement)) return;
+  el.style.setProperty("display", display, "important");
+  el.removeAttribute("aria-hidden");
 }
 
 function hide(el) {
@@ -43,15 +37,42 @@ function hide(el) {
   el.setAttribute("aria-hidden", "true");
 }
 
-function hideEmptyAncestors(el, stopAt) {
-  let current = el instanceof HTMLElement ? el.parentElement : null;
-  for (let depth = 0; depth < 4 && current && current !== stopAt; depth += 1) {
-    const visible = [...current.children].some(
-      (child) => child instanceof HTMLElement && window.getComputedStyle(child).display !== "none"
-    );
-    if (visible) break;
-    hide(current);
+function findQueueCard() {
+  const mascot = document.querySelector("[data-reference-queue-mascot]");
+  if (!(mascot instanceof HTMLElement)) return null;
+
+  const exactCard = mascot.closest(".mt-3.mb-3.overflow-hidden");
+  if (exactCard instanceof HTMLElement) return exactCard;
+
+  let current = mascot.parentElement;
+  for (let depth = 0; depth < 8 && current; depth += 1) {
+    const text = normalizeText(current.textContent);
+    const className = current.className?.toString() || "";
+    if (
+      className.includes("overflow-hidden") &&
+      (text.includes("目前等待順位") || text.includes("任務已結束") || text.includes("無法再接龍"))
+    ) {
+      return current;
+    }
     current = current.parentElement;
+  }
+
+  return null;
+}
+
+function restoreQueueCard(queueCard) {
+  show(queueCard, "block");
+  queueCard.style.removeProperty("visibility");
+  queueCard.style.removeProperty("height");
+  queueCard.style.removeProperty("max-height");
+  queueCard.style.removeProperty("overflow");
+
+  let parent = queueCard.parentElement;
+  for (let depth = 0; depth < 3 && parent; depth += 1) {
+    if (parent.getAttribute("aria-hidden") === "true" || parent.style.display === "none") {
+      show(parent, parent.classList.contains("flex") ? "flex" : "block");
+    }
+    parent = parent.parentElement;
   }
 }
 
@@ -94,56 +115,20 @@ function hideClosedActions(queueCard) {
   ["更改名字", "不排了", "取消排隊"].forEach((text) => {
     const label = smallestExact(queueCard, text);
     if (!(label instanceof HTMLElement)) return;
-    const button = label.closest("button, [role='button']") || label.parentElement;
-    hide(button);
-  });
-
-  allElements(queueCard).forEach((el) => {
-    const text = normalizeText(el.textContent);
-    if (text === "儲存名字" || text === "儲存中…") {
-      const panel = el.closest("div.rounded-2xl") || el.parentElement?.parentElement;
-      hide(panel);
-    }
-  });
-}
-
-function hideDuplicateListSummary(queueCard) {
-  const candidates = allElements(document.body)
-    .filter((el) => normalizeText(el.textContent) === "任務已結束" && !queueCard.contains(el))
-    .sort((a, b) => a.querySelectorAll("*").length - b.querySelectorAll("*").length);
-
-  candidates.forEach((label) => {
-    const row = label.parentElement?.parentElement || label.parentElement;
-    hide(row);
-    hideEmptyAncestors(row, queueCard);
-  });
-
-  allElements(document.body).forEach((el) => {
-    if (queueCard.contains(el)) return;
-    const text = normalizeText(el.textContent);
-    if (/^已完成\s*\d+\s*位$/.test(text) || text === "已截止") {
-      const row = el.parentElement?.parentElement || el.parentElement;
-      if (row instanceof HTMLElement && row.getBoundingClientRect().top > queueCard.getBoundingClientRect().bottom - 12) {
-        hide(row);
-        hideEmptyAncestors(row, queueCard);
-      }
-    }
+    hide(label.closest("button, [role='button']") || label.parentElement);
   });
 }
 
 function applyFinalClosedLayout() {
   if (!pageIsClosed()) return;
 
-  const mascot = document.querySelector("[data-reference-queue-mascot]");
-  if (!(mascot instanceof HTMLElement)) return;
-
-  const queueCard = nearestRoundedPanel(mascot);
+  const queueCard = findQueueCard();
   if (!(queueCard instanceof HTMLElement)) return;
 
+  restoreQueueCard(queueCard);
   queueCard.setAttribute("data-queue-closed-card", "true");
   stylePrimaryStatus(queueCard);
   hideClosedActions(queueCard);
-  hideDuplicateListSummary(queueCard);
 }
 
 export default function QueueClosedFinalLayout() {
@@ -157,7 +142,7 @@ export default function QueueClosedFinalLayout() {
     refresh();
     const observer = new MutationObserver(refresh);
     observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-    const interval = window.setInterval(refresh, 1200);
+    const interval = window.setInterval(refresh, 800);
 
     return () => {
       observer.disconnect();
