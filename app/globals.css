@@ -300,3 +300,9 @@ input, textarea, select {
 .relay-actions-in > span[aria-hidden="true"] {
   height: 60% !important;
 }
+
+/* 愛心重複送出提示：愛心圖示固定為白色。 */
+#home-love-support .bg-emerald-500 svg {
+  color: #fff !important;
+  fill: #fff !important;
+}
