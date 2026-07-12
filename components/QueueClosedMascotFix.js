@@ -78,22 +78,77 @@ function hideActionByText(elements, label) {
   if ("disabled" in control) control.disabled = true;
 }
 
-function addStaticClosedDot(title) {
-  const parent = title.parentElement;
-  if (!(parent instanceof HTMLElement)) return;
-  if (parent.querySelector("[data-queue-closed-dot='true']")) return;
+function findVisualBox(el) {
+  if (!(el instanceof HTMLElement)) return null;
 
-  const dot = document.createElement("span");
-  dot.setAttribute("data-queue-closed-dot", "true");
-  dot.setAttribute("aria-hidden", "true");
-  dot.style.display = "block";
-  dot.style.width = "8px";
-  dot.style.height = "8px";
-  dot.style.margin = "0 auto 8px";
-  dot.style.borderRadius = "9999px";
-  dot.style.backgroundColor = CLOSED_RED;
-  dot.style.flex = "0 0 auto";
-  parent.insertBefore(dot, title);
+  let current = el;
+  for (let depth = 0; depth < 6 && current.parentElement; depth += 1) {
+    current = current.parentElement;
+    const style = window.getComputedStyle(current);
+    const radius = parseFloat(style.borderTopLeftRadius) || 0;
+    const borderWidth = parseFloat(style.borderTopWidth) || 0;
+    const hasPanelShape = radius >= 12 || borderWidth > 0;
+    const isMeaningfullyLarger = current.getBoundingClientRect().width >= el.getBoundingClientRect().width + 24;
+
+    if (hasPanelShape && isMeaningfullyLarger) return current;
+  }
+
+  return el.parentElement;
+}
+
+function nearestCommonParent(first, second) {
+  if (!(first instanceof HTMLElement) || !(second instanceof HTMLElement)) return null;
+  const ancestors = new Set();
+  let current = first.parentElement;
+  while (current) {
+    ancestors.add(current);
+    current = current.parentElement;
+  }
+
+  current = second.parentElement;
+  while (current) {
+    if (ancestors.has(current)) return current;
+    current = current.parentElement;
+  }
+
+  return null;
+}
+
+function simplifyPrimaryClosedStatus(waitingLabel, liveStatus) {
+  if (!(waitingLabel instanceof HTMLElement) || !(liveStatus instanceof HTMLElement)) return;
+
+  const leftBox = findVisualBox(waitingLabel);
+  const rightBox = findVisualBox(liveStatus);
+  if (!(leftBox instanceof HTMLElement) || !(rightBox instanceof HTMLElement)) return;
+  if (leftBox === rightBox) return;
+
+  rightBox.style.display = "none";
+  rightBox.setAttribute("aria-hidden", "true");
+
+  leftBox.style.width = "100%";
+  leftBox.style.maxWidth = "100%";
+  leftBox.style.flex = "1 1 100%";
+  leftBox.style.gridColumn = "1 / -1";
+  leftBox.style.justifyContent = "center";
+  leftBox.style.alignItems = "center";
+  leftBox.style.textAlign = "center";
+  leftBox.style.backgroundColor = CLOSED_RED_SOFT;
+  leftBox.style.borderColor = CLOSED_RED_BORDER;
+  leftBox.style.borderStyle = "solid";
+  leftBox.style.borderWidth = "1px";
+
+  waitingLabel.style.display = "block";
+  waitingLabel.style.width = "100%";
+  waitingLabel.style.textAlign = "center";
+  waitingLabel.style.color = "#111827";
+
+  const row = nearestCommonParent(leftBox, rightBox);
+  if (row instanceof HTMLElement) {
+    row.style.gridTemplateColumns = "minmax(0, 1fr)";
+    row.style.columnGap = "0";
+    row.style.gap = "0";
+    row.style.width = "100%";
+  }
 }
 
 function styleClosedBadge(elements) {
@@ -119,11 +174,10 @@ function styleClosedBadge(elements) {
 }
 
 function applyClosedVisuals(root = document.body) {
+  root.querySelectorAll?.("[data-queue-closed-dot='true']").forEach((dot) => dot.remove());
+
   const title = root.querySelector?.("[data-queue-closed-title='true']");
-  if (title instanceof HTMLElement) {
-    title.style.color = CLOSED_RED;
-    addStaticClosedDot(title);
-  }
+  if (title instanceof HTMLElement) title.style.color = CLOSED_RED;
 
   const subtitle = root.querySelector?.("[data-queue-closed-subtitle='true']");
   if (subtitle instanceof HTMLElement) subtitle.style.color = CLOSED_SUBTITLE;
@@ -155,24 +209,24 @@ function applyClosedCopy(root = document.body) {
   );
 
   const liveStatus = smallestMatch(elements, (text) => text === "排隊狀態即時同步");
-  if (liveStatus) {
-    const container = liveStatus.parentElement;
-    liveStatus.textContent = "已截止";
-    liveStatus.setAttribute("data-queue-closed-status", "true");
-    if (container instanceof HTMLElement) {
-      [...container.children].forEach((child) => {
-        if (child instanceof HTMLElement && child !== liveStatus) child.style.display = "none";
-      });
-    }
-  }
-
   const waitingLabels = elements
     .filter((el) => /^等待中\s*\d+\s*位$/.test(normalizeText(el.textContent)))
     .sort((a, b) => a.querySelectorAll("*").length - b.querySelectorAll("*").length);
+  const primaryWaitingLabel = waitingLabels[0];
+
+  if (liveStatus) {
+    liveStatus.textContent = "已截止";
+    liveStatus.setAttribute("data-queue-closed-status", "true");
+  }
+
   waitingLabels.forEach((el) => {
     el.textContent = "任務已結束";
     el.setAttribute("data-queue-closed-status", "true");
   });
+
+  if (primaryWaitingLabel && liveStatus) {
+    simplifyPrimaryClosedStatus(primaryWaitingLabel, liveStatus);
+  }
 
   const completedLabels = elements
     .filter((el) => /^已完成\s*\d+\s*位$/.test(normalizeText(el.textContent)))
