@@ -46,6 +46,32 @@ function leafElements(root = document.body) {
   );
 }
 
+function hideActionControl(el) {
+  const control = el.closest("button, a, [role='button']");
+  const target = control || el.parentElement;
+  if (!(target instanceof HTMLElement)) return;
+  target.style.display = "none";
+  target.setAttribute("aria-hidden", "true");
+  if ("disabled" in target) target.disabled = true;
+}
+
+function removeLiveDot(el) {
+  const container = el.parentElement;
+  if (!(container instanceof HTMLElement)) return;
+
+  [...container.children].forEach((child) => {
+    if (!(child instanceof HTMLElement) || child === el) return;
+    const className = child.className?.toString() || "";
+    const style = window.getComputedStyle(child);
+    const looksLikeDot =
+      className.includes("rounded-full") ||
+      (parseFloat(style.width) <= 20 &&
+        parseFloat(style.height) <= 20 &&
+        style.borderRadius !== "0px");
+    if (looksLikeDot) child.style.display = "none";
+  });
+}
+
 function applyClosedCopy(root = document.body) {
   const leaves = leafElements(root);
 
@@ -67,6 +93,30 @@ function applyClosedCopy(root = document.body) {
     if (/你前面還有\s*\d+\s*位[，,、]?\s*請稍候/.test(text)) {
       el.textContent = "無法再接龍";
       el.setAttribute("data-queue-closed-subtitle", "true");
+      return;
+    }
+
+    if (/^等待中\s*\d+\s*位$/.test(text)) {
+      el.textContent = "任務已結束";
+      el.setAttribute("data-queue-closed-status", "true");
+      return;
+    }
+
+    if (text === "排隊狀態即時同步") {
+      el.textContent = "已截止";
+      el.setAttribute("data-queue-closed-status", "true");
+      removeLiveDot(el);
+      return;
+    }
+
+    if (/^已完成\s*\d+\s*位$/.test(text)) {
+      el.textContent = "已截止";
+      el.setAttribute("data-queue-closed-status", "true");
+      return;
+    }
+
+    if (text === "更改名字" || text === "取消排隊") {
+      hideActionControl(el);
     }
   });
 }
