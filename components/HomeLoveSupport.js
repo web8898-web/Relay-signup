@@ -144,8 +144,8 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
           >
             <Heart
               size={heart.size}
-              className="shrink-0 fill-rose-300 text-rose-400"
-              strokeWidth={1.7}
+              className="shrink-0 fill-rose-200 text-rose-200"
+              strokeWidth={0}
             />
             <span className="max-w-[150px] truncate rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-medium text-gray-500 shadow-sm ring-1 ring-gray-100">
               {heart.localOnly ? "今天也謝謝你的支持" : `${heart.displayName} 喜歡這個小工具`}
@@ -154,22 +154,20 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
         ))}
       </div>
 
-      <p className="text-xs font-medium text-gray-500">喜歡這個小工具嗎？</p>
-
       <button
         type="button"
         onClick={handleLoveClick}
         disabled={submitting}
         aria-label="送出一顆愛心支持接龍報名小助手"
-        className={`mx-auto mt-2.5 flex h-12 w-12 items-center justify-center rounded-full bg-rose-50 text-rose-400 ring-1 ring-rose-100 transition-transform duration-300 active:scale-95 disabled:opacity-60 ${
+        className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-50/70 ring-1 ring-rose-100/60 transition-transform duration-300 active:scale-95 disabled:opacity-60 ${
           pressed ? "scale-110" : "scale-100"
         }`}
       >
-        <Heart size={23} className="fill-rose-300 text-rose-400" strokeWidth={1.7} />
+        <Heart size={23} className="fill-rose-200 text-rose-200" strokeWidth={0} />
       </button>
 
       <p className="mt-2 text-[11px] text-gray-400" aria-live="polite">
-        {totalCount == null ? "— 個愛心" : `已有 ${formatCount(totalCount)} 人送出愛心`}
+        {totalCount == null ? "—" : formatCount(totalCount)}
       </p>
 
       {toast && (
