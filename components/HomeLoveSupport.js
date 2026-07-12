@@ -128,7 +128,7 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
   }
 
   return (
-    <section id="home-love-support" className="relative mx-auto mt-3 w-full max-w-[260px] px-3 py-3 text-center overflow-visible">
+    <section id="home-love-support" className="relative mx-auto w-full max-w-[260px] px-3 text-center overflow-visible">
       <div className="pointer-events-none absolute inset-x-0 bottom-[58px] h-40 overflow-visible" aria-hidden="true">
         {floatingHearts.map((heart) => (
           <div
@@ -166,11 +166,11 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
         <Heart size={23} className="fill-rose-200 text-rose-200" strokeWidth={0} />
       </button>
 
-      <p className="mt-2 text-[11px] text-gray-400" aria-live="polite">
+      <p className="mt-1.5 text-[11px] text-gray-400" aria-live="polite">
         {totalCount == null ? "—" : formatCount(totalCount)}
       </p>
 
-      <div className="mt-8 text-center text-[11px] text-gray-300">
+      <div className="home-love-copyright text-center text-[11px] text-gray-300">
         © 2026{" "}
         <a
           href="https://www.wiweb.com.tw"
@@ -211,6 +211,11 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
           will-change: transform, opacity;
         }
 
+        .home-love-copyright {
+          margin-top: clamp(10px, 1.8dvh, 22px);
+          padding-bottom: max(2px, env(safe-area-inset-bottom));
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .floating-love-event {
             animation-duration: 600ms;
@@ -219,8 +224,60 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
       `}</style>
 
       <style jsx global>{`
+        html:has(#home-love-support),
+        body:has(#home-love-support) {
+          height: 100dvh;
+          overflow: hidden;
+          overscroll-behavior: none;
+        }
+
+        body:has(#home-love-support) > div.w-full.max-w-md {
+          height: 100dvh;
+          min-height: 100dvh;
+          overflow: hidden;
+        }
+
+        body:has(#home-love-support) div.flex-1.px-6.py-8.flex.flex-col:has(#home-love-support) {
+          min-height: 0;
+          overflow: hidden;
+          padding-top: clamp(14px, 2.1dvh, 30px);
+          padding-bottom: max(8px, env(safe-area-inset-bottom));
+          gap: clamp(4px, 0.75dvh, 12px);
+        }
+
+        body:has(#home-love-support) div[class*="h-[276px]"] {
+          height: clamp(232px, 32dvh, 276px) !important;
+          min-height: clamp(232px, 32dvh, 276px) !important;
+          padding-top: clamp(30px, 5dvh, 48px) !important;
+          padding-bottom: clamp(22px, 3.5dvh, 40px) !important;
+        }
+
+        body:has(#home-love-support) div:has(> #home-love-support) > div > button:last-child {
+          margin-top: clamp(0px, 0.4dvh, 4px);
+          padding-top: clamp(4px, 0.8dvh, 8px);
+          padding-bottom: clamp(4px, 0.8dvh, 8px);
+        }
+
+        #home-love-support {
+          margin-top: clamp(4px, 0.9dvh, 12px);
+          padding-top: clamp(2px, 0.5dvh, 8px);
+          padding-bottom: 0;
+        }
+
         #home-love-support + div.mt-auto {
           display: none;
+        }
+
+        @media (max-height: 740px) {
+          body:has(#home-love-support) div.flex-1.px-6.py-8.flex.flex-col:has(#home-love-support) {
+            padding-left: 20px;
+            padding-right: 20px;
+          }
+
+          body:has(#home-love-support) div:has(> #home-love-support) > div > button[class*="rounded-3xl"] {
+            padding-top: 14px;
+            padding-bottom: 14px;
+          }
         }
       `}</style>
     </section>
