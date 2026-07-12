@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./task-card-actions.css";
 import LiffBootstrap from "@/components/LiffBootstrap";
 import LiffTransitionOverlay from "@/components/LiffTransitionOverlay";
 import QueueLiveStatusLabel from "@/components/QueueLiveStatusLabel";
