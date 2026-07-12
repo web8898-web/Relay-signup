@@ -10,6 +10,11 @@ const CLOSED_MARKERS = [
   "報名已截止",
 ];
 
+const CLOSED_RED = "#EF4444";
+const CLOSED_RED_SOFT = "#FEF2F2";
+const CLOSED_RED_BORDER = "#FECACA";
+const CLOSED_SUBTITLE = "#4B5563";
+
 function closedSeatSvg() {
   return `
     <svg viewBox="0 0 180 150" role="img" aria-label="空椅子與時鐘，表示任務已截止">
@@ -73,6 +78,59 @@ function hideActionByText(elements, label) {
   if ("disabled" in control) control.disabled = true;
 }
 
+function addStaticClosedDot(title) {
+  const parent = title.parentElement;
+  if (!(parent instanceof HTMLElement)) return;
+  if (parent.querySelector("[data-queue-closed-dot='true']")) return;
+
+  const dot = document.createElement("span");
+  dot.setAttribute("data-queue-closed-dot", "true");
+  dot.setAttribute("aria-hidden", "true");
+  dot.style.display = "block";
+  dot.style.width = "8px";
+  dot.style.height = "8px";
+  dot.style.margin = "0 auto 8px";
+  dot.style.borderRadius = "9999px";
+  dot.style.backgroundColor = CLOSED_RED;
+  dot.style.flex = "0 0 auto";
+  parent.insertBefore(dot, title);
+}
+
+function styleClosedBadge(elements) {
+  const badgeText = elements.filter((el) => {
+    if (normalizeText(el.textContent) !== "已截止") return false;
+    if (el.hasAttribute("data-queue-closed-title")) return false;
+    if (el.hasAttribute("data-queue-closed-status")) return false;
+    const ownClass = el.className?.toString() || "";
+    const parentClass = el.parentElement?.className?.toString() || "";
+    return /rounded|badge|pill/.test(`${ownClass} ${parentClass}`);
+  });
+
+  badgeText.forEach((el) => {
+    const ownClass = el.className?.toString() || "";
+    const target = /rounded|badge|pill/.test(ownClass) ? el : el.parentElement;
+    if (!(target instanceof HTMLElement)) return;
+    target.style.color = CLOSED_RED;
+    target.style.backgroundColor = CLOSED_RED_SOFT;
+    target.style.borderColor = CLOSED_RED_BORDER;
+    target.style.borderStyle = "solid";
+    if (!target.style.borderWidth) target.style.borderWidth = "1px";
+  });
+}
+
+function applyClosedVisuals(root = document.body) {
+  const title = root.querySelector?.("[data-queue-closed-title='true']");
+  if (title instanceof HTMLElement) {
+    title.style.color = CLOSED_RED;
+    addStaticClosedDot(title);
+  }
+
+  const subtitle = root.querySelector?.("[data-queue-closed-subtitle='true']");
+  if (subtitle instanceof HTMLElement) subtitle.style.color = CLOSED_SUBTITLE;
+
+  styleClosedBadge(allElements(root));
+}
+
 function applyClosedCopy(root = document.body) {
   const elements = allElements(root);
 
@@ -126,6 +184,7 @@ function applyClosedCopy(root = document.body) {
 
   hideActionByText(elements, "更改名字");
   hideActionByText(elements, "取消排隊");
+  applyClosedVisuals(root);
 }
 
 function applyClosedMascot(root = document.body) {
