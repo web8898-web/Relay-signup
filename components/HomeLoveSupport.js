@@ -82,6 +82,7 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
   const [pressed, setPressed] = useState(false);
   const [toast, setToast] = useState("");
   const timersRef = useRef(new Map());
+  const pendingOwnRealtimeRef = useRef(null);
 
   const removeHeart = useCallback((id) => {
     setFloatingHearts((current) => current.filter((heart) => heart.id !== id));
@@ -96,6 +97,7 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
       setFloatingHearts((current) => [...current, heart].slice(-MAX_FLOATING_HEARTS));
       const timer = window.setTimeout(() => removeHeart(heart.id), heart.duration + 160);
       timersRef.current.set(heart.id, timer);
+      return heart.id;
     },
     [removeHeart]
   );
@@ -118,7 +120,20 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
         (payload) => {
           const event = payload?.new;
           if (!event?.id) return;
-          addFloatingHeart(event);
+
+          const pending = pendingOwnRealtimeRef.current;
+          const eventName = event?.display_name || "";
+          const isOwnPendingEvent =
+            pending &&
+            Date.now() - pending.createdAt < 8000 &&
+            eventName === pending.displayName;
+
+          if (isOwnPendingEvent) {
+            pendingOwnRealtimeRef.current = null;
+          } else {
+            addFloatingHeart(event);
+          }
+
           setTotalCount((current) => (typeof current === "number" ? current + 1 : current));
         }
       )
@@ -150,6 +165,17 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
       return;
     }
 
+    const optimisticHeartId = addFloatingHeart(
+      { displayName: profile.displayName },
+      true
+    );
+
+    pendingOwnRealtimeRef.current = {
+      displayName: profile.displayName || "",
+      createdAt: Date.now(),
+      heartId: optimisticHeartId,
+    };
+
     setSubmitting(true);
     try {
       const response = await fetch("/api/love", {
@@ -163,10 +189,12 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
       if (Number.isFinite(data?.totalCount)) setTotalCount(data.totalCount);
 
       if (!data?.accepted) {
-        addFloatingHeart({ displayName: profile.displayName }, true);
+        pendingOwnRealtimeRef.current = null;
         setToast(data?.message || "今天已經送過愛心了 ❤️");
       }
     } catch (error) {
+      pendingOwnRealtimeRef.current = null;
+      removeHeart(optimisticHeartId);
       setToast(error?.message || "暫時無法送出愛心，請稍後再試");
     } finally {
       setSubmitting(false);
