@@ -1,0 +1,35 @@
+.relay-actions-in {
+  animation: relay-actions-in 200ms ease-out !important;
+  right: 2.25rem !important;
+  top: -0.75rem !important;
+  bottom: auto !important;
+  width: min(42vw, 11rem) !important;
+  height: calc(100% + 1.5rem) !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-left: 1px solid rgba(15, 23, 42, 0.055) !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+  justify-content: stretch !important;
+}
+
+.relay-actions-in > button {
+  flex: 1 1 0 !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  padding: 0.5rem !important;
+  justify-content: center !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+.relay-actions-in > button:active {
+  background: rgba(15, 23, 42, 0.035) !important;
+}
+
+.relay-actions-in > span[aria-hidden="true"] {
+  height: 58% !important;
+  background: rgba(148, 163, 184, 0.24) !important;
+}
