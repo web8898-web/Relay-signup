@@ -22,6 +22,10 @@ function closedSeatSvg() {
     </svg>`;
 }
 
+function normalizeText(value) {
+  return (value || "").replace(/\s+/g, " ").trim();
+}
+
 function pageIsClosed() {
   const text = document.body?.innerText || document.body?.textContent || "";
   return CLOSED_MARKERS.some((marker) => text.includes(marker));
@@ -40,85 +44,88 @@ function stopMascotTimers(mascot) {
   });
 }
 
-function leafElements(root = document.body) {
+function allElements(root = document.body) {
   return [...(root.querySelectorAll?.("*") || [])].filter(
-    (el) => el instanceof HTMLElement && el.children.length === 0
+    (el) => el instanceof HTMLElement
   );
 }
 
-function hideActionControl(el) {
-  const control = el.closest("button, a, [role='button']");
-  const target = control || el.parentElement;
-  if (!(target instanceof HTMLElement)) return;
-  target.style.display = "none";
-  target.setAttribute("aria-hidden", "true");
-  if ("disabled" in target) target.disabled = true;
+function smallestMatch(elements, predicate) {
+  return elements
+    .filter((el) => predicate(normalizeText(el.textContent)))
+    .sort((a, b) => a.querySelectorAll("*").length - b.querySelectorAll("*").length)[0];
 }
 
-function removeLiveDot(el) {
-  const container = el.parentElement;
-  if (!(container instanceof HTMLElement)) return;
+function replaceSmallest(elements, predicate, replacement, attribute) {
+  const el = smallestMatch(elements, predicate);
+  if (!el) return;
+  el.textContent = replacement;
+  if (attribute) el.setAttribute(attribute, "true");
+}
 
-  [...container.children].forEach((child) => {
-    if (!(child instanceof HTMLElement) || child === el) return;
-    const className = child.className?.toString() || "";
-    const style = window.getComputedStyle(child);
-    const looksLikeDot =
-      className.includes("rounded-full") ||
-      (parseFloat(style.width) <= 20 &&
-        parseFloat(style.height) <= 20 &&
-        style.borderRadius !== "0px");
-    if (looksLikeDot) child.style.display = "none";
-  });
+function hideActionByText(elements, label) {
+  const el = smallestMatch(elements, (text) => text === label);
+  if (!el) return;
+  const control = el.closest("button, a, [role='button']") || el.parentElement;
+  if (!(control instanceof HTMLElement)) return;
+  control.style.display = "none";
+  control.setAttribute("aria-hidden", "true");
+  if ("disabled" in control) control.disabled = true;
 }
 
 function applyClosedCopy(root = document.body) {
-  const leaves = leafElements(root);
+  const elements = allElements(root);
 
-  leaves.forEach((el) => {
-    const text = el.textContent?.trim() || "";
+  const waitingTitle = smallestMatch(elements, (text) => text === "目前等待順位");
+  if (waitingTitle) {
+    waitingTitle.style.display = "none";
+    waitingTitle.setAttribute("aria-hidden", "true");
+  }
 
-    if (text === "目前等待順位") {
-      el.style.display = "none";
-      el.setAttribute("aria-hidden", "true");
-      return;
+  replaceSmallest(
+    elements,
+    (text) => /^第\s*\d+\s*位$/.test(text),
+    "已截止",
+    "data-queue-closed-title"
+  );
+
+  replaceSmallest(
+    elements,
+    (text) => /你前面還有\s*\d+\s*位[，,、]?\s*請稍候/.test(text),
+    "無法再接龍",
+    "data-queue-closed-subtitle"
+  );
+
+  const liveStatus = smallestMatch(elements, (text) => text === "排隊狀態即時同步");
+  if (liveStatus) {
+    const container = liveStatus.parentElement;
+    liveStatus.textContent = "已截止";
+    liveStatus.setAttribute("data-queue-closed-status", "true");
+    if (container instanceof HTMLElement) {
+      [...container.children].forEach((child) => {
+        if (child instanceof HTMLElement && child !== liveStatus) child.style.display = "none";
+      });
     }
+  }
 
-    if (/^第\s*\d+\s*位$/.test(text)) {
-      el.textContent = "已截止";
-      el.setAttribute("data-queue-closed-title", "true");
-      return;
-    }
-
-    if (/你前面還有\s*\d+\s*位[，,、]?\s*請稍候/.test(text)) {
-      el.textContent = "無法再接龍";
-      el.setAttribute("data-queue-closed-subtitle", "true");
-      return;
-    }
-
-    if (/^等待中\s*\d+\s*位$/.test(text)) {
-      el.textContent = "任務已結束";
-      el.setAttribute("data-queue-closed-status", "true");
-      return;
-    }
-
-    if (text === "排隊狀態即時同步") {
-      el.textContent = "已截止";
-      el.setAttribute("data-queue-closed-status", "true");
-      removeLiveDot(el);
-      return;
-    }
-
-    if (/^已完成\s*\d+\s*位$/.test(text)) {
-      el.textContent = "已截止";
-      el.setAttribute("data-queue-closed-status", "true");
-      return;
-    }
-
-    if (text === "更改名字" || text === "取消排隊") {
-      hideActionControl(el);
-    }
+  const waitingLabels = elements
+    .filter((el) => /^等待中\s*\d+\s*位$/.test(normalizeText(el.textContent)))
+    .sort((a, b) => a.querySelectorAll("*").length - b.querySelectorAll("*").length);
+  waitingLabels.forEach((el) => {
+    el.textContent = "任務已結束";
+    el.setAttribute("data-queue-closed-status", "true");
   });
+
+  const completedLabels = elements
+    .filter((el) => /^已完成\s*\d+\s*位$/.test(normalizeText(el.textContent)))
+    .sort((a, b) => a.querySelectorAll("*").length - b.querySelectorAll("*").length);
+  completedLabels.forEach((el) => {
+    el.textContent = "已截止";
+    el.setAttribute("data-queue-closed-status", "true");
+  });
+
+  hideActionByText(elements, "更改名字");
+  hideActionByText(elements, "取消排隊");
 }
 
 function applyClosedMascot(root = document.body) {
@@ -127,15 +134,15 @@ function applyClosedMascot(root = document.body) {
   const mascots = root.querySelectorAll?.("[data-reference-queue-mascot]") || [];
   mascots.forEach((mascot) => {
     if (!(mascot instanceof HTMLElement)) return;
-    if (mascot.dataset.closedSeatOnly === "true") return;
-
-    stopMascotTimers(mascot);
-    mascot.dataset.closedSeatOnly = "true";
-    mascot.dataset.referenceActionActive = "false";
-    mascot.dataset.referenceActionScheduled = "false";
-    mascot.dataset.referenceSpeechScheduled = "false";
-    mascot.className = "queue-reference-mascot queue-reference-closed";
-    mascot.innerHTML = closedSeatSvg();
+    if (mascot.dataset.closedSeatOnly !== "true") {
+      stopMascotTimers(mascot);
+      mascot.dataset.closedSeatOnly = "true";
+      mascot.dataset.referenceActionActive = "false";
+      mascot.dataset.referenceActionScheduled = "false";
+      mascot.dataset.referenceSpeechScheduled = "false";
+      mascot.className = "queue-reference-mascot queue-reference-closed";
+      mascot.innerHTML = closedSeatSvg();
+    }
   });
 
   document.querySelectorAll(".queue-reference-speech").forEach((bubble) => bubble.remove());
