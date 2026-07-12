@@ -15,102 +15,135 @@ function pageIsClosed() {
   return CLOSED_MARKERS.some((marker) => text.includes(marker));
 }
 
-function allElements() {
-  return [...document.querySelectorAll("*")].filter((el) => el instanceof HTMLElement);
+function allElements(root = document.body) {
+  return [...(root?.querySelectorAll?.("*") || [])].filter((el) => el instanceof HTMLElement);
 }
 
-function findVisualBox(el) {
-  if (!(el instanceof HTMLElement)) return null;
-  const baseWidth = el.getBoundingClientRect().width;
-  let current = el;
+function smallestExact(root, text) {
+  return allElements(root)
+    .filter((el) => normalizeText(el.textContent) === text)
+    .sort((a, b) => a.querySelectorAll("*").length - b.querySelectorAll("*").length)[0] || null;
+}
 
-  for (let depth = 0; depth < 7 && current.parentElement; depth += 1) {
+function nearestRoundedPanel(el) {
+  if (!(el instanceof HTMLElement)) return null;
+  let current = el;
+  for (let depth = 0; depth < 8 && current.parentElement; depth += 1) {
     current = current.parentElement;
-    const rect = current.getBoundingClientRect();
     const style = window.getComputedStyle(current);
     const radius = parseFloat(style.borderTopLeftRadius) || 0;
-    const borderWidth = parseFloat(style.borderTopWidth) || 0;
-    if ((radius >= 12 || borderWidth > 0) && rect.width >= baseWidth + 32) return current;
+    if (radius >= 20 && current.getBoundingClientRect().width >= 240) return current;
   }
-
-  return el.parentElement;
+  return null;
 }
 
-function hideElementAndEmptyParents(el) {
+function hide(el) {
   if (!(el instanceof HTMLElement)) return;
-  el.style.display = "none";
+  el.style.setProperty("display", "none", "important");
   el.setAttribute("aria-hidden", "true");
+}
 
-  let parent = el.parentElement;
-  for (let depth = 0; depth < 3 && parent; depth += 1) {
-    const visibleChildren = [...parent.children].filter(
+function hideEmptyAncestors(el, stopAt) {
+  let current = el instanceof HTMLElement ? el.parentElement : null;
+  for (let depth = 0; depth < 4 && current && current !== stopAt; depth += 1) {
+    const visible = [...current.children].some(
       (child) => child instanceof HTMLElement && window.getComputedStyle(child).display !== "none"
     );
-    if (visibleChildren.length > 0) break;
-    parent.style.display = "none";
-    parent.setAttribute("aria-hidden", "true");
-    parent = parent.parentElement;
+    if (visible) break;
+    hide(current);
+    current = current.parentElement;
   }
 }
 
-function stylePrimaryClosedLabel(label) {
+function stylePrimaryStatus(queueCard) {
+  const label = smallestExact(queueCard, "任務已結束");
   if (!(label instanceof HTMLElement)) return;
-  const box = findVisualBox(label);
-  if (!(box instanceof HTMLElement)) return;
 
-  box.setAttribute("data-queue-final-primary-status", "true");
-  box.style.display = "flex";
-  box.style.width = "100%";
-  box.style.maxWidth = "100%";
-  box.style.flex = "1 1 100%";
-  box.style.gridColumn = "1 / -1";
-  box.style.justifyContent = "center";
-  box.style.alignItems = "center";
-  box.style.textAlign = "center";
-  box.style.backgroundColor = CLOSED_RED_SOFT;
-  box.style.borderColor = CLOSED_RED_BORDER;
-  box.style.borderStyle = "solid";
-  box.style.borderWidth = "1px";
+  const leftBox = label.parentElement;
+  const row = leftBox?.parentElement;
+  if (!(leftBox instanceof HTMLElement) || !(row instanceof HTMLElement)) return;
 
-  label.style.display = "block";
-  label.style.width = "100%";
-  label.style.textAlign = "center";
-  label.style.color = "#111827";
+  [...row.children].forEach((child) => {
+    if (child instanceof HTMLElement && child !== leftBox) hide(child);
+  });
+
+  row.style.setProperty("display", "grid", "important");
+  row.style.setProperty("grid-template-columns", "minmax(0, 1fr)", "important");
+  row.style.setProperty("gap", "0", "important");
+  row.style.setProperty("width", "100%", "important");
+
+  leftBox.style.setProperty("display", "flex", "important");
+  leftBox.style.setProperty("width", "100%", "important");
+  leftBox.style.setProperty("max-width", "100%", "important");
+  leftBox.style.setProperty("grid-column", "1 / -1", "important");
+  leftBox.style.setProperty("justify-content", "center", "important");
+  leftBox.style.setProperty("align-items", "center", "important");
+  leftBox.style.setProperty("text-align", "center", "important");
+  leftBox.style.setProperty("background-color", CLOSED_RED_SOFT, "important");
+  leftBox.style.setProperty("border-color", CLOSED_RED_BORDER, "important");
+  leftBox.style.setProperty("border-style", "solid", "important");
+  leftBox.style.setProperty("border-width", "1px", "important");
+
+  label.style.setProperty("display", "block", "important");
+  label.style.setProperty("width", "100%", "important");
+  label.style.setProperty("text-align", "center", "important");
+  label.style.setProperty("color", "#111827", "important");
+}
+
+function hideClosedActions(queueCard) {
+  ["更改名字", "不排了", "取消排隊"].forEach((text) => {
+    const label = smallestExact(queueCard, text);
+    if (!(label instanceof HTMLElement)) return;
+    const button = label.closest("button, [role='button']") || label.parentElement;
+    hide(button);
+  });
+
+  allElements(queueCard).forEach((el) => {
+    const text = normalizeText(el.textContent);
+    if (text === "儲存名字" || text === "儲存中…") {
+      const panel = el.closest("div.rounded-2xl") || el.parentElement?.parentElement;
+      hide(panel);
+    }
+  });
+}
+
+function hideDuplicateListSummary(queueCard) {
+  const candidates = allElements(document.body)
+    .filter((el) => normalizeText(el.textContent) === "任務已結束" && !queueCard.contains(el))
+    .sort((a, b) => a.querySelectorAll("*").length - b.querySelectorAll("*").length);
+
+  candidates.forEach((label) => {
+    const row = label.parentElement?.parentElement || label.parentElement;
+    hide(row);
+    hideEmptyAncestors(row, queueCard);
+  });
+
+  allElements(document.body).forEach((el) => {
+    if (queueCard.contains(el)) return;
+    const text = normalizeText(el.textContent);
+    if (/^已完成\s*\d+\s*位$/.test(text) || text === "已截止") {
+      const row = el.parentElement?.parentElement || el.parentElement;
+      if (row instanceof HTMLElement && row.getBoundingClientRect().top > queueCard.getBoundingClientRect().bottom - 12) {
+        hide(row);
+        hideEmptyAncestors(row, queueCard);
+      }
+    }
+  });
 }
 
 function applyFinalClosedLayout() {
   if (!pageIsClosed()) return;
 
-  const elements = allElements();
-  const labels = elements
-    .filter((el) => normalizeText(el.textContent) === "任務已結束")
-    .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+  const mascot = document.querySelector("[data-reference-queue-mascot]");
+  if (!(mascot instanceof HTMLElement)) return;
 
-  if (labels.length === 0) return;
+  const queueCard = nearestRoundedPanel(mascot);
+  if (!(queueCard instanceof HTMLElement)) return;
 
-  const primary = labels[0];
-  stylePrimaryClosedLabel(primary);
-
-  labels.slice(1).forEach((label) => {
-    const box = findVisualBox(label);
-    hideElementAndEmptyParents(box instanceof HTMLElement ? box : label);
-  });
-
-  const primaryBox = findVisualBox(primary);
-  if (primaryBox instanceof HTMLElement) {
-    let row = primaryBox.parentElement;
-    if (row instanceof HTMLElement) {
-      [...row.children].forEach((child) => {
-        if (!(child instanceof HTMLElement) || child === primaryBox) return;
-        const text = normalizeText(child.textContent);
-        if (text === "已截止" || text === "排隊狀態即時同步") hideElementAndEmptyParents(child);
-      });
-      row.style.display = "grid";
-      row.style.gridTemplateColumns = "minmax(0, 1fr)";
-      row.style.width = "100%";
-      row.style.gap = "0";
-    }
-  }
+  queueCard.setAttribute("data-queue-closed-card", "true");
+  stylePrimaryStatus(queueCard);
+  hideClosedActions(queueCard);
+  hideDuplicateListSummary(queueCard);
 }
 
 export default function QueueClosedFinalLayout() {
@@ -124,9 +157,11 @@ export default function QueueClosedFinalLayout() {
     refresh();
     const observer = new MutationObserver(refresh);
     observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    const interval = window.setInterval(refresh, 1200);
 
     return () => {
       observer.disconnect();
+      window.clearInterval(interval);
       window.cancelAnimationFrame(frame);
     };
   }, []);
