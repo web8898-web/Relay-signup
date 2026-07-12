@@ -5,7 +5,7 @@ import { Heart } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
 const MAX_FLOATING_HEARTS = 3;
-const HEART_LIFETIME_MS = 2800;
+const HEART_LIFETIME_MS = 3200;
 const LOVE_MESSAGES = [
   "愛心收到囉",
   "今天的愛心已收到",
@@ -52,17 +52,26 @@ function getRandomLoveMessage() {
 }
 
 function makeFloatingHeart(event, localOnly = false) {
+  const direction = Math.random() < 0.5 ? -1 : 1;
+  const motionType = randomBetween(1, 5);
+  const driftX = randomBetween(38, 92) * direction;
+
   return {
     id: event?.id || `local-${Date.now()}-${Math.random()}`,
     displayName: event?.display_name || event?.displayName || "謝謝你的支持",
     localOnly,
     message: localOnly ? getRandomLoveMessage() : "",
-    driftX: randomBetween(-34, 34),
-    floatY: randomBetween(110, 155),
-    startX: randomBetween(-12, 12),
-    size: randomBetween(22, 28),
-    rotateStart: randomBetween(-6, 6),
-    rotateEnd: randomBetween(-6, 6),
+    motionType,
+    driftX,
+    curveX: randomBetween(18, 58) * -direction,
+    floatY: randomBetween(118, 188),
+    startX: randomBetween(-24, 24),
+    startY: randomBetween(2, 18),
+    size: randomBetween(21, 29),
+    rotateStart: randomBetween(-18, 18),
+    rotateMid: randomBetween(-12, 12),
+    rotateEnd: randomBetween(-22, 22),
+    duration: randomBetween(2400, 3400),
   };
 }
 
@@ -85,7 +94,7 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
     (event, localOnly = false) => {
       const heart = makeFloatingHeart(event, localOnly);
       setFloatingHearts((current) => [...current, heart].slice(-MAX_FLOATING_HEARTS));
-      const timer = window.setTimeout(() => removeHeart(heart.id), HEART_LIFETIME_MS + 100);
+      const timer = window.setTimeout(() => removeHeart(heart.id), heart.duration + 160);
       timersRef.current.set(heart.id, timer);
     },
     [removeHeart]
@@ -167,17 +176,21 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
   return (
     <section id="home-love-support" className="relative mx-auto flex min-h-0 w-full max-w-[260px] flex-1 flex-col px-3 text-center overflow-visible">
       <div className="love-center-area relative flex min-h-0 flex-1 items-center justify-center">
-        <div className="pointer-events-none absolute inset-x-0 bottom-1/2 h-40 translate-y-[58px] overflow-visible" aria-hidden="true">
+        <div className="pointer-events-none absolute inset-x-0 bottom-1/2 h-44 translate-y-[60px] overflow-visible" aria-hidden="true">
           {floatingHearts.map((heart) => (
             <div
               key={heart.id}
-              className="floating-love-event absolute left-1/2 bottom-0 flex items-center gap-1.5"
+              className={`floating-love-event motion-${heart.motionType} absolute left-1/2 bottom-0 flex items-center gap-1.5`}
               style={{
                 "--start-x": `${heart.startX}px`,
+                "--start-y": `${heart.startY}px`,
                 "--drift-x": `${heart.driftX}px`,
+                "--curve-x": `${heart.curveX}px`,
                 "--float-y": `${heart.floatY}px`,
                 "--rotate-start": `${heart.rotateStart}deg`,
+                "--rotate-mid": `${heart.rotateMid}deg`,
                 "--rotate-end": `${heart.rotateEnd}deg`,
+                "--motion-duration": `${heart.duration}ms`,
               }}
             >
               <Heart
@@ -231,26 +244,111 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
       )}
 
       <style jsx>{`
-        @keyframes floatLove {
+        @keyframes floatLoveWave {
           0% {
-            transform: translate3d(var(--start-x), 8px, 0) scale(0.88) rotate(var(--rotate-start));
+            transform: translate3d(var(--start-x), var(--start-y), 0) scale(0.84) rotate(var(--rotate-start));
             opacity: 0;
           }
           12% { opacity: 1; }
-          58% {
-            transform: translate3d(calc(var(--start-x) + var(--drift-x) * 0.55), calc(var(--float-y) * -0.55), 0) scale(1.02) rotate(0deg);
+          38% {
+            transform: translate3d(calc(var(--start-x) + var(--curve-x)), calc(var(--float-y) * -0.34), 0) scale(1.03) rotate(var(--rotate-mid));
+            opacity: 1;
+          }
+          72% {
+            transform: translate3d(calc(var(--start-x) + var(--drift-x) * 0.72), calc(var(--float-y) * -0.76), 0) scale(1) rotate(calc(var(--rotate-end) * 0.65));
+            opacity: 0.9;
+          }
+          100% {
+            transform: translate3d(calc(var(--start-x) + var(--drift-x)), calc(var(--float-y) * -1), 0) scale(0.94) rotate(var(--rotate-end));
+            opacity: 0;
+          }
+        }
+
+        @keyframes floatLoveArc {
+          0% {
+            transform: translate3d(var(--start-x), var(--start-y), 0) scale(0.86) rotate(var(--rotate-start));
+            opacity: 0;
+          }
+          14% { opacity: 1; }
+          48% {
+            transform: translate3d(calc(var(--start-x) + var(--drift-x) * 0.22), calc(var(--float-y) * -0.62), 0) scale(1.06) rotate(var(--rotate-mid));
             opacity: 1;
           }
           100% {
-            transform: translate3d(calc(var(--start-x) + var(--drift-x)), calc(var(--float-y) * -1), 0) scale(0.96) rotate(var(--rotate-end));
+            transform: translate3d(calc(var(--start-x) + var(--drift-x) * 1.2), calc(var(--float-y) * -0.94), 0) scale(0.92) rotate(var(--rotate-end));
+            opacity: 0;
+          }
+        }
+
+        @keyframes floatLoveSway {
+          0% {
+            transform: translate3d(var(--start-x), var(--start-y), 0) scale(0.82) rotate(var(--rotate-start));
+            opacity: 0;
+          }
+          12% { opacity: 1; }
+          30% {
+            transform: translate3d(calc(var(--start-x) + var(--drift-x) * 0.5), calc(var(--float-y) * -0.28), 0) scale(1.02) rotate(var(--rotate-mid));
+          }
+          62% {
+            transform: translate3d(calc(var(--start-x) + var(--curve-x) * 1.35), calc(var(--float-y) * -0.7), 0) scale(1.04) rotate(calc(var(--rotate-mid) * -1));
+            opacity: 1;
+          }
+          100% {
+            transform: translate3d(calc(var(--start-x) + var(--drift-x) * 0.82), calc(var(--float-y) * -1.05), 0) scale(0.9) rotate(var(--rotate-end));
+            opacity: 0;
+          }
+        }
+
+        @keyframes floatLoveBurst {
+          0% {
+            transform: translate3d(var(--start-x), var(--start-y), 0) scale(0.72) rotate(var(--rotate-start));
+            opacity: 0;
+          }
+          10% {
+            transform: translate3d(calc(var(--start-x) + var(--curve-x) * 0.5), calc(var(--float-y) * -0.2), 0) scale(1.12) rotate(var(--rotate-mid));
+            opacity: 1;
+          }
+          54% {
+            transform: translate3d(calc(var(--start-x) + var(--drift-x) * 0.48), calc(var(--float-y) * -0.58), 0) scale(1) rotate(calc(var(--rotate-end) * 0.35));
+            opacity: 1;
+          }
+          100% {
+            transform: translate3d(calc(var(--start-x) + var(--drift-x) * 1.08), calc(var(--float-y) * -0.92), 0) scale(0.88) rotate(var(--rotate-end));
+            opacity: 0;
+          }
+        }
+
+        @keyframes floatLoveSpiral {
+          0% {
+            transform: translate3d(var(--start-x), var(--start-y), 0) scale(0.8) rotate(var(--rotate-start));
+            opacity: 0;
+          }
+          16% { opacity: 1; }
+          35% {
+            transform: translate3d(calc(var(--start-x) + var(--curve-x) * 1.25), calc(var(--float-y) * -0.32), 0) scale(1.05) rotate(calc(var(--rotate-mid) + 12deg));
+          }
+          68% {
+            transform: translate3d(calc(var(--start-x) + var(--drift-x) * 0.35), calc(var(--float-y) * -0.72), 0) scale(0.98) rotate(calc(var(--rotate-mid) - 12deg));
+            opacity: 0.95;
+          }
+          100% {
+            transform: translate3d(calc(var(--start-x) + var(--drift-x)), calc(var(--float-y) * -1), 0) scale(0.9) rotate(var(--rotate-end));
             opacity: 0;
           }
         }
 
         .floating-love-event {
-          animation: floatLove 2.8s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+          animation-duration: var(--motion-duration);
+          animation-fill-mode: forwards;
+          animation-timing-function: cubic-bezier(0.2, 0.72, 0.28, 1);
           will-change: transform, opacity;
         }
+
+        .motion-1 { animation-name: floatLoveWave; }
+        .motion-2 { animation-name: floatLoveArc; }
+        .motion-3 { animation-name: floatLoveSway; }
+        .motion-4 { animation-name: floatLoveBurst; }
+        .motion-5 { animation-name: floatLoveSpiral; }
 
         .home-love-copyright {
           padding-bottom: max(2px, env(safe-area-inset-bottom));
