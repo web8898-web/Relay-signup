@@ -83,6 +83,7 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
   const [toast, setToast] = useState("");
   const timersRef = useRef(new Map());
   const pendingOwnRealtimeRef = useRef(null);
+  const duplicateToastShownRef = useRef(false);
 
   const removeHeart = useCallback((id) => {
     setFloatingHearts((current) => current.filter((heart) => heart.id !== id));
@@ -190,7 +191,10 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
 
       if (!data?.accepted) {
         pendingOwnRealtimeRef.current = null;
-        setToast(data?.message || "今天已經送過愛心了 ❤️");
+        if (!duplicateToastShownRef.current) {
+          duplicateToastShownRef.current = true;
+          setToast("already-loved");
+        }
       }
     } catch (error) {
       pendingOwnRealtimeRef.current = null;
@@ -266,8 +270,15 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
       </div>
 
       {toast && (
-        <div className="absolute left-1/2 bottom-[calc(env(safe-area-inset-bottom)+34px)] z-20 -translate-x-1/2 whitespace-nowrap rounded-full bg-emerald-500 px-3 py-1.5 text-[11px] text-white shadow-lg">
-          {toast}
+        <div className="absolute left-1/2 bottom-[calc(env(safe-area-inset-bottom)+34px)] z-20 flex -translate-x-1/2 items-center gap-1 whitespace-nowrap rounded-full bg-emerald-500 px-3 py-1.5 text-[11px] text-white shadow-lg">
+          {toast === "already-loved" ? (
+            <>
+              <span>今天的愛心已收到，明天再來吧</span>
+              <Heart size={12} className="fill-rose-300 text-rose-300" strokeWidth={0} />
+            </>
+          ) : (
+            toast
+          )}
         </div>
       )}
 
