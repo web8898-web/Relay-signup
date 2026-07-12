@@ -128,49 +128,53 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
   }
 
   return (
-    <section id="home-love-support" className="relative mx-auto w-full max-w-[260px] px-3 text-center overflow-visible">
-      <div className="pointer-events-none absolute inset-x-0 bottom-[58px] h-40 overflow-visible" aria-hidden="true">
-        {floatingHearts.map((heart) => (
-          <div
-            key={heart.id}
-            className="floating-love-event absolute left-1/2 bottom-0 flex items-center gap-1.5"
-            style={{
-              "--start-x": `${heart.startX}px`,
-              "--drift-x": `${heart.driftX}px`,
-              "--float-y": `${heart.floatY}px`,
-              "--rotate-start": `${heart.rotateStart}deg`,
-              "--rotate-end": `${heart.rotateEnd}deg`,
-            }}
+    <section id="home-love-support" className="relative mx-auto flex min-h-0 w-full max-w-[260px] flex-1 flex-col px-3 text-center overflow-visible">
+      <div className="love-center-area relative flex min-h-0 flex-1 items-center justify-center">
+        <div className="pointer-events-none absolute inset-x-0 bottom-1/2 h-40 translate-y-[58px] overflow-visible" aria-hidden="true">
+          {floatingHearts.map((heart) => (
+            <div
+              key={heart.id}
+              className="floating-love-event absolute left-1/2 bottom-0 flex items-center gap-1.5"
+              style={{
+                "--start-x": `${heart.startX}px`,
+                "--drift-x": `${heart.driftX}px`,
+                "--float-y": `${heart.floatY}px`,
+                "--rotate-start": `${heart.rotateStart}deg`,
+                "--rotate-end": `${heart.rotateEnd}deg`,
+              }}
+            >
+              <Heart
+                size={heart.size}
+                className="shrink-0 fill-rose-200 text-rose-200"
+                strokeWidth={0}
+              />
+              <span className="max-w-[150px] truncate rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-medium text-gray-500 shadow-sm ring-1 ring-gray-100">
+                {heart.localOnly ? "今天也謝謝你的支持" : `${heart.displayName} 喜歡這個小工具`}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div>
+          <button
+            type="button"
+            onClick={handleLoveClick}
+            disabled={submitting}
+            aria-label="送出一顆愛心支持接龍報名小助手"
+            className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-50/70 ring-1 ring-rose-100/60 transition-transform duration-300 active:scale-95 disabled:opacity-60 ${
+              pressed ? "scale-110" : "scale-100"
+            }`}
           >
-            <Heart
-              size={heart.size}
-              className="shrink-0 fill-rose-200 text-rose-200"
-              strokeWidth={0}
-            />
-            <span className="max-w-[150px] truncate rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-medium text-gray-500 shadow-sm ring-1 ring-gray-100">
-              {heart.localOnly ? "今天也謝謝你的支持" : `${heart.displayName} 喜歡這個小工具`}
-            </span>
-          </div>
-        ))}
+            <Heart size={23} className="fill-rose-200 text-rose-200" strokeWidth={0} />
+          </button>
+
+          <p className="mt-1.5 text-[11px] text-gray-400" aria-live="polite">
+            {totalCount == null ? "—" : formatCount(totalCount)}
+          </p>
+        </div>
       </div>
 
-      <button
-        type="button"
-        onClick={handleLoveClick}
-        disabled={submitting}
-        aria-label="送出一顆愛心支持接龍報名小助手"
-        className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-50/70 ring-1 ring-rose-100/60 transition-transform duration-300 active:scale-95 disabled:opacity-60 ${
-          pressed ? "scale-110" : "scale-100"
-        }`}
-      >
-        <Heart size={23} className="fill-rose-200 text-rose-200" strokeWidth={0} />
-      </button>
-
-      <p className="mt-1.5 text-[11px] text-gray-400" aria-live="polite">
-        {totalCount == null ? "—" : formatCount(totalCount)}
-      </p>
-
-      <div className="home-love-copyright text-center text-[11px] text-gray-300">
+      <div className="home-love-copyright shrink-0 text-center text-[11px] text-gray-300">
         © 2026{" "}
         <a
           href="https://www.wiweb.com.tw"
@@ -184,7 +188,7 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
       </div>
 
       {toast && (
-        <div className="absolute left-1/2 top-full z-20 mt-1.5 -translate-x-1/2 whitespace-nowrap rounded-full bg-emerald-500 px-3 py-1.5 text-[11px] text-white shadow-lg">
+        <div className="absolute left-1/2 bottom-[calc(env(safe-area-inset-bottom)+34px)] z-20 -translate-x-1/2 whitespace-nowrap rounded-full bg-emerald-500 px-3 py-1.5 text-[11px] text-white shadow-lg">
           {toast}
         </div>
       )}
@@ -212,7 +216,6 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
         }
 
         .home-love-copyright {
-          margin-top: clamp(10px, 1.8dvh, 22px);
           padding-bottom: max(2px, env(safe-area-inset-bottom));
         }
 
@@ -259,8 +262,8 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
         }
 
         #home-love-support {
-          margin-top: clamp(4px, 0.9dvh, 12px);
-          padding-top: clamp(2px, 0.5dvh, 8px);
+          margin-top: clamp(2px, 0.5dvh, 8px);
+          padding-top: 0;
           padding-bottom: 0;
         }
 
