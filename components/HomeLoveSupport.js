@@ -171,7 +171,7 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
       </p>
 
       {toast && (
-        <div className="absolute left-1/2 top-full z-20 mt-1.5 -translate-x-1/2 whitespace-nowrap rounded-full bg-gray-800 px-3 py-1.5 text-[11px] text-white shadow-lg">
+        <div className="absolute left-1/2 top-full z-20 mt-1.5 -translate-x-1/2 whitespace-nowrap rounded-full bg-emerald-500 px-3 py-1.5 text-[11px] text-white shadow-lg">
           {toast}
         </div>
       )}
