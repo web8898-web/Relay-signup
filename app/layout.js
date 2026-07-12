@@ -5,6 +5,7 @@ import LiffTransitionOverlay from "@/components/LiffTransitionOverlay";
 import QueueLiveStatusLabel from "@/components/QueueLiveStatusLabel";
 import QueueMascotReference from "@/components/QueueMascotReference";
 import QueueClosedMascotFix from "@/components/QueueClosedMascotFix";
+import QueueClosedFinalLayout from "@/components/QueueClosedFinalLayout";
 import QueueMascotOverflowFix from "@/components/QueueMascotOverflowFix";
 import QueueMascotDetailFix from "@/components/QueueMascotDetailFix";
 import QueueSmallScreenFix from "@/components/QueueSmallScreenFix";
@@ -101,6 +102,7 @@ export default function RootLayout({ children }) {
         <QueueLiveStatusLabel />
         <QueueMascotReference />
         <QueueClosedMascotFix />
+        <QueueClosedFinalLayout />
         <QueueMascotOverflowFix />
         <QueueMascotDetailFix />
         <QueueSmallScreenFix />
