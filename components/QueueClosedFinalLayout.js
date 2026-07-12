@@ -66,6 +66,20 @@ function restoreElement(el, display = "block") {
   el.removeAttribute("aria-hidden");
 }
 
+function hideClosedQueueWaitingCount(queueCard) {
+  const section = queueCard.parentElement;
+  if (!(section instanceof HTMLElement)) return;
+
+  [...section.children].forEach((child) => {
+    if (!(child instanceof HTMLElement) || child === queueCard) return;
+    const text = normalizeText(child.textContent);
+    if (/^\d+\s*人等待中$/.test(text)) {
+      child.style.setProperty("display", "none", "important");
+      child.setAttribute("aria-hidden", "true");
+    }
+  });
+}
+
 function hideDuplicateStatusRows(queueCard) {
   const listContainer = queueCard.parentElement?.nextElementSibling;
   if (!(listContainer instanceof HTMLElement)) return;
@@ -104,6 +118,7 @@ function applyFinalClosedLayout() {
   }
 
   queueCard.className = "mt-3 mb-3 overflow-hidden rounded-[28px] border border-sky-100 bg-gradient-to-br from-sky-50 via-white to-emerald-50 shadow-sm";
+  hideClosedQueueWaitingCount(queueCard);
   hideDuplicateStatusRows(queueCard);
 }
 
