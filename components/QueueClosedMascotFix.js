@@ -2,7 +2,13 @@
 
 import { useEffect } from "react";
 
-const CLOSED_MARKERS = ["此任務已截止", "任務已截止", "無法再接龍"];
+const CLOSED_MARKERS = [
+  "此任務已截止",
+  "任務已截止",
+  "無法再接龍",
+  "接龍已截止",
+  "報名已截止",
+];
 
 function closedSeatSvg() {
   return `
@@ -16,38 +22,57 @@ function closedSeatSvg() {
     </svg>`;
 }
 
-function isClosedCard(card) {
-  const text = card?.textContent || "";
+function pageIsClosed() {
+  const text = document.body?.innerText || document.body?.textContent || "";
   return CLOSED_MARKERS.some((marker) => text.includes(marker));
 }
 
+function stopMascotTimers(mascot) {
+  [
+    "referenceBlinkTimer",
+    "referenceActionTimer",
+    "referenceActionScheduleTimer",
+    "referenceSpeechTimer",
+  ].forEach((key) => {
+    const timer = Number(mascot.dataset[key]);
+    if (timer) window.clearTimeout(timer);
+    delete mascot.dataset[key];
+  });
+}
+
 function applyClosedMascot(root = document.body) {
+  if (!root || !pageIsClosed()) return;
+
   const mascots = root.querySelectorAll?.("[data-reference-queue-mascot]") || [];
   mascots.forEach((mascot) => {
     if (!(mascot instanceof HTMLElement)) return;
-    const card = mascot.closest("div.bg-gradient-to-br") || mascot.parentElement?.parentElement;
-    if (!isClosedCard(card)) return;
     if (mascot.dataset.closedSeatOnly === "true") return;
 
+    stopMascotTimers(mascot);
     mascot.dataset.closedSeatOnly = "true";
     mascot.dataset.referenceActionActive = "false";
+    mascot.dataset.referenceActionScheduled = "false";
+    mascot.dataset.referenceSpeechScheduled = "false";
     mascot.className = "queue-reference-mascot queue-reference-closed";
     mascot.innerHTML = closedSeatSvg();
-
-    document.querySelectorAll(".queue-reference-speech").forEach((bubble) => bubble.remove());
   });
+
+  document.querySelectorAll(".queue-reference-speech").forEach((bubble) => bubble.remove());
 }
 
 export default function QueueClosedMascotFix() {
   useEffect(() => {
     applyClosedMascot();
+
     let frame = 0;
     const refresh = () => {
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => applyClosedMascot(document.body));
     };
+
     const observer = new MutationObserver(refresh);
     observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+
     return () => {
       observer.disconnect();
       window.cancelAnimationFrame(frame);
