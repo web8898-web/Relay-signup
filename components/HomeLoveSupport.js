@@ -6,6 +6,38 @@ import { supabase } from "@/lib/supabaseClient";
 
 const MAX_FLOATING_HEARTS = 3;
 const HEART_LIFETIME_MS = 2800;
+const LOVE_MESSAGES = [
+  "愛心收到囉",
+  "今天的愛心已收到",
+  "謝謝你的愛心",
+  "謝謝你的支持",
+  "收到你的心意了",
+  "今天也收到愛心了",
+  "愛心成功送出",
+  "你的愛心已送達",
+  "心意已收到",
+  "感謝你的支持",
+  "愛心已簽收",
+  "愛心入袋",
+  "收到一顆暖暖的心",
+  "愛心補給成功",
+  "今日愛心已完成",
+  "你的愛心飛過來了",
+  "愛心已安全抵達",
+  "今天的可愛額度已收到",
+  "這顆愛心我收下啦",
+  "愛心成功充電",
+  "今天的愛心已送出",
+  "今日愛心已收到",
+  "今天已經支持過囉",
+  "今天的心意已經收到",
+  "今日份愛心已完成",
+  "今天的支持已記錄",
+  "今日愛心已簽收",
+  "今天這顆愛心收到了",
+  "今日支持已完成",
+  "明天再來送一顆吧",
+];
 
 function formatCount(value) {
   return new Intl.NumberFormat("zh-TW").format(Number(value) || 0);
@@ -15,11 +47,16 @@ function randomBetween(min, max) {
   return Math.round(min + Math.random() * (max - min));
 }
 
+function getRandomLoveMessage() {
+  return LOVE_MESSAGES[Math.floor(Math.random() * LOVE_MESSAGES.length)];
+}
+
 function makeFloatingHeart(event, localOnly = false) {
   return {
     id: event?.id || `local-${Date.now()}-${Math.random()}`,
     displayName: event?.display_name || event?.displayName || "謝謝你的支持",
     localOnly,
+    message: localOnly ? getRandomLoveMessage() : "",
     driftX: randomBetween(-34, 34),
     floatY: randomBetween(110, 155),
     startX: randomBetween(-12, 12),
@@ -149,7 +186,7 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
                 strokeWidth={0}
               />
               <span className="max-w-[150px] truncate rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-medium text-gray-500 shadow-sm ring-1 ring-gray-100">
-                {heart.localOnly ? "今天也謝謝你的支持" : `${heart.displayName} 喜歡這個小工具`}
+                {heart.localOnly ? heart.message : `${heart.displayName} 喜歡這個小工具`}
               </span>
             </div>
           ))}
