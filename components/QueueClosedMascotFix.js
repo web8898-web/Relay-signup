@@ -151,6 +151,27 @@ function simplifyPrimaryClosedStatus(waitingLabel, liveStatus) {
   }
 }
 
+function hideDuplicateClosedSummary(label) {
+  if (!(label instanceof HTMLElement)) return;
+
+  const box = findVisualBox(label);
+  const target = box instanceof HTMLElement ? box : label;
+  target.style.display = "none";
+  target.setAttribute("aria-hidden", "true");
+
+  const parent = target.parentElement;
+  if (parent instanceof HTMLElement) {
+    const visibleChildren = [...parent.children].filter((child) => {
+      if (!(child instanceof HTMLElement)) return false;
+      return window.getComputedStyle(child).display !== "none";
+    });
+    if (visibleChildren.length === 0) {
+      parent.style.display = "none";
+      parent.setAttribute("aria-hidden", "true");
+    }
+  }
+}
+
 function styleClosedBadge(elements) {
   const badgeText = elements.filter((el) => {
     if (normalizeText(el.textContent) !== "已截止") return false;
@@ -219,10 +240,12 @@ function applyClosedCopy(root = document.body) {
     liveStatus.setAttribute("data-queue-closed-status", "true");
   }
 
-  waitingLabels.forEach((el) => {
-    el.textContent = "任務已結束";
-    el.setAttribute("data-queue-closed-status", "true");
-  });
+  if (primaryWaitingLabel) {
+    primaryWaitingLabel.textContent = "任務已結束";
+    primaryWaitingLabel.setAttribute("data-queue-closed-status", "true");
+  }
+
+  waitingLabels.slice(1).forEach((el) => hideDuplicateClosedSummary(el));
 
   if (primaryWaitingLabel && liveStatus) {
     simplifyPrimaryClosedStatus(primaryWaitingLabel, liveStatus);
@@ -231,10 +254,7 @@ function applyClosedCopy(root = document.body) {
   const completedLabels = elements
     .filter((el) => /^已完成\s*\d+\s*位$/.test(normalizeText(el.textContent)))
     .sort((a, b) => a.querySelectorAll("*").length - b.querySelectorAll("*").length);
-  completedLabels.forEach((el) => {
-    el.textContent = "已截止";
-    el.setAttribute("data-queue-closed-status", "true");
-  });
+  completedLabels.forEach((el) => hideDuplicateClosedSummary(el));
 
   hideActionByText(elements, "更改名字");
   hideActionByText(elements, "取消排隊");
