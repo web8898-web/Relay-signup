@@ -8,6 +8,7 @@ import OnboardingTour, {
   resetOnboarding,
 } from "@/components/OnboardingTour";
 import FadeIn from "@/components/FadeIn";
+import HomeLoveSupport from "@/components/HomeLoveSupport";
 import { useLineProfile } from "@/lib/useLineProfile";
 import { avatarClass } from "@/lib/utils";
 
@@ -28,9 +29,6 @@ export default function HomePage() {
   const { profile, loading, login, error } = useLineProfile();
   const router = useRouter();
 
-  // 第一次進站保留完整首頁＋登入動畫 1.5 秒，建立產品記憶點；
-  // 同一個瀏覽分頁已確認登入，或這台裝置曾看過首頁登入動畫，就跳過等待，
-  // 讓回訪使用者接近「秒進」。
   const SESSION_AUTHED = "relay_session_authed";
   const SEEN_LOGIN_ANIMATION = "relay_seen_login_animation";
   const [minWaitDone, setMinWaitDone] = useState(false);
@@ -68,8 +66,6 @@ export default function HomePage() {
     return () => clearTimeout(t);
   }, []);
 
-  // 登入確認完成後做個記號（只存在目前的瀏覽分頁，關閉即清除），
-  // 之後在同一次使用中回到首頁就不必重看等待畫面
   useEffect(() => {
     if (!profile) return;
     try {
@@ -79,9 +75,8 @@ export default function HomePage() {
   }, [profile]);
 
   const [showTour, setShowTour] = useState(false);
-
-  // 登入動畫點點：● ○ ○ → ○ ● ○ → ○ ○ ●，比單純跳動更安定。
   const [activeDot, setActiveDot] = useState(0);
+
   useEffect(() => {
     const t = setInterval(() => {
       setActiveDot((n) => (n + 1) % 3);
@@ -90,7 +85,7 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    if (!profile) return; // 尚未用 LINE 登入，不顯示首次導覽
+    if (!profile) return;
     if (getOnboardingState()) return;
     const t = setTimeout(() => setShowTour(true), 600);
     return () => clearTimeout(t);
@@ -146,6 +141,7 @@ export default function HomePage() {
             <span className="text-xs text-white/90 font-medium max-w-[80px] truncate">{profile.displayName}</span>
           </div>
         )}
+
         <div
           className={`transform-gpu origin-top-left will-change-transform transition-[opacity,transform] duration-[560ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
             heroCollapsed ? "opacity-0 -translate-y-8 scale-[0.96]" : "opacity-100 translate-y-0 scale-100"
@@ -241,7 +237,6 @@ export default function HomePage() {
 
             <button
               onClick={() => {
-                // 清掉本機的教學進度標記，並立刻從首頁重新開始導覽
                 resetOnboarding();
                 setShowTour(true);
               }}
@@ -251,6 +246,8 @@ export default function HomePage() {
             </button>
           </FadeIn>
         )}
+
+        <HomeLoveSupport profile={profile} onRequireLogin={login} />
 
         <div className="mt-auto text-center text-[11px] text-gray-300 pt-8">
           © 2026{" "}
@@ -278,8 +275,6 @@ export default function HomePage() {
           ]}
           finishLabel="好，開始建立"
           onFinish={() => {
-            // 不寫入任何標記，維持「還沒看過」的狀態，
-            // 建立任務頁載入時就會自動接續後面的導覽步驟。
             setShowTour(false);
             router.push("/create");
           }}
