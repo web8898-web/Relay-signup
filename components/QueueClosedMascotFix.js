@@ -40,6 +40,37 @@ function stopMascotTimers(mascot) {
   });
 }
 
+function leafElements(root = document.body) {
+  return [...(root.querySelectorAll?.("*") || [])].filter(
+    (el) => el instanceof HTMLElement && el.children.length === 0
+  );
+}
+
+function applyClosedCopy(root = document.body) {
+  const leaves = leafElements(root);
+
+  leaves.forEach((el) => {
+    const text = el.textContent?.trim() || "";
+
+    if (text === "目前等待順位") {
+      el.style.display = "none";
+      el.setAttribute("aria-hidden", "true");
+      return;
+    }
+
+    if (/^第\s*\d+\s*位$/.test(text)) {
+      el.textContent = "已截止";
+      el.setAttribute("data-queue-closed-title", "true");
+      return;
+    }
+
+    if (/你前面還有\s*\d+\s*位[，,、]?\s*請稍候/.test(text)) {
+      el.textContent = "無法再接龍";
+      el.setAttribute("data-queue-closed-subtitle", "true");
+    }
+  });
+}
+
 function applyClosedMascot(root = document.body) {
   if (!root || !pageIsClosed()) return;
 
@@ -58,6 +89,7 @@ function applyClosedMascot(root = document.body) {
   });
 
   document.querySelectorAll(".queue-reference-speech").forEach((bubble) => bubble.remove());
+  applyClosedCopy(root);
 }
 
 export default function QueueClosedMascotFix() {
