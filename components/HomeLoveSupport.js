@@ -128,7 +128,7 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
   }
 
   return (
-    <section className="relative mx-auto mt-3 w-full max-w-[260px] px-3 py-3 text-center overflow-visible">
+    <section id="home-love-support" className="relative mx-auto mt-3 w-full max-w-[260px] px-3 py-3 text-center overflow-visible">
       <div className="pointer-events-none absolute inset-x-0 bottom-[58px] h-40 overflow-visible" aria-hidden="true">
         {floatingHearts.map((heart) => (
           <div
@@ -170,8 +170,21 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
         {totalCount == null ? "—" : formatCount(totalCount)}
       </p>
 
+      <div className="mt-8 text-center text-[11px] text-gray-300">
+        © 2026{" "}
+        <a
+          href="https://www.wiweb.com.tw"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-gray-400 transition"
+        >
+          豐碩企業有限公司
+        </a>{" "}
+        版權所有
+      </div>
+
       {toast && (
-        <div className="absolute left-1/2 top-full z-20 mt-1.5 -translate-x-1/2 whitespace-nowrap rounded-full bg-gray-800 px-3 py-1.5 text-[11px] text-white shadow-lg">
+        <div className="absolute left-1/2 top-full z-20 mt-1.5 -translate-x-1/2 whitespace-nowrap rounded-full bg-emerald-500 px-3 py-1.5 text-[11px] text-white shadow-lg">
           {toast}
         </div>
       )}
@@ -202,6 +215,12 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
           .floating-love-event {
             animation-duration: 600ms;
           }
+        }
+      `}</style>
+
+      <style jsx global>{`
+        #home-love-support + div.mt-auto {
+          display: none;
         }
       `}</style>
     </section>
