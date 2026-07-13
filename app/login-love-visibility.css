@@ -1,0 +1,5 @@
+/* 登入前與登入載入畫面不顯示首頁愛心互動區。 */
+body:has(.login-card-enter) #home-love-support,
+body:has(button[class~="mt-6"][class~="w-full"][class~="bg-emerald-500"]) #home-love-support {
+  display: none !important;
+}
