@@ -137,6 +137,11 @@ export default function TaskDetailClient() {
   const isMultiActive = allowMulti && filledNames.length >= 2;
   const taskHasCategories = !isQueueTask && task?.categories?.length > 0;
   const usesPerCategoryQuantity = !isQueueTask && !!task?.quantity_unit && taskHasCategories;
+  const categoryRequired = usesPerCategoryQuantity && !headcountMode;
+  const usesStandaloneQuantity =
+    !isQueueTask &&
+    !!task?.quantity_unit &&
+    (!taskHasCategories || (headcountMode && categories.length === 0));
   const queueDisplaySignups = isQueueTask ? [...waitingSignups, ...completedSignups] : signups;
   const mySignups = signups.filter((s) => myIds.includes(s.id));
   const myWaitingSignup = mySignups.find((s) => !s.checked_in);
@@ -189,7 +194,7 @@ export default function TaskDetailClient() {
       nameInputRef.current?.focus();
       return;
     }
-    if (!isQueueTask && task.quantity_unit && taskHasCategories && categories.length === 0) {
+    if (categoryRequired && categories.length === 0) {
       setCategoryError("請至少選擇一個分類");
       return;
     }
@@ -206,8 +211,8 @@ export default function TaskDetailClient() {
           name: allowMulti ? names[0].trim() : name.trim(),
           names: allowMulti && filledNames.length >= 2 ? filledNames : undefined,
           note: isQueueTask || isMultiActive ? "" : note.trim(),
-          quantity: !isQueueTask && task.quantity_unit && !usesPerCategoryQuantity ? quantity : undefined,
-          category_quantities: !isQueueTask && usesPerCategoryQuantity ? categoryQuantities : undefined,
+          quantity: usesStandaloneQuantity ? quantity : undefined,
+          category_quantities: !isQueueTask && usesPerCategoryQuantity && categories.length > 0 ? categoryQuantities : undefined,
           owner_token: getOwnerToken(),
         }),
       });
@@ -576,26 +581,24 @@ export default function TaskDetailClient() {
                 </p>
               )}
               {!isQueueTask && task.quantity_unit && (
-                usesPerCategoryQuantity ? (
-                  categories.length > 0 && (
-                    <div className="flex flex-col gap-2">
-                      {categories.map((c) => (
-                        <QuantityStepper
-                          key={c}
-                          label={`${c}（${task.quantity_unit}）`}
-                          value={categoryQuantities[c] ?? 1}
-                          onChange={(v) => setCategoryQuantities((prev) => ({ ...prev, [c]: v }))}
-                        />
-                      ))}
-                    </div>
-                  )
-                ) : (
+                usesPerCategoryQuantity && categories.length > 0 ? (
+                  <div className="flex flex-col gap-2">
+                    {categories.map((c) => (
+                      <QuantityStepper
+                        key={c}
+                        label={`${c}（${task.quantity_unit}）`}
+                        value={categoryQuantities[c] ?? 1}
+                        onChange={(v) => setCategoryQuantities((prev) => ({ ...prev, [c]: v }))}
+                      />
+                    ))}
+                  </div>
+                ) : usesStandaloneQuantity ? (
                   <QuantityStepper
                     label={`數量（${task.quantity_unit}）`}
                     value={quantity}
                     onChange={setQuantity}
                   />
-                )
+                ) : null
               )}
               {!isQueueTask && (
                 <input
