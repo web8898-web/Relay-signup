@@ -1,0 +1,13 @@
+/* 愛心文字氣泡必須顯示在首頁愛心按鈕上方，避免被按鈕圖層遮住。 */
+#home-love-support .love-center-area > div[aria-hidden="true"] {
+  z-index: 40 !important;
+}
+
+#home-love-support .floating-love-event {
+  z-index: 50 !important;
+}
+
+#home-love-support .love-center-area > div:not([aria-hidden="true"]) {
+  position: relative;
+  z-index: 10;
+}
