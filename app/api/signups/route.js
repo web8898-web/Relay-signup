@@ -105,12 +105,15 @@ export async function POST(request) {
         }
         // 人數型單位要把報名者本人算進去。
         quantityValue = headcountMode ? total + 1 : total;
+      } else if (taskHasCategories && headcountMode) {
+        // 有分類的人數型單位若未選分類，不顯示數量選擇器，只計報名者本人。
+        quantityValue = 1;
       } else {
         const n = parseInt(quantity, 10);
         if (!Number.isFinite(n) || n <= 0) {
           return NextResponse.json({ error: `請填寫數量（${task.quantity_unit}）` }, { status: 400 });
         }
-        // 沒有分類或人數型單位未選分類時，輸入值代表同行人數，另加報名者本人。
+        // 沒有分類的人數型單位，輸入值代表同行人數，另加報名者本人。
         quantityValue = headcountMode ? n + 1 : n;
       }
     }
