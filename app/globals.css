@@ -306,3 +306,8 @@ input, textarea, select {
   color: #fff !important;
   fill: #fff !important;
 }
+
+/* 愛心下方等待符號與累計數字，統一使用主視覺綠。 */
+#home-love-support p[aria-live="polite"] {
+  color: #10b981 !important;
+}
