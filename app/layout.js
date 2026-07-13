@@ -14,6 +14,7 @@ import TaskShareImageActionFix from "@/components/TaskShareImageActionFix";
 import TaskModeTutorial from "@/components/TaskModeTutorial";
 import TaskModeCopyFix from "@/components/TaskModeCopyFix";
 import TaskTabsScrollFix from "@/components/TaskTabsScrollFix";
+import InnerHeaderShadow from "@/components/InnerHeaderShadow";
 
 const APP_TITLE = "接龍報名小助手";
 const APP_DESCRIPTION = "在 LINE 上分享、免登入即可完成報名的接龍小工具";
@@ -111,6 +112,7 @@ export default function RootLayout({ children }) {
         <TaskModeTutorial />
         <TaskModeCopyFix />
         <TaskTabsScrollFix />
+        <InnerHeaderShadow />
         <div className="w-full max-w-md mx-auto min-h-screen bg-white shadow-xl relative flex flex-col">
           {children}
         </div>
