@@ -83,6 +83,13 @@ export async function POST(request) {
         : [];
 
     const headcountMode = isHeadcountUnit(task.quantity_unit);
+    const taskHasCategories = Array.isArray(task.categories) && task.categories.length > 0;
+
+    // 有分類＋非人數型數量單位時，分類為必選；人、位、名、口則允許不選分類。
+    if (task.quantity_unit && taskHasCategories && !headcountMode && selectedCategories.length === 0) {
+      return NextResponse.json({ error: "請至少選擇一個分類" }, { status: 400 });
+    }
+
     let quantityValue = null;
     let categoryQuantitiesValue = {};
     if (task.quantity_unit) {
@@ -96,13 +103,15 @@ export async function POST(request) {
           categoryQuantitiesValue[cat] = n;
           total += n;
         }
+        // 人數型單位要把報名者本人算進去。
         quantityValue = headcountMode ? total + 1 : total;
       } else {
         const n = parseInt(quantity, 10);
         if (!Number.isFinite(n) || n <= 0) {
           return NextResponse.json({ error: `請填寫數量（${task.quantity_unit}）` }, { status: 400 });
         }
-        quantityValue = n;
+        // 沒有分類或人數型單位未選分類時，輸入值代表同行人數，另加報名者本人。
+        quantityValue = headcountMode ? n + 1 : n;
       }
     }
 
