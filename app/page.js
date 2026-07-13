@@ -240,9 +240,11 @@ export default function HomePage() {
                 resetOnboarding();
                 setShowTour(true);
               }}
-              className="mt-1 mx-auto flex items-center gap-1.5 text-xs text-gray-400 hover:text-emerald-600 active:text-emerald-600 py-2 px-3 transition"
+              className="group mt-1 mx-auto flex items-center gap-1.5 text-xs py-2 px-3 transition-colors duration-200 active:text-emerald-500"
+              style={{ color: "#8A94A3" }}
             >
-              <RotateCcw size={13} className="shrink-0" /> 播放建立任務教學
+              <RotateCcw size={13} className="shrink-0 text-emerald-500 transition-colors duration-200 group-active:text-emerald-500" />
+              <span className="group-active:text-emerald-500">播放建立任務教學</span>
             </button>
           </FadeIn>
         )}
