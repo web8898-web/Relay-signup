@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Heart } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
-const MAX_FLOATING_HEARTS = 3;
 const LOVE_MESSAGES = [
   "愛心收到囉", "今天的愛心已收到", "謝謝你的愛心", "謝謝你的支持", "收到你的心意了",
   "今天也收到愛心了", "愛心成功送出", "你的愛心已送達", "心意已收到", "感謝你的支持",
@@ -39,8 +38,18 @@ function getRandomLoveMessage() {
   return LOVE_MESSAGES[Math.floor(Math.random() * LOVE_MESSAGES.length)];
 }
 
-function makeFloatingHeart(event, localOnly = false) {
+function getMotionDuration(concurrentCount) {
+  if (concurrentCount >= 21) return randomBetween(1250, 1650);
+  if (concurrentCount >= 16) return randomBetween(1450, 1900);
+  if (concurrentCount >= 11) return randomBetween(1750, 2350);
+  if (concurrentCount >= 7) return randomBetween(2200, 2900);
+  if (concurrentCount >= 4) return randomBetween(2800, 3500);
+  return randomBetween(3400, 4400);
+}
+
+function makeFloatingHeart(event, localOnly = false, concurrentCount = 1) {
   const direction = getBalancedDirection();
+  const horizontalSpread = Math.min(44, 12 + concurrentCount * 1.5);
   return {
     id: event?.id || `local-${Date.now()}-${Math.random()}`,
     displayName: event?.display_name || event?.displayName || "謝謝你的支持",
@@ -50,13 +59,13 @@ function makeFloatingHeart(event, localOnly = false) {
     driftX: randomBetween(48, 108) * direction,
     curveX: randomBetween(22, 68) * -direction,
     floatY: randomBetween(155, 225),
-    startX: randomBetween(-12, 12),
+    startX: randomBetween(-horizontalSpread, horizontalSpread),
     startY: randomBetween(2, 18),
     size: randomBetween(21, 29),
     rotateStart: randomBetween(-18, 18),
     rotateMid: randomBetween(-16, 16),
     rotateEnd: randomBetween(-25, 25),
-    duration: randomBetween(3400, 4400),
+    duration: getMotionDuration(concurrentCount),
   };
 }
 
@@ -67,19 +76,29 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
   const [pressed, setPressed] = useState(false);
   const [toast, setToast] = useState("");
   const timersRef = useRef(new Map());
+  const activeHeartsRef = useRef([]);
   const pendingOwnRealtimeRef = useRef(null);
   const duplicateToastShownRef = useRef(false);
 
   const removeHeart = useCallback((id) => {
-    setFloatingHearts((current) => current.filter((heart) => heart.id !== id));
+    setFloatingHearts((current) => {
+      const next = current.filter((heart) => heart.id !== id);
+      activeHeartsRef.current = next;
+      return next;
+    });
     const timer = timersRef.current.get(id);
     if (timer) window.clearTimeout(timer);
     timersRef.current.delete(id);
   }, []);
 
   const addFloatingHeart = useCallback((event, localOnly = false) => {
-    const heart = makeFloatingHeart(event, localOnly);
-    setFloatingHearts((current) => [...current, heart].slice(-MAX_FLOATING_HEARTS));
+    const concurrentCount = activeHeartsRef.current.length + 1;
+    const heart = makeFloatingHeart(event, localOnly, concurrentCount);
+    setFloatingHearts((current) => {
+      const next = [...current, heart];
+      activeHeartsRef.current = next;
+      return next;
+    });
     const timer = window.setTimeout(() => removeHeart(heart.id), heart.duration + 180);
     timersRef.current.set(heart.id, timer);
     return heart.id;
@@ -113,6 +132,7 @@ export default function HomeLoveSupport({ profile, onRequireLogin }) {
       supabase.removeChannel(channel);
       timersRef.current.forEach((timer) => window.clearTimeout(timer));
       timersRef.current.clear();
+      activeHeartsRef.current = [];
     };
   }, [addFloatingHeart]);
 
