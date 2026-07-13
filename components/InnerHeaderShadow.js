@@ -4,56 +4,66 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
 const TARGET_PATHS = new Set(["/create", "/my-tasks"]);
-const HEADER_SHADOW =
-  "0 5px 10px -4px rgba(15, 23, 42, 0.22), 0 2px 5px -3px rgba(15, 23, 42, 0.14)";
+const HEADER_TITLES = new Set(["建立任務", "任務清單"]);
+const HEADER_SHADOW = "0 8px 18px -10px rgba(15, 23, 42, 0.42), 0 4px 10px -8px rgba(15, 23, 42, 0.28)";
+const HEADER_FILTER = "drop-shadow(0 7px 7px rgba(15, 23, 42, 0.16))";
 
-function normalizeText(value) {
-  return String(value || "").replace(/\s+/g, " ").trim();
-}
-
-function findPageHeader(pathname) {
-  const expectedTitle = pathname === "/create" ? "建立任務" : "任務清單";
-  const appRoot = document.querySelector("body > div.w-full.max-w-md");
-  if (!(appRoot instanceof HTMLElement)) return null;
-
-  const title = [...appRoot.querySelectorAll("h1, h2, p, span")].find(
-    (element) => normalizeText(element.textContent) === expectedTitle
-  );
-
-  if (title instanceof HTMLElement) {
-    const header = title.closest(".bg-emerald-500");
-    if (header instanceof HTMLElement) return header;
-  }
-
-  const candidates = [...appRoot.querySelectorAll(".bg-emerald-500")].filter(
+function findVisibleInnerHeader() {
+  const candidates = [...document.querySelectorAll(".bg-emerald-500")].filter(
     (element) => element instanceof HTMLElement
   );
 
   return (
-    candidates.find((element) => normalizeText(element.textContent).includes(expectedTitle)) ||
-    candidates[0] ||
-    null
+    candidates.find((element) => {
+      const rect = element.getBoundingClientRect();
+      const text = (element.textContent || "").replace(/\s+/g, " ").trim();
+      const hasTargetTitle = [...HEADER_TITLES].some((title) => text.includes(title));
+      return (
+        hasTargetTitle &&
+        rect.width > 280 &&
+        rect.height >= 48 &&
+        rect.height <= 110 &&
+        rect.bottom > 0 &&
+        rect.top < window.innerHeight
+      );
+    }) || null
   );
+}
+
+function clearShadow() {
+  document.querySelectorAll("[data-inner-header-shadow='true']").forEach((header) => {
+    if (!(header instanceof HTMLElement)) return;
+    header.style.removeProperty("box-shadow");
+    header.style.removeProperty("filter");
+    header.style.removeProperty("-webkit-filter");
+    header.style.removeProperty("isolation");
+    header.removeAttribute("data-inner-header-shadow");
+  });
 }
 
 export default function InnerHeaderShadow() {
   const pathname = usePathname();
 
   useEffect(() => {
+    clearShadow();
     if (!TARGET_PATHS.has(pathname)) return;
 
     let frame = 0;
+    let interval = 0;
 
     const applyShadow = () => {
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {
-        const header = findPageHeader(pathname);
+        const header = findVisibleInnerHeader();
         if (!(header instanceof HTMLElement)) return;
 
         header.style.setProperty("box-shadow", HEADER_SHADOW, "important");
+        header.style.setProperty("filter", HEADER_FILTER, "important");
+        header.style.setProperty("-webkit-filter", HEADER_FILTER, "important");
         header.style.setProperty("position", "relative", "important");
         header.style.setProperty("z-index", "30", "important");
         header.style.setProperty("overflow", "visible", "important");
+        header.style.setProperty("isolation", "isolate", "important");
         header.setAttribute("data-inner-header-shadow", "true");
       });
     };
@@ -68,23 +78,13 @@ export default function InnerHeaderShadow() {
       attributeFilter: ["class", "style"],
     });
 
-    const interval = window.setInterval(applyShadow, 500);
-    const delayedRuns = [80, 220, 600, 1200].map((delay) =>
-      window.setTimeout(applyShadow, delay)
-    );
+    interval = window.setInterval(applyShadow, 500);
 
     return () => {
       observer.disconnect();
       window.clearInterval(interval);
-      delayedRuns.forEach((timer) => window.clearTimeout(timer));
       window.cancelAnimationFrame(frame);
-      document.querySelectorAll("[data-inner-header-shadow='true']").forEach((header) => {
-        if (!(header instanceof HTMLElement)) return;
-        header.style.removeProperty("box-shadow");
-        header.style.removeProperty("z-index");
-        header.style.removeProperty("overflow");
-        header.removeAttribute("data-inner-header-shadow");
-      });
+      clearShadow();
     };
   }, [pathname]);
 
