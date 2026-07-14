@@ -18,6 +18,7 @@ import TaskModeCopyFix from "@/components/TaskModeCopyFix";
 import TaskTabsScrollFix from "@/components/TaskTabsScrollFix";
 import InnerHeaderShadow from "@/components/InnerHeaderShadow";
 import HeadcountCategoryQuantityFix from "@/components/HeadcountCategoryQuantityFix";
+import HomeLoveNameReplay from "@/components/HomeLoveNameReplay";
 
 const APP_TITLE = "接龍報名小助手";
 const APP_DESCRIPTION = "在 LINE 上分享、免登入即可完成報名的接龍小工具";
@@ -54,11 +55,6 @@ export const viewport = {
   themeColor: "#10B981",
 };
 
-// Runs synchronously as early as possible, before the app UI paints. LIFF's
-// deep-link redirect can briefly land on this root page with a `liff.state`
-// query param before the SDK navigates to the real target. Setting the title
-// in <head> makes the in-app browser title settle on the product name earlier,
-// and the splash prevents users from seeing a blank/root-page flash.
 const antiFlashScript = `
 (function () {
   try {
@@ -117,6 +113,7 @@ export default function RootLayout({ children }) {
         <TaskTabsScrollFix />
         <InnerHeaderShadow />
         <HeadcountCategoryQuantityFix />
+        <HomeLoveNameReplay />
         <div className="w-full max-w-md mx-auto min-h-screen bg-white shadow-xl relative flex flex-col">
           {children}
         </div>
