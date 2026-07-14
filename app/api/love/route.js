@@ -41,11 +41,13 @@ export async function GET(request) {
     let query = supabase
       .from("love_events")
       .select("id, display_name, created_at")
-      .order("created_at", { ascending: true })
       .limit(50);
 
-    if (after) query = query.gt("created_at", after);
-    else query = query.order("created_at", { ascending: false }).limit(12);
+    if (after) {
+      query = query.gt("created_at", after).order("created_at", { ascending: true });
+    } else {
+      query = query.order("created_at", { ascending: false });
+    }
 
     const { data, error } = await query;
     if (error) throw error;
