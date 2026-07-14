@@ -31,11 +31,27 @@ async function getTotalCount(supabase) {
   return count || 0;
 }
 
-export async function GET() {
+export async function GET(request) {
   try {
     const supabase = getSupabaseAdmin();
     const totalCount = await getTotalCount(supabase);
-    return NextResponse.json({ totalCount });
+    const { searchParams } = new URL(request.url);
+    const after = String(searchParams.get("after") || "").trim();
+
+    let query = supabase
+      .from("love_events")
+      .select("id, display_name, created_at")
+      .order("created_at", { ascending: true })
+      .limit(50);
+
+    if (after) query = query.gt("created_at", after);
+    else query = query.order("created_at", { ascending: false }).limit(12);
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const recentEvents = after ? (data || []) : [...(data || [])].reverse();
+    return NextResponse.json({ totalCount, recentEvents });
   } catch (error) {
     console.error("love count error", error);
     return NextResponse.json({ error: "暫時無法取得愛心數" }, { status: 500 });
