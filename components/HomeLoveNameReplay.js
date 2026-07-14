@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 // 測試重播版本：更換 key 後，所有裝置重新進入首頁時都會視為尚未看過。
-const STORAGE_KEY = "relay_last_seen_love_created_at_replay_20260714_1";
+const STORAGE_KEY = "relay_last_seen_love_created_at_replay_20260714_2";
 const queue = [];
 let playing = false;
 
@@ -85,6 +85,8 @@ export default function HomeLoveNameReplay() {
     start();
     return () => {
       active = false;
+      queue.length = 0;
+      playing = false;
       document.querySelectorAll(".home-love-name-replay").forEach((el) => el.remove());
     };
   }, []);
@@ -92,15 +94,19 @@ export default function HomeLoveNameReplay() {
   return (
     <style jsx global>{`
       #home-love-support .love-center-area { overflow: visible !important; }
-      .home-love-name-replay {
-        position: absolute;
-        left: 50%;
-        bottom: 50%;
-        z-index: 80;
-        max-width: 190px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+      #home-love-support .love-center-area > .home-love-name-replay {
+        position: absolute !important;
+        display: block !important;
+        flex: none !important;
+        left: 50% !important;
+        bottom: 50% !important;
+        z-index: 80 !important;
+        width: max-content !important;
+        min-width: max-content !important;
+        max-width: none !important;
+        white-space: nowrap !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
         border-radius: 9999px;
         padding: 5px 10px;
         background: rgba(255,255,255,.96);
@@ -108,11 +114,12 @@ export default function HomeLoveNameReplay() {
         color: #6b7280;
         font-size: 10px;
         font-weight: 600;
+        line-height: 1.4;
         pointer-events: none;
         animation: home-love-name-float var(--love-duration) cubic-bezier(.2,.72,.28,1) forwards;
         will-change: transform, opacity;
       }
-      .home-love-name-replay::before {
+      #home-love-support .love-center-area > .home-love-name-replay::before {
         content: "♥";
         color: #fecdd3;
         margin-right: 6px;
