@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 
-const STORAGE_KEY = "relay_last_seen_love_created_at";
+// 測試重播版本：更換 key 後，所有裝置重新進入首頁時都會視為尚未看過。
+const STORAGE_KEY = "relay_last_seen_love_created_at_replay_20260714_1";
 const queue = [];
 let playing = false;
 
