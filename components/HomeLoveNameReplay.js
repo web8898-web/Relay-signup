@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { supabase } from "@/lib/supabaseClient";
 
 const STORAGE_KEY = "relay_last_seen_love_created_at";
 const queue = [];
@@ -65,7 +64,6 @@ function enqueue(event) {
 export default function HomeLoveNameReplay() {
   useEffect(() => {
     let active = true;
-    let channel;
 
     const start = async () => {
       for (let tries = 0; tries < 20; tries += 1) {
@@ -81,24 +79,17 @@ export default function HomeLoveNameReplay() {
         const data = await response.json();
         (data?.recentEvents || []).forEach(enqueue);
       } catch (e) {}
-
-      channel = supabase
-        .channel(`home-love-name-replay-${Math.random().toString(36).slice(2)}`)
-        .on("postgres_changes", { event: "INSERT", schema: "public", table: "love_events" }, (payload) => enqueue(payload?.new))
-        .subscribe();
     };
 
     start();
     return () => {
       active = false;
-      if (channel) supabase.removeChannel(channel);
       document.querySelectorAll(".home-love-name-replay").forEach((el) => el.remove());
     };
   }, []);
 
   return (
     <style jsx global>{`
-      #home-love-support .floating-love-event { display: none !important; }
       #home-love-support .love-center-area { overflow: visible !important; }
       .home-love-name-replay {
         position: absolute;
