@@ -10,14 +10,11 @@ function isEligiblePage() {
   );
   if (!categoryTitle) return false;
 
-  const quantityLabel = [...document.querySelectorAll("span")].some((el) =>
-    /^數量（.+）$/.test((el.textContent || "").trim()) || /（.+）$/.test((el.textContent || "").trim()) && el.closest("button")
-  );
   const hasStepperButtons = [...document.querySelectorAll("button")].some((button) => {
     const label = button.getAttribute("aria-label") || "";
     return label.includes("增加") || label.includes("減少");
   });
-  return !quantityLabel && !hasStepperButtons;
+  return !hasStepperButtons;
 }
 
 function findPrimaryNameInput() {
@@ -27,39 +24,103 @@ function findPrimaryNameInput() {
   });
 }
 
-function collectNames(primary) {
-  const names = [primary?.value || ""];
-  document.querySelectorAll("input.category-multi-signup-input").forEach((input) => names.push(input.value || ""));
-  return names.map((name) => name.trim()).filter(Boolean);
+function getAvailableCategories() {
+  const title = [...document.querySelectorAll("p")].find((el) =>
+    (el.textContent || "").includes("選擇您要報名的類別")
+  );
+  const scroller = title?.nextElementSibling?.querySelector?.("div.flex") || title?.parentElement?.querySelector?.("div.flex");
+  if (!scroller) return [];
+  return [...scroller.querySelectorAll("button")]
+    .map((button) => (button.textContent || "").trim())
+    .filter(Boolean);
 }
 
-function ensureTrailingBlank(container) {
-  const inputs = [...container.querySelectorAll("input.category-multi-signup-input")];
-  if (inputs.length === 0 || inputs[inputs.length - 1].value.trim()) {
-    const input = document.createElement("input");
-    input.type = "text";
-    input.maxLength = 60;
-    input.placeholder = "幫別人報名（選填）";
-    input.className = INPUT_CLASS;
-    input.addEventListener("input", () => {
-      ensureTrailingBlank(container);
-      const all = [...container.querySelectorAll("input.category-multi-signup-input")];
-      while (all.length > 1 && !all[all.length - 1].value.trim() && !all[all.length - 2].value.trim()) {
-        all[all.length - 1].remove();
-        all.pop();
-      }
-      const count = collectNames(findPrimaryNameInput()).length;
-      let hint = container.querySelector("[data-category-multi-hint]");
-      if (!hint) {
-        hint = document.createElement("p");
-        hint.setAttribute("data-category-multi-hint", "true");
-        hint.className = "text-[11px] text-emerald-600 px-2 -mt-0.5";
-        container.appendChild(hint);
-      }
-      hint.textContent = count >= 2 ? `一次幫 ${count} 位報名（套用相同分類）` : "";
+function createCategorySelector(categories) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "category-multi-signup-categories";
+  wrapper.innerHTML = '<p class="text-[11px] font-semibold text-emerald-700 mb-1.5 px-0.5">👉 選擇代報者的分類（可複選）</p>';
+  const row = document.createElement("div");
+  row.className = "flex gap-1.5 overflow-x-auto pb-1 px-1";
+  categories.forEach((category) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = category;
+    button.dataset.category = category;
+    button.dataset.selected = "false";
+    button.className = "shrink-0 text-xs px-3 py-1.5 rounded-full border transition bg-white text-gray-500 border-gray-200";
+    button.addEventListener("click", () => {
+      const selected = button.dataset.selected !== "true";
+      button.dataset.selected = selected ? "true" : "false";
+      button.className = selected
+        ? "shrink-0 text-xs px-3 py-1.5 rounded-full border transition bg-emerald-500 text-white border-emerald-500"
+        : "shrink-0 text-xs px-3 py-1.5 rounded-full border transition bg-white text-gray-500 border-gray-200";
     });
-    const hint = container.querySelector("[data-category-multi-hint]");
-    container.insertBefore(input, hint || null);
+    row.appendChild(button);
+  });
+  wrapper.appendChild(row);
+  return wrapper;
+}
+
+function createProxyRow(container) {
+  const categories = getAvailableCategories();
+  const row = document.createElement("div");
+  row.className = "category-multi-signup-row flex flex-col gap-2 rounded-2xl border border-emerald-100 bg-white/70 p-2.5";
+
+  const selector = createCategorySelector(categories);
+  row.appendChild(selector);
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.maxLength = 60;
+  input.placeholder = "幫別人報名（選填）";
+  input.className = INPUT_CLASS;
+  row.appendChild(input);
+
+  input.addEventListener("input", () => {
+    ensureRows(container);
+    updateHint(container);
+  });
+  container.insertBefore(row, container.querySelector("[data-category-multi-hint]") || null);
+}
+
+function collectEntries(primary) {
+  const primaryName = (primary?.value || "").trim();
+  const proxyEntries = [...document.querySelectorAll(".category-multi-signup-row")]
+    .map((row) => ({
+      name: (row.querySelector("input.category-multi-signup-input")?.value || "").trim(),
+      categories: [...row.querySelectorAll("button[data-category][data-selected='true']")].map((button) => button.dataset.category),
+    }))
+    .filter((entry) => entry.name);
+  return { primaryName, proxyEntries };
+}
+
+function updateHint(container) {
+  const { primaryName, proxyEntries } = collectEntries(findPrimaryNameInput());
+  const hint = container.querySelector("[data-category-multi-hint]");
+  if (hint) hint.textContent = primaryName && proxyEntries.length ? `這次共幫 ${proxyEntries.length + 1} 位報名` : "";
+}
+
+function ensureRows(container) {
+  const primary = findPrimaryNameInput();
+  const hasPrimaryName = !!primary?.value?.trim();
+  const rows = [...container.querySelectorAll(".category-multi-signup-row")];
+
+  if (!hasPrimaryName) {
+    rows.forEach((row) => row.remove());
+    updateHint(container);
+    return;
+  }
+
+  if (rows.length === 0 || rows[rows.length - 1].querySelector("input")?.value.trim()) createProxyRow(container);
+
+  const updated = [...container.querySelectorAll(".category-multi-signup-row")];
+  while (
+    updated.length > 1 &&
+    !updated[updated.length - 1].querySelector("input")?.value.trim() &&
+    !updated[updated.length - 2].querySelector("input")?.value.trim()
+  ) {
+    updated[updated.length - 1].remove();
+    updated.pop();
   }
 }
 
@@ -72,16 +133,14 @@ function mountFields() {
   const root = document.createElement("div");
   root.setAttribute("data-category-multi-signup-root", "true");
   root.className = "flex flex-col gap-2";
-  const helper = document.createElement("p");
-  helper.className = "text-[11px] text-gray-400 px-2";
-  helper.textContent = "幫別人報名時，可繼續填寫姓名；所有姓名會套用上方選擇的分類。";
-  root.appendChild(helper);
   const hint = document.createElement("p");
   hint.setAttribute("data-category-multi-hint", "true");
   hint.className = "text-[11px] text-emerald-600 px-2 -mt-0.5";
   root.appendChild(hint);
   primary.insertAdjacentElement("afterend", root);
-  ensureTrailingBlank(root);
+
+  primary.addEventListener("input", () => ensureRows(root));
+  ensureRows(root);
 }
 
 export default function CategoryMultiSignupFix() {
@@ -91,12 +150,10 @@ export default function CategoryMultiSignupFix() {
       try {
         const url = typeof input === "string" ? input : input?.url || "";
         if (url.includes("/api/signups") && String(init?.method || "GET").toUpperCase() === "POST" && isEligiblePage()) {
-          const primary = findPrimaryNameInput();
-          const names = collectNames(primary);
-          if (names.length >= 2 && typeof init.body === "string") {
+          const { proxyEntries } = collectEntries(findPrimaryNameInput());
+          if (proxyEntries.length && typeof init.body === "string") {
             const body = JSON.parse(init.body);
-            body.name = names[0];
-            body.names = names;
+            body.proxy_entries = proxyEntries;
             init = { ...init, body: JSON.stringify(body) };
           }
         }
