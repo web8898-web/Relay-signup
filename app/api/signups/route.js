@@ -20,8 +20,6 @@ async function findTask(supabase, taskId) {
     .eq("id", taskId)
     .single();
 
-  // Some existing Supabase projects may not have applied sql/task_mode.sql yet.
-  // A missing column must not make a valid task look like it does not exist.
   if (isMissingTaskModeColumn(error)) {
     ({ data, error } = await supabase
       .from("tasks")
@@ -55,9 +53,6 @@ export async function POST(request) {
 
     const isQueueTask = task.task_mode === "queue";
 
-    // A device may hold only one active queue position for the same task.
-    // Once the host marks it completed, checked_in becomes true and the device
-    // may join the queue again.
     if (isQueueTask) {
       const { data: activeQueueEntry, error: activeQueueError } = await supabase
         .from("signups")
@@ -85,7 +80,6 @@ export async function POST(request) {
     const headcountMode = isHeadcountUnit(task.quantity_unit);
     const taskHasCategories = Array.isArray(task.categories) && task.categories.length > 0;
 
-    // 有分類＋非人數型數量單位時，分類為必選；人、位、名、口則允許不選分類。
     if (task.quantity_unit && taskHasCategories && !headcountMode && selectedCategories.length === 0) {
       return NextResponse.json({ error: "請至少選擇一個分類" }, { status: 400 });
     }
@@ -103,22 +97,26 @@ export async function POST(request) {
           categoryQuantitiesValue[cat] = n;
           total += n;
         }
-        // 人數型單位要把報名者本人算進去。
         quantityValue = headcountMode ? total + 1 : total;
       } else if (taskHasCategories && headcountMode) {
-        // 有分類的人數型單位若未選分類，不顯示數量選擇器，只計報名者本人。
         quantityValue = 1;
       } else {
         const n = parseInt(quantity, 10);
         if (!Number.isFinite(n) || n <= 0) {
           return NextResponse.json({ error: `請填寫數量（${task.quantity_unit}）` }, { status: 400 });
         }
-        // 沒有分類的人數型單位，輸入值代表同行人數，另加報名者本人。
         quantityValue = headcountMode ? n + 1 : n;
       }
     }
 
-    const incomingHeadcount = headcountMode ? (quantityValue || 1) : 1;
+    const cleanNames = Array.isArray(names)
+      ? names.map((n) => String(n || "").trim()).filter(Boolean).slice(0, 50)
+      : [];
+    const isMultiEligible = !isQueueTask && !task.quantity_unit;
+    const incomingHeadcount = isMultiEligible && cleanNames.length >= 2
+      ? cleanNames.length
+      : headcountMode ? (quantityValue || 1) : 1;
+
     if (task.max_signups) {
       let currentHeadcount;
       if (headcountMode) {
@@ -159,33 +157,11 @@ export async function POST(request) {
       );
     }
 
-    const cleanNames = Array.isArray(names)
-      ? names.map((n) => String(n || "").trim()).filter(Boolean).slice(0, 50)
-      : [];
-    const isMultiEligible =
-      !isQueueTask && (!task.categories || task.categories.length === 0) && !task.quantity_unit;
-
     if (isMultiEligible && cleanNames.length >= 2) {
-      if (task.max_signups) {
-        const { count } = await supabase
-          .from("signups")
-          .select("id", { count: "exact", head: true })
-          .eq("task_id", task_id);
-        const remaining = task.max_signups - (count ?? 0);
-        if (remaining <= 0) {
-          return NextResponse.json({ error: "這個任務已經額滿了" }, { status: 400 });
-        }
-        if (cleanNames.length > remaining) {
-          return NextResponse.json(
-            { error: `名額不足，僅剩 ${remaining} 個，請減少報名人數` },
-            { status: 400 }
-          );
-        }
-      }
       const batchId = globalThis.crypto?.randomUUID?.() || null;
       const rows = cleanNames.map((nm) => ({
         task_id,
-        categories: [],
+        categories: selectedCategories,
         name: nm.slice(0, 60),
         note: "",
         quantity: null,
