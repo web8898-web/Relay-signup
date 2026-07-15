@@ -66,8 +66,7 @@ function createProxyRow(container) {
   const row = document.createElement("div");
   row.className = "category-multi-signup-row flex flex-col gap-2 rounded-2xl border border-emerald-100 bg-white/70 p-2.5";
 
-  const selector = createCategorySelector(categories);
-  row.appendChild(selector);
+  row.appendChild(createCategorySelector(categories));
 
   const input = document.createElement("input");
   input.type = "text";
@@ -124,8 +123,12 @@ function ensureRows(container) {
   }
 }
 
-function mountFields() {
+function removeInjectedFields() {
   document.querySelectorAll("[data-category-multi-signup-root]").forEach((el) => el.remove());
+}
+
+function mountFields() {
+  removeInjectedFields();
   if (!isEligiblePage()) return;
   const primary = findPrimaryNameInput();
   if (!(primary instanceof HTMLInputElement)) return;
@@ -146,25 +149,55 @@ function mountFields() {
 export default function CategoryMultiSignupFix() {
   useEffect(() => {
     const originalFetch = window.fetch;
+    let suppressRemountUntilFormReset = false;
+
     window.fetch = async (input, init = {}) => {
-      try {
-        const url = typeof input === "string" ? input : input?.url || "";
-        if (url.includes("/api/signups") && String(init?.method || "GET").toUpperCase() === "POST" && isEligiblePage()) {
+      const url = typeof input === "string" ? input : input?.url || "";
+      const isSignupPost = url.includes("/api/signups") && String(init?.method || "GET").toUpperCase() === "POST" && isEligiblePage();
+
+      if (isSignupPost) {
+        try {
           const { proxyEntries } = collectEntries(findPrimaryNameInput());
           if (proxyEntries.length && typeof init.body === "string") {
             const body = JSON.parse(init.body);
             body.proxy_entries = proxyEntries;
             init = { ...init, body: JSON.stringify(body) };
           }
-        }
-      } catch (e) {}
-      return originalFetch(input, init);
+        } catch (e) {}
+      }
+
+      const response = await originalFetch(input, init);
+
+      if (isSignupPost && response.ok) {
+        suppressRemountUntilFormReset = true;
+        removeInjectedFields();
+
+        // React 會在成功後清空主姓名欄位；等它完成再解除暫停，
+        // 避免舊的代報姓名與分類被 MutationObserver 重新掛回畫面。
+        let checks = 0;
+        const waitForReset = window.setInterval(() => {
+          checks += 1;
+          const primary = findPrimaryNameInput();
+          if (!primary?.value?.trim() || checks >= 30) {
+            window.clearInterval(waitForReset);
+            suppressRemountUntilFormReset = false;
+            removeInjectedFields();
+            if (primary?.value?.trim()) mountFields();
+          }
+        }, 50);
+      }
+
+      return response;
     };
 
     let frame = 0;
     const refresh = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
+        if (suppressRemountUntilFormReset) {
+          removeInjectedFields();
+          return;
+        }
         if (!document.querySelector("[data-category-multi-signup-root]")) mountFields();
       });
     };
@@ -176,7 +209,7 @@ export default function CategoryMultiSignupFix() {
       window.fetch = originalFetch;
       observer.disconnect();
       cancelAnimationFrame(frame);
-      document.querySelectorAll("[data-category-multi-signup-root]").forEach((el) => el.remove());
+      removeInjectedFields();
     };
   }, []);
   return null;
