@@ -70,7 +70,8 @@ export async function POST(request) {
       } else if (taskHasCategories && headcountMode) quantityValue = 1;
       else {
         const n = parseInt(quantity, 10);
-        if (!Number.isFinite(n) || n <= 0) return NextResponse.json({ error: `請填寫數量（${task.quantity_unit}）` }, { status: 400 });
+        const invalidQuantity = !Number.isFinite(n) || (headcountMode ? n < 0 : n <= 0);
+        if (invalidQuantity) return NextResponse.json({ error: `請填寫數量（${task.quantity_unit}）` }, { status: 400 });
         quantityValue = headcountMode ? n + 1 : n;
       }
     }
