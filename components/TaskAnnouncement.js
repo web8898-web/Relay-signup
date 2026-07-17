@@ -1,16 +1,8 @@
 "use client";
 import { MessageCircle, Calendar } from "lucide-react";
-import { taskStatus, getVisibleCategories } from "@/lib/utils";
+import { taskStatus, getVisibleCategories, getVisibleTaskNote } from "@/lib/utils";
 
 const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
-
-function visibleNote(value = "") {
-  return String(value)
-    .split(/\r?\n/)
-    .filter((line) => line.trim() !== "__relay_queue_mode__")
-    .join("\n")
-    .trim();
-}
 
 function parseDateParts(value) {
   const match = String(value || "").match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
@@ -38,7 +30,7 @@ function formatDateRange(startValue, endValue) {
 export default function TaskAnnouncement({ task, full }) {
   const st = taskStatus(task);
   const label = full && st.label === "進行中" ? "已額滿" : st.label;
-  const note = visibleNote(task.note);
+  const note = getVisibleTaskNote(task.note);
   const categories = getVisibleCategories(task.categories);
 
   return (
