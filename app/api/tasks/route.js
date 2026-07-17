@@ -3,6 +3,13 @@ import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { verifyLineAccessToken, getBearerToken } from "@/lib/lineAuth";
 import { generateShortCode } from "@/lib/shortCode";
 
+const CONFIG_MARKERS = new Set([
+  "__relay_category_single__",
+  "__relay_category_multiple__",
+  "__relay_share_enabled__",
+  "__relay_share_disabled__",
+]);
+
 function parseMaxSignups(value) {
   if (value === undefined || value === null || value === "") return null;
   const n = parseInt(value, 10);
@@ -34,13 +41,19 @@ export async function POST(request) {
     const supabase = getSupabaseAdmin();
     const trimmedUnit = String(quantity_unit || "").trim().slice(0, 20) || null;
     const mode = parseTaskMode(task_mode);
+    const incomingCategories = Array.isArray(categories) ? categories.map((item) => String(item).trim()).filter(Boolean) : [];
+    const configMarkers = incomingCategories.filter((item) => CONFIG_MARKERS.has(item));
+    const visibleCategories = incomingCategories.filter((item) => !CONFIG_MARKERS.has(item));
+    const storedCategories = mode === "queue"
+      ? configMarkers.slice(0, 4)
+      : [...visibleCategories.slice(0, 26), ...configMarkers.slice(0, 4)];
 
     let data, error;
     for (let attempt = 0; attempt < 5; attempt++) {
       const payload = {
         title: String(title).slice(0, 200),
         description: String(description || "").slice(0, 2000),
-        categories: mode === "queue" ? [] : Array.isArray(categories) ? categories.slice(0, 30) : [],
+        categories: storedCategories,
         start_date,
         end_date,
         note: String(note || "").slice(0, 1000),
