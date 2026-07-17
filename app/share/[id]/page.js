@@ -103,7 +103,7 @@ export default function ShareAgainPage() {
       <div className="pointer-events-none absolute -right-16 top-8 h-44 w-44 rounded-full bg-emerald-200/30 blur-3xl" />
       <div className="pointer-events-none absolute -left-20 bottom-10 h-52 w-52 rounded-full bg-teal-100/60 blur-3xl" />
 
-      <section className="relative mx-auto my-auto w-full max-w-sm overflow-hidden rounded-[32px] border border-white/80 bg-white/95 shadow-[0_24px_70px_-32px_rgba(5,150,105,0.45)] backdrop-blur">
+      <section className="share-background-card relative mx-auto my-auto w-full max-w-sm overflow-hidden rounded-[32px] border border-white/80 bg-white/95 shadow-[0_24px_70px_-32px_rgba(5,150,105,0.45)] backdrop-blur">
         <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 via-emerald-500 to-teal-500 px-6 pb-10 pt-7 text-white">
           <div className="absolute -right-10 -top-12 h-36 w-36 rounded-full border border-white/15" />
           <div className="absolute -right-2 -top-4 h-24 w-24 rounded-full bg-white/10" />
@@ -118,7 +118,7 @@ export default function ShareAgainPage() {
           </div>
         </div>
 
-        <div className="relative -mt-5 px-5 pb-6">
+        <div className="share-foreground-card relative -mt-5 px-5 pb-6">
           <div className="rounded-[26px] border border-emerald-100 bg-white px-5 py-5 text-left shadow-[0_12px_36px_-22px_rgba(15,118,110,0.38)]">
             <div className="flex items-start gap-3">
               <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-500">
@@ -159,6 +159,49 @@ export default function ShareAgainPage() {
           <p className="mt-4 text-center text-[11px] text-gray-300">分享後，大家會看到同一份接龍內容</p>
         </div>
       </section>
+
+      <style jsx>{`
+        @keyframes shareBackgroundSlideIn {
+          0% {
+            opacity: 0;
+            transform: translate3d(0, 72px, 0) scale(0.985);
+          }
+          100% {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1);
+          }
+        }
+
+        @keyframes shareForegroundSlideIn {
+          0% {
+            opacity: 0;
+            transform: translate3d(0, 54px, 0) scale(0.99);
+          }
+          100% {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1);
+          }
+        }
+
+        .share-background-card {
+          animation: shareBackgroundSlideIn 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
+          will-change: transform, opacity;
+        }
+
+        .share-foreground-card {
+          opacity: 0;
+          animation: shareForegroundSlideIn 680ms cubic-bezier(0.16, 1, 0.3, 1) 500ms both;
+          will-change: transform, opacity;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .share-background-card,
+          .share-foreground-card {
+            animation-duration: 1ms;
+            animation-delay: 0ms;
+          }
+        }
+      `}</style>
     </main>
   );
 }
