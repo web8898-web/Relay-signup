@@ -109,9 +109,7 @@ export default function ShareAgainPage() {
           <div className="absolute -right-2 -top-4 h-24 w-24 rounded-full bg-white/10" />
 
           <div className="relative flex items-center gap-3 text-left">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/95 shadow-lg shadow-emerald-900/10 ring-1 ring-white/80">
-              <img src="/app-icon.png" alt="接龍報名小助手 LOGO" className="h-11 w-11 object-contain" />
-            </div>
+            <img src="/app-icon.png" alt="接龍報名小助手 LOGO" className="h-14 w-14 shrink-0 object-contain" />
             <div className="min-w-0">
               <p className="text-[11px] font-semibold tracking-[0.14em] text-emerald-50/90">RELAY SIGNUP</p>
               <p className="mt-1 text-lg font-bold tracking-wide">接龍報名小助手</p>
@@ -137,7 +135,7 @@ export default function ShareAgainPage() {
               <span>{formatDateRange(task.start_date, task.end_date)}</span>
             </div>
 
-            <p className="mt-4 text-center text-sm leading-relaxed text-gray-400">
+            <p className="mt-4 whitespace-nowrap text-center text-[clamp(11px,3.1vw,14px)] leading-relaxed text-gray-400">
               將這個接龍分享到其他 LINE 群組或好友。
             </p>
 
@@ -158,7 +156,7 @@ export default function ShareAgainPage() {
             {error && <p className="mt-4 text-center text-xs text-rose-500">{error}</p>}
           </div>
 
-          <p className="mt-4 text-center text-[11px] text-gray-300">接龍內容不會被複製，分享的是同一個任務</p>
+          <p className="mt-4 text-center text-[11px] text-gray-300">分享後，大家會看到同一份接龍內容</p>
         </div>
       </section>
     </main>
