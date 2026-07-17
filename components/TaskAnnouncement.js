@@ -27,12 +27,12 @@ function formatDateRange(startValue, endValue) {
   const end = parseDateParts(endValue);
   if (!start || !end) return `${startValue || ""} ~ ${endValue || ""}`.trim();
 
-  const startText = `${start.year}年${start.month}月${start.day}日（${start.weekday}）`;
+  const startText = `${start.year}年${start.month}月${start.day}日(${start.weekday})`;
   const endText = start.year === end.year
-    ? `${end.month}月${end.day}日（${end.weekday}）`
-    : `${end.year}年${end.month}月${end.day}日（${end.weekday}）`;
+    ? `${end.month}月${end.day}日(${end.weekday})`
+    : `${end.year}年${end.month}月${end.day}日(${end.weekday})`;
 
-  return `${startText}~${endText}`;
+  return `${startText} ~ ${endText}`;
 }
 
 export default function TaskAnnouncement({ task, full }) {
