@@ -10,6 +10,29 @@ function visibleNote(value = "") {
     .trim();
 }
 
+function parseDateParts(value) {
+  const match = String(value || "").match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (!match) return null;
+  return {
+    year: Number(match[1]),
+    month: Number(match[2]),
+    day: Number(match[3]),
+  };
+}
+
+function formatDateRange(startValue, endValue) {
+  const start = parseDateParts(startValue);
+  const end = parseDateParts(endValue);
+  if (!start || !end) return `${startValue || ""} ~ ${endValue || ""}`.trim();
+
+  const startText = `${start.year}年${start.month}月${start.day}日`;
+  const endText = start.year === end.year
+    ? `${end.month}月${end.day}日`
+    : `${end.year}年${end.month}月${end.day}日`;
+
+  return `${startText}~${endText}`;
+}
+
 export default function TaskAnnouncement({ task, full }) {
   const st = taskStatus(task);
   const label = full && st.label === "進行中" ? "已額滿" : st.label;
@@ -30,7 +53,7 @@ export default function TaskAnnouncement({ task, full }) {
           </div>
           {task.description && <p className="text-sm text-emerald-50 mt-1.5 leading-relaxed whitespace-pre-wrap">{task.description}</p>}
           <div className="flex items-center gap-1 text-[11px] text-emerald-50 mt-2">
-            <Calendar size={12} /> {task.start_date} ~ {task.end_date}
+            <Calendar size={12} /> {formatDateRange(task.start_date, task.end_date)}
           </div>
           {categories.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-2">
