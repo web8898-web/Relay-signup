@@ -2,6 +2,8 @@
 import { MessageCircle, Calendar } from "lucide-react";
 import { taskStatus, getVisibleCategories } from "@/lib/utils";
 
+const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
+
 function visibleNote(value = "") {
   return String(value)
     .split(/\r?\n/)
@@ -13,11 +15,11 @@ function visibleNote(value = "") {
 function parseDateParts(value) {
   const match = String(value || "").match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
   if (!match) return null;
-  return {
-    year: Number(match[1]),
-    month: Number(match[2]),
-    day: Number(match[3]),
-  };
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const weekday = WEEKDAYS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()];
+  return { year, month, day, weekday };
 }
 
 function formatDateRange(startValue, endValue) {
@@ -25,10 +27,10 @@ function formatDateRange(startValue, endValue) {
   const end = parseDateParts(endValue);
   if (!start || !end) return `${startValue || ""} ~ ${endValue || ""}`.trim();
 
-  const startText = `${start.year}年${start.month}月${start.day}日`;
+  const startText = `${start.year}年${start.month}月${start.day}日（${start.weekday}）`;
   const endText = start.year === end.year
-    ? `${end.month}月${end.day}日`
-    : `${end.year}年${end.month}月${end.day}日`;
+    ? `${end.month}月${end.day}日（${end.weekday}）`
+    : `${end.year}年${end.month}月${end.day}日（${end.weekday}）`;
 
   return `${startText}~${endText}`;
 }
