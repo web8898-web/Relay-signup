@@ -1,9 +1,11 @@
 "use client";
-import { MessageCircle, PenLine, Calendar, Users, FileText, ClipboardEdit } from "lucide-react";
-import { chipClass, isQueueTask } from "@/lib/utils";
+import { MessageCircle, PenLine, Calendar, Users, FileText, ClipboardEdit, Share2 } from "lucide-react";
+import { chipClass, isQueueTask, getVisibleCategories, shouldShowShareButton } from "@/lib/utils";
 
 export default function TaskShareCard({ task, signupCount, onOpen, previewOnly, onPreviewTap }) {
   const queue = isQueueTask(task);
+  const categories = getVisibleCategories(task.categories);
+  const showShare = shouldShowShareButton(task);
 
   function handleButtonClick() {
     if (previewOnly) {
@@ -11,6 +13,12 @@ export default function TaskShareCard({ task, signupCount, onOpen, previewOnly, 
       return;
     }
     onOpen?.();
+  }
+
+  function handleSharePreview() {
+    if (previewOnly) {
+      onPreviewTap?.();
+    }
   }
 
   return (
@@ -30,8 +38,18 @@ export default function TaskShareCard({ task, signupCount, onOpen, previewOnly, 
           <ClipboardEdit size={15} className="text-emerald-500" />
           <p className="text-xs font-bold">任務名稱：</p>
         </div>
-        <div className="border border-dashed border-emerald-200 rounded-xl px-3.5 py-2.5 mb-4 bg-emerald-50/40">
-          <p className="text-sm font-semibold text-gray-800 leading-snug">{task.title}</p>
+        <div className="flex items-center gap-3 border border-dashed border-emerald-200 rounded-xl px-3.5 py-2.5 mb-4 bg-emerald-50/40">
+          <p className="min-w-0 flex-1 text-sm font-semibold text-gray-800 leading-snug">{task.title}</p>
+          {showShare && (
+            <button
+              type="button"
+              onClick={handleSharePreview}
+              className="shrink-0 text-emerald-500"
+              aria-label="分享接龍"
+            >
+              <Share2 size={15} strokeWidth={2.2} />
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-1.5 text-gray-700 mb-1.5">
@@ -48,9 +66,9 @@ export default function TaskShareCard({ task, signupCount, onOpen, previewOnly, 
           <span className="flex items-center gap-1"><Calendar size={12} />{task.start_date} ~ {task.end_date}</span>
           <span className="flex items-center gap-1"><Users size={12} />{signupCount} 人{queue ? "已排隊" : "已報名"}</span>
         </div>
-        {task.categories?.length > 0 && (
+        {categories.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-4">
-            {task.categories.map((c) => (
+            {categories.map((c) => (
               <span key={c} className={`text-[10px] px-2 py-0.5 rounded-full border ${chipClass(c)}`}>{c}</span>
             ))}
           </div>
