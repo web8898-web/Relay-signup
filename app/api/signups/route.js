@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { notifySignupActivity } from "@/lib/smartNotify";
-import { isHeadcountUnit } from "@/lib/utils";
+import { isHeadcountUnit, getVisibleCategories, getCategorySelectionMode } from "@/lib/utils";
 
 const DUPLICATE_WINDOW_MS = 30_000;
 const TASK_FIELDS = "id, title, categories, end_date, creator_id, notify_enabled, max_signups, quantity_unit, task_mode";
@@ -44,10 +44,17 @@ export async function POST(request) {
       if (activeQueueEntry) return NextResponse.json({ error: "你目前已在排隊中，完成後才能重新加入排隊" }, { status: 409 });
     }
 
-    const selectedCategories = task.categories?.length > 0 && Array.isArray(categories)
-      ? categories.filter((c) => task.categories.includes(c)) : [];
+    const availableCategories = getVisibleCategories(task.categories);
+    const selectionMode = getCategorySelectionMode(task);
+    const selectedCategories = availableCategories.length > 0 && Array.isArray(categories)
+      ? categories.filter((c) => availableCategories.includes(c)) : [];
+
+    if (selectionMode === "single" && selectedCategories.length > 1) {
+      return NextResponse.json({ error: "此任務的類別只能選擇一個" }, { status: 400 });
+    }
+
     const headcountMode = isHeadcountUnit(task.quantity_unit);
-    const taskHasCategories = Array.isArray(task.categories) && task.categories.length > 0;
+    const taskHasCategories = availableCategories.length > 0;
 
     if (task.quantity_unit && taskHasCategories && !headcountMode && selectedCategories.length === 0) {
       return NextResponse.json({ error: "請至少選擇一個分類" }, { status: 400 });
@@ -79,10 +86,16 @@ export async function POST(request) {
     const cleanNames = Array.isArray(names)
       ? names.map((n) => String(n || "").trim()).filter(Boolean).slice(0, 50) : [];
     const cleanProxyEntries = !isQueueTask && taskHasCategories && !task.quantity_unit && Array.isArray(proxy_entries)
-      ? proxy_entries.map((entry) => ({
-          name: String(entry?.name || "").trim().slice(0, 60),
-          categories: Array.isArray(entry?.categories) ? entry.categories.filter((c) => task.categories.includes(c)) : [],
-        })).filter((entry) => entry.name).slice(0, 49)
+      ? proxy_entries.map((entry) => {
+          let entryCategories = Array.isArray(entry?.categories)
+            ? entry.categories.filter((c) => availableCategories.includes(c))
+            : [];
+          if (selectionMode === "single") entryCategories = entryCategories.slice(0, 1);
+          return {
+            name: String(entry?.name || "").trim().slice(0, 60),
+            categories: entryCategories,
+          };
+        }).filter((entry) => entry.name).slice(0, 49)
       : [];
     const isMultiEligible = !isQueueTask && !task.quantity_unit;
     const incomingHeadcount = cleanProxyEntries.length
