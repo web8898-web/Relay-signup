@@ -7,7 +7,8 @@ const SINGLE_MARKER = "__relay_category_single__";
 const MULTIPLE_MARKER = "__relay_category_multiple__";
 const SHARE_ON_MARKER = "__relay_share_enabled__";
 const SHARE_OFF_MARKER = "__relay_share_disabled__";
-const ALL_MARKERS = new Set([SINGLE_MARKER, MULTIPLE_MARKER, SHARE_ON_MARKER, SHARE_OFF_MARKER]);
+const CATEGORY_MARKERS = new Set([SINGLE_MARKER, MULTIPLE_MARKER]);
+const SHARE_MARKERS = new Set([SHARE_ON_MARKER, SHARE_OFF_MARKER]);
 
 let categoryMode = "single";
 let shareEnabled = true;
@@ -120,11 +121,19 @@ function enhanceTaskPayload(input, init = {}) {
   try {
     const body = JSON.parse(init.body);
     const categories = Array.isArray(body.categories)
-      ? body.categories.filter((item) => !ALL_MARKERS.has(String(item)))
+      ? body.categories.filter((item) => !CATEGORY_MARKERS.has(String(item)) && !SHARE_MARKERS.has(String(item)))
       : [];
-    categories.push(categoryMode === "multiple" ? MULTIPLE_MARKER : SINGLE_MARKER);
-    categories.push(shareEnabled ? SHARE_ON_MARKER : SHARE_OFF_MARKER);
+    if (categories.length > 0) {
+      categories.push(categoryMode === "multiple" ? MULTIPLE_MARKER : SINGLE_MARKER);
+    }
     body.categories = categories;
+
+    const cleanNote = String(body.note || "")
+      .split(/\r?\n/)
+      .filter((line) => !SHARE_MARKERS.has(line.trim()))
+      .join("\n")
+      .trim();
+    body.note = [cleanNote, shareEnabled ? SHARE_ON_MARKER : SHARE_OFF_MARKER].filter(Boolean).join("\n");
     return { ...init, body: JSON.stringify(body) };
   } catch (error) {
     return init;
