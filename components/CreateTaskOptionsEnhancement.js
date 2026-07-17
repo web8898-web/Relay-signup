@@ -10,8 +10,8 @@ const SHARE_OFF_MARKER = "__relay_share_disabled__";
 const CATEGORY_MARKERS = new Set([SINGLE_MARKER, MULTIPLE_MARKER]);
 const SHARE_MARKERS = new Set([SHARE_ON_MARKER, SHARE_OFF_MARKER]);
 
-let categoryMode = "single";
-let shareEnabled = true;
+let categoryMode = "multiple";
+let shareEnabled = false;
 
 function buttonClass(selected) {
   return `flex-1 rounded-xl px-3 py-2 text-xs font-semibold transition ${
@@ -64,7 +64,7 @@ function mountCategoryMode() {
   const help = document.createElement("p");
   help.dataset.categoryModeHelp = "true";
   help.className = "mt-2 text-[11px] leading-relaxed text-gray-400";
-  help.textContent = "每位報名者只能選擇一個類別。";
+  help.textContent = "每位報名者可以同時選擇多個類別。";
 
   root.append(heading, group, help);
   title.insertAdjacentElement("afterend", root);
@@ -145,8 +145,8 @@ export default function CreateTaskOptionsEnhancement() {
 
   useEffect(() => {
     if (pathname !== "/create") return;
-    categoryMode = "single";
-    shareEnabled = true;
+    categoryMode = "multiple";
+    shareEnabled = false;
 
     const originalFetch = window.fetch;
     window.fetch = (input, init) => originalFetch(input, enhanceTaskPayload(input, init));
