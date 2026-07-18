@@ -6,6 +6,8 @@ import { isHeadcountUnit, getVisibleCategories, getCategorySelectionMode } from 
 const DUPLICATE_WINDOW_MS = 30_000;
 const TASK_FIELDS = "id, title, categories, end_date, creator_id, notify_enabled, max_signups, quantity_unit, task_mode";
 const LEGACY_TASK_FIELDS = "id, title, categories, end_date, creator_id, notify_enabled, max_signups, quantity_unit";
+const SINGLE_MARKER = "__relay_category_single__";
+const MULTIPLE_MARKER = "__relay_category_multiple__";
 
 function isMissingTaskModeColumn(error) {
   if (!error) return false;
@@ -20,6 +22,11 @@ async function findTask(supabase, taskId) {
     if (data) data.task_mode = "normal";
   }
   return { task: data, error };
+}
+
+function isCategoryRequired(task, selectionMode) {
+  const marker = selectionMode === "single" ? SINGLE_MARKER : MULTIPLE_MARKER;
+  return (task.categories || []).filter((item) => item === marker).length >= 2;
 }
 
 export async function POST(request) {
@@ -46,6 +53,7 @@ export async function POST(request) {
 
     const availableCategories = getVisibleCategories(task.categories);
     const selectionMode = getCategorySelectionMode(task);
+    const categoryRequired = isCategoryRequired(task, selectionMode);
     const selectedCategories = availableCategories.length > 0 && Array.isArray(categories)
       ? categories.filter((c) => availableCategories.includes(c)) : [];
 
@@ -55,6 +63,10 @@ export async function POST(request) {
 
     const headcountMode = isHeadcountUnit(task.quantity_unit);
     const taskHasCategories = availableCategories.length > 0;
+
+    if (categoryRequired && taskHasCategories && selectedCategories.length === 0) {
+      return NextResponse.json({ error: "請至少選擇一個分類" }, { status: 400 });
+    }
 
     if (task.quantity_unit && taskHasCategories && !headcountMode && selectedCategories.length === 0) {
       return NextResponse.json({ error: "請至少選擇一個分類" }, { status: 400 });
@@ -97,6 +109,11 @@ export async function POST(request) {
           };
         }).filter((entry) => entry.name).slice(0, 49)
       : [];
+
+    if (categoryRequired && cleanProxyEntries.some((entry) => entry.categories.length === 0)) {
+      return NextResponse.json({ error: "請為每位代報者至少選擇一個分類" }, { status: 400 });
+    }
+
     const isMultiEligible = !isQueueTask && !task.quantity_unit;
     const incomingHeadcount = cleanProxyEntries.length
       ? 1 + cleanProxyEntries.length
