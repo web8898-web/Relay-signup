@@ -24,6 +24,7 @@ import CategoryMultiSignupFix from "@/components/CategoryMultiSignupFix";
 import CreateTaskOptionsEnhancement from "@/components/CreateTaskOptionsEnhancement";
 import TaskCategorySelectionMode from "@/components/TaskCategorySelectionMode";
 import EditTaskConfigMarkerFix from "@/components/EditTaskConfigMarkerFix";
+import TutorialCloseButtonFeedback from "@/components/TutorialCloseButtonFeedback";
 
 const APP_TITLE = "接龍報名小助手";
 const APP_DESCRIPTION = "在 LINE 上分享、免登入即可完成報名的接龍小工具";
@@ -124,6 +125,7 @@ export default function RootLayout({ children }) {
         <CreateTaskOptionsEnhancement />
         <TaskCategorySelectionMode />
         <EditTaskConfigMarkerFix />
+        <TutorialCloseButtonFeedback />
         <div className="w-full max-w-md mx-auto min-h-screen bg-white shadow-xl relative flex flex-col">
           {children}
         </div>
