@@ -63,7 +63,7 @@ function mountCategoryMode() {
 
   const help = document.createElement("p");
   help.dataset.categoryModeHelp = "true";
-  help.className = "mt-2 text-[11px] leading-relaxed text-gray-400";
+  help.className = "mt-2 whitespace-nowrap text-[clamp(9px,2.55vw,11px)] leading-relaxed text-gray-400";
   help.textContent = "每位報名者可以同時選擇多個類別。";
 
   root.append(heading, group, help);
@@ -87,10 +87,10 @@ function mountShareToggle() {
   row.className = "flex items-center justify-between gap-3";
 
   const copy = document.createElement("div");
-  copy.className = "min-w-0";
+  copy.className = "min-w-0 flex-1";
   copy.innerHTML = `
     <p class="text-xs font-semibold text-emerald-700">接龍卡片顯示分享圖示</p>
-    <p class="mt-0.5 text-[11px] leading-relaxed text-gray-400">方便報名者將同一個接龍轉傳到其他群組。</p>
+    <p class="mt-0.5 whitespace-nowrap text-[clamp(9px,2.45vw,11px)] leading-relaxed text-gray-400">方便報名者將同一個接龍轉傳到其他群組。</p>
   `;
 
   const toggle = document.createElement("button");
@@ -111,6 +111,20 @@ function mountShareToggle() {
   row.append(copy, toggle);
   root.appendChild(row);
   advancedBody.appendChild(root);
+}
+
+function keepDescriptionsOnOneLine() {
+  const targets = new Set([
+    "預設一般報名即可；現場排隊適合需要邊報名邊處理的情境。",
+    "需要調整任務模式、分類或統計數量時再設定，沒有需要可以略過。",
+  ]);
+
+  document.querySelectorAll("p").forEach((element) => {
+    const text = (element.textContent || "").trim();
+    if (!targets.has(text)) return;
+    element.classList.add("whitespace-nowrap", "text-[clamp(9px,2.45vw,11px)]");
+    element.classList.remove("text-[11px]");
+  });
 }
 
 function enhanceTaskPayload(input, init = {}) {
@@ -157,6 +171,7 @@ export default function CreateTaskOptionsEnhancement() {
       frame = requestAnimationFrame(() => {
         mountCategoryMode();
         mountShareToggle();
+        keepDescriptionsOnOneLine();
       });
     };
     refresh();
