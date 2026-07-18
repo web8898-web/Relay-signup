@@ -11,31 +11,45 @@ const CATEGORY_MARKERS = new Set([SINGLE_MARKER, MULTIPLE_MARKER]);
 const SHARE_MARKERS = new Set([SHARE_ON_MARKER, SHARE_OFF_MARKER]);
 
 let categoryMode = "multiple";
+let categoryRequired = false;
 let shareEnabled = false;
 
 function buttonClass(selected) {
-  return `flex-1 rounded-xl px-3 py-2 text-xs font-semibold transition ${
+  return `flex-1 rounded-xl px-3 py-1.5 text-xs font-semibold transition active:scale-[0.98] ${
     selected
       ? "bg-emerald-500 text-white shadow-sm"
       : "bg-white text-gray-500 border border-gray-200"
   }`;
 }
 
-function createSegmentButton(label, value, group) {
+function helpText() {
+  if (categoryMode === "single" && categoryRequired) return "每位報名者只能選擇一個類別，而且必須選擇。";
+  if (categoryMode === "single") return "每位報名者最多選擇一個類別，也可以不選。";
+  if (categoryRequired) return "每位報名者可以選擇多個類別，至少要選一個。";
+  return "每位報名者可以選擇多個類別，也可以不選。";
+}
+
+function refreshOptionGroup(root) {
+  root.querySelectorAll("button[data-category-mode]").forEach((button) => {
+    button.className = buttonClass(button.dataset.categoryMode === categoryMode);
+  });
+  root.querySelectorAll("button[data-category-required]").forEach((button) => {
+    const selected = button.dataset.categoryRequired === String(categoryRequired);
+    button.className = buttonClass(selected);
+  });
+  const help = root.querySelector("[data-category-mode-help]");
+  if (help) help.textContent = helpText();
+}
+
+function createOptionButton(label, dataName, value, root) {
   const button = document.createElement("button");
   button.type = "button";
   button.textContent = label;
-  button.dataset.value = value;
-  button.className = buttonClass(categoryMode === value);
+  button.dataset[dataName] = String(value);
   button.addEventListener("click", () => {
-    categoryMode = value;
-    group.querySelectorAll("button[data-value]").forEach((item) => {
-      item.className = buttonClass(item.dataset.value === categoryMode);
-    });
-    const help = group.parentElement?.querySelector("[data-category-mode-help]");
-    if (help) help.textContent = categoryMode === "single"
-      ? "每位報名者只能選擇一個類別。"
-      : "每位報名者可以同時選擇多個類別。";
+    if (dataName === "categoryMode") categoryMode = value;
+    else categoryRequired = value;
+    refreshOptionGroup(root);
   });
   return button;
 }
@@ -52,22 +66,31 @@ function mountCategoryMode() {
   root.dataset.createCategoryMode = "true";
   root.className = "mb-4 rounded-2xl border border-emerald-100 bg-emerald-50/40 p-3";
 
-  const heading = document.createElement("p");
-  heading.className = "mb-2 text-[11px] font-semibold text-emerald-700";
-  heading.textContent = "類別選擇方式";
+  const modeLabel = document.createElement("p");
+  modeLabel.className = "mb-1.5 text-[11px] font-semibold text-emerald-700";
+  modeLabel.textContent = "類別選擇方式";
 
-  const group = document.createElement("div");
-  group.className = "flex gap-2";
-  group.appendChild(createSegmentButton("單選", "single", group));
-  group.appendChild(createSegmentButton("複選", "multiple", group));
+  const modeGroup = document.createElement("div");
+  modeGroup.className = "flex gap-2";
+  modeGroup.appendChild(createOptionButton("單選", "categoryMode", "single", root));
+  modeGroup.appendChild(createOptionButton("複選", "categoryMode", "multiple", root));
+
+  const requiredLabel = document.createElement("p");
+  requiredLabel.className = "mb-1.5 mt-3 text-[11px] font-semibold text-emerald-700";
+  requiredLabel.textContent = "報名時是否必選";
+
+  const requiredGroup = document.createElement("div");
+  requiredGroup.className = "flex gap-2";
+  requiredGroup.appendChild(createOptionButton("必須選", "categoryRequired", true, root));
+  requiredGroup.appendChild(createOptionButton("可不選", "categoryRequired", false, root));
 
   const help = document.createElement("p");
   help.dataset.categoryModeHelp = "true";
   help.className = "mt-2 whitespace-nowrap text-[clamp(9px,2.55vw,11px)] leading-relaxed text-gray-400";
-  help.textContent = "每位報名者可以同時選擇多個類別。";
 
-  root.append(heading, group, help);
+  root.append(modeLabel, modeGroup, requiredLabel, requiredGroup, help);
   title.insertAdjacentElement("afterend", root);
+  refreshOptionGroup(root);
 }
 
 function mountShareToggle() {
@@ -138,7 +161,9 @@ function enhanceTaskPayload(input, init = {}) {
       ? body.categories.filter((item) => !CATEGORY_MARKERS.has(String(item)) && !SHARE_MARKERS.has(String(item)))
       : [];
     if (categories.length > 0) {
-      categories.push(categoryMode === "multiple" ? MULTIPLE_MARKER : SINGLE_MARKER);
+      const marker = categoryMode === "multiple" ? MULTIPLE_MARKER : SINGLE_MARKER;
+      categories.push(marker);
+      if (categoryRequired) categories.push(marker);
     }
     body.categories = categories;
 
@@ -160,6 +185,7 @@ export default function CreateTaskOptionsEnhancement() {
   useEffect(() => {
     if (pathname !== "/create") return;
     categoryMode = "multiple";
+    categoryRequired = false;
     shareEnabled = false;
 
     const originalFetch = window.fetch;
