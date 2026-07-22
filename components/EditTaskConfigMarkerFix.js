@@ -10,18 +10,24 @@ const MARKERS = new Set([
   "__relay_share_disabled__",
   "__relay_queue_mode__",
 ]);
+const BANNER_PREFIX = "__relay_banner_url__:";
+
+function isMarker(value) {
+  const text = String(value || "").trim();
+  return MARKERS.has(text) || text.startsWith(BANNER_PREFIX);
+}
 
 function markerLines(value) {
   return String(value || "")
     .split(/\r?\n/)
     .map((line) => line.trim())
-    .filter((line) => MARKERS.has(line));
+    .filter(isMarker);
 }
 
 function cleanText(value) {
   return String(value || "")
     .split(/\r?\n/)
-    .filter((line) => !MARKERS.has(line.trim()))
+    .filter((line) => !isMarker(line))
     .join("\n")
     .trim();
 }
@@ -52,13 +58,13 @@ export default function EditTaskConfigMarkerFix() {
         try {
           const body = JSON.parse(init.body);
           if (Array.isArray(body.categories)) {
-            const cleanCategories = body.categories.filter((item) => !MARKERS.has(String(item).trim()));
+            const cleanCategories = body.categories.filter((item) => !isMarker(item));
             const categoryMarkers = [...savedMarkers.current].filter((item) => item.includes("category_") || item === "__relay_queue_mode__");
             body.categories = [...cleanCategories, ...categoryMarkers];
           }
           if (Object.prototype.hasOwnProperty.call(body, "note")) {
-            const shareMarkers = [...savedMarkers.current].filter((item) => item.includes("share_"));
-            body.note = [cleanText(body.note), ...shareMarkers].filter(Boolean).join("\n");
+            const noteMarkers = [...savedMarkers.current].filter((item) => item.includes("share_") || item.startsWith(BANNER_PREFIX));
+            body.note = [cleanText(body.note), ...noteMarkers].filter(Boolean).join("\n");
           }
           init = { ...init, body: JSON.stringify(body) };
         } catch (error) {}
@@ -85,7 +91,7 @@ export default function EditTaskConfigMarkerFix() {
         document.querySelectorAll("button, span, div").forEach((element) => {
           if (!(element instanceof HTMLElement)) return;
           const text = (element.textContent || "").trim();
-          if (!MARKERS.has(text)) return;
+          if (!isMarker(text)) return;
           savedMarkers.current.add(text);
           const chip = element.closest("span.rounded-full, button.rounded-full") || element;
           if (chip instanceof HTMLElement) {
