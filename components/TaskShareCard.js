@@ -1,11 +1,12 @@
 "use client";
 import { MessageCircle, PenLine, Calendar, Users, FileText, ClipboardEdit, Share2 } from "lucide-react";
-import { chipClass, isQueueTask, getVisibleCategories, shouldShowShareButton } from "@/lib/utils";
+import { chipClass, isQueueTask, getVisibleCategories, shouldShowShareButton, getTaskBannerUrl } from "@/lib/utils";
 
 export default function TaskShareCard({ task, signupCount, onOpen, previewOnly, onPreviewTap }) {
   const queue = isQueueTask(task);
   const categories = getVisibleCategories(task.categories);
   const showShare = shouldShowShareButton(task);
+  const bannerUrl = getTaskBannerUrl(task);
 
   function handleButtonClick() {
     if (previewOnly) {
@@ -29,6 +30,13 @@ export default function TaskShareCard({ task, signupCount, onOpen, previewOnly, 
           <MessageCircle size={26} className="text-white" strokeWidth={2.2} />
         </div>
       </div>
+
+      {bannerUrl && (
+        <div className="aspect-[1200/630] w-full overflow-hidden bg-emerald-50">
+          <img src={bannerUrl} alt={`${task.title} 活動橫幅`} className="h-full w-full object-cover" />
+        </div>
+      )}
+
       <svg viewBox="0 0 400 28" preserveAspectRatio="none" className="w-full h-7 block -mt-4">
         <path d="M0,14 C100,28 300,0 400,14 L400,28 L0,28 Z" fill="white" />
       </svg>
@@ -39,7 +47,7 @@ export default function TaskShareCard({ task, signupCount, onOpen, previewOnly, 
           <p className="text-xs font-bold">任務名稱：</p>
         </div>
         <div className="flex items-center gap-3 border border-dashed border-emerald-200 rounded-xl px-3.5 py-2.5 mb-4 bg-emerald-50/40">
-          <p className="min-w-0 flex-1 text-sm font-semibold text-gray-800 leading-snug">{task.title}</p>
+          <p className="min-w-0 flex-1 text-sm font-semibold text-gray-800 leading-snug line-clamp-2">{task.title}</p>
           {showShare && (
             <button
               type="button"
