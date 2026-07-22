@@ -16,17 +16,18 @@ function ensureStyles() {
     .task-banner-summary-title{font-size:13px;font-weight:800;color:#374151}
     .task-banner-summary-badge{border-radius:999px;background:#f3f4f6;padding:2px 8px;font-size:10px;color:#9ca3af}
     .task-banner-summary-subtitle{margin-top:3px;white-space:nowrap;font-size:clamp(9px,2.55vw,11px);color:#9ca3af}
-    .task-banner-summary-right{display:flex;align-items:center;gap:9px;flex-shrink:0}
+    .task-banner-summary-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
     .task-banner-summary-thumb{width:44px;height:30px;border-radius:9px;object-fit:cover;border:1px solid #d1fae5;box-shadow:0 4px 10px rgba(5,150,105,.12);display:none}
-    .task-banner-summary-add{display:flex;width:30px;height:30px;align-items:center;justify-content:center;border-radius:999px;background:#ecfdf5;color:#10b981;font-size:20px;line-height:1}
-    .task-banner-summary-chevron{font-size:18px;line-height:1;color:#10b981;transition:transform 260ms cubic-bezier(.22,.8,.3,1)}
-    .task-banner-summary[aria-expanded="true"] .task-banner-summary-chevron{transform:rotate(180deg)}
+    .task-banner-summary-action{display:inline-flex;height:34px;align-items:center;justify-content:center;border:1px solid #d1fae5;border-radius:999px;background:#ecfdf5;padding:0 12px;white-space:nowrap;font-size:11px;font-weight:800;color:#059669;transition:background-color 160ms ease,border-color 160ms ease,transform 120ms ease}
+    .task-banner-summary[aria-expanded="true"] .task-banner-summary-action{background:#fff;border-color:#a7f3d0}
+    .task-banner-summary:active .task-banner-summary-action{transform:scale(.97)}
     .task-banner-expandable{max-height:0;overflow:hidden;opacity:0;border-top:1px solid transparent;transition:max-height 420ms cubic-bezier(.22,.8,.3,1),opacity 220ms ease,border-color 220ms ease}
     .task-banner-expandable[data-expanded="true"]{opacity:1;border-top-color:#d1fae5}
     .task-banner-expandable-inner{padding:14px 16px 16px}
     .task-banner-expandable-inner>div:first-child>div:first-child{display:none!important}
     .task-banner-expandable-inner>div:first-child{margin-bottom:10px!important}
-    @media(prefers-reduced-motion:reduce){.task-banner-summary,.task-banner-summary-chevron,.task-banner-expandable{transition-duration:1ms!important}}
+    @media(max-width:360px){.task-banner-summary{padding:13px 14px}.task-banner-summary-action{height:32px;padding:0 10px;font-size:10px}.task-banner-summary-thumb{width:40px;height:28px}}
+    @media(prefers-reduced-motion:reduce){.task-banner-summary,.task-banner-summary-action,.task-banner-expandable{transition-duration:1ms!important}}
   `;
   document.head.appendChild(style);
 }
@@ -50,8 +51,7 @@ function enhanceBanner(section) {
     </span>
     <span class="task-banner-summary-right">
       <img data-banner-summary-thumb class="task-banner-summary-thumb" alt="已加入的活動橫幅縮圖" />
-      <span data-banner-summary-add class="task-banner-summary-add">＋</span>
-      <span class="task-banner-summary-chevron">⌄</span>
+      <span data-banner-summary-action class="task-banner-summary-action">＋ 新增圖片</span>
     </span>
   `;
 
@@ -65,36 +65,44 @@ function enhanceBanner(section) {
   section.append(summary, expandable);
 
   let expanded = false;
+  let hasImage = false;
 
   const updateHeight = () => {
     expandable.style.maxHeight = expanded ? `${inner.scrollHeight + 8}px` : "0px";
+  };
+
+  const updateAction = () => {
+    const action = summary.querySelector("[data-banner-summary-action]");
+    if (!(action instanceof HTMLElement)) return;
+    action.textContent = expanded ? "收起" : hasImage ? "編輯" : "＋ 新增圖片";
   };
 
   const setExpanded = (next) => {
     expanded = next;
     summary.setAttribute("aria-expanded", String(expanded));
     expandable.dataset.expanded = String(expanded);
+    updateAction();
     updateHeight();
   };
 
   const updateSummary = () => {
     const preview = section.querySelector("[data-banner-preview]");
     const thumb = summary.querySelector("[data-banner-summary-thumb]");
-    const add = summary.querySelector("[data-banner-summary-add]");
     const subtitle = summary.querySelector("[data-banner-summary-subtitle]");
     const src = preview instanceof HTMLImageElement ? preview.getAttribute("src") || "" : "";
     const visible = preview instanceof HTMLImageElement && preview.style.display !== "none" && Boolean(src);
+    hasImage = visible;
 
     if (thumb instanceof HTMLImageElement) {
       thumb.src = visible ? src : "";
       thumb.style.display = visible ? "block" : "none";
     }
-    if (add instanceof HTMLElement) add.style.display = visible ? "none" : "flex";
     if (subtitle instanceof HTMLElement) {
       subtitle.textContent = visible
         ? "已加入圖片，將顯示於接龍頁與分享卡"
         : "讓接龍頁與分享卡更有辨識度";
     }
+    updateAction();
     updateHeight();
   };
 
