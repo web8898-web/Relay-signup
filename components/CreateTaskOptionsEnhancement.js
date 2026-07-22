@@ -223,6 +223,7 @@ function mountBanner() {
         <p class="text-xs font-bold text-gray-700">活動橫幅圖</p>
         <span class="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-400">選填</span>
       </div>
+      <p class="mt-1 text-[10px] font-medium text-emerald-600">建議尺寸：1200 × 630 像素</p>
       <p class="mt-1 whitespace-nowrap text-[clamp(9px,2.45vw,11px)] text-gray-400">顯示在接龍頁最上方，也會帶入分享卡片。</p>
     </div>
     <div class="relative aspect-[1200/630] overflow-hidden rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/50">
