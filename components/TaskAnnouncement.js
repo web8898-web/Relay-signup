@@ -1,6 +1,6 @@
 "use client";
 import { MessageCircle, Calendar } from "lucide-react";
-import { taskStatus, getVisibleCategories, getVisibleTaskNote } from "@/lib/utils";
+import { taskStatus, getVisibleCategories, getVisibleTaskNote, getTaskBannerUrl } from "@/lib/utils";
 
 const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
 
@@ -32,31 +32,45 @@ export default function TaskAnnouncement({ task, full }) {
   const label = full && st.label === "進行中" ? "已額滿" : st.label;
   const note = getVisibleTaskNote(task.note);
   const categories = getVisibleCategories(task.categories);
+  const bannerUrl = getTaskBannerUrl(task);
 
   return (
-    <div className="flex gap-2 items-start">
-      <div className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
-        <MessageCircle size={16} />
-      </div>
-      <div className="flex-1">
-        <p className="text-[11px] text-gray-400 mb-1">{task.creator_name || "主辦人"}</p>
-        <div className="bg-emerald-500 text-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
-          <div className="flex items-center justify-between gap-2">
-            <p className="font-bold">{task.title}</p>
-            <span className="shrink-0 text-[10px] px-2 py-0.5 rounded-full bg-white/20">{label}</span>
-          </div>
-          {task.description && <p className="text-sm text-emerald-50 mt-1.5 leading-relaxed whitespace-pre-wrap">{task.description}</p>}
-          <div className="flex items-center gap-1 text-[11px] text-emerald-50 mt-2">
-            <Calendar size={12} /> {formatDateRange(task.start_date, task.end_date)}
-          </div>
-          {categories.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {categories.map((c) => (
-                <span key={c} className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full">{c}</span>
-              ))}
+    <div className="space-y-3">
+      {bannerUrl && (
+        <div className="aspect-[1200/630] w-full overflow-hidden rounded-[24px] border border-emerald-100 bg-emerald-50 shadow-sm">
+          <img
+            src={bannerUrl}
+            alt={`${task.title} 活動橫幅`}
+            className="h-full w-full object-cover"
+            loading="eager"
+          />
+        </div>
+      )}
+
+      <div className="flex gap-2 items-start">
+        <div className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+          <MessageCircle size={16} />
+        </div>
+        <div className="flex-1">
+          <p className="text-[11px] text-gray-400 mb-1">{task.creator_name || "主辦人"}</p>
+          <div className="bg-emerald-500 text-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
+            <div className="flex items-center justify-between gap-2">
+              <p className="font-bold">{task.title}</p>
+              <span className="shrink-0 text-[10px] px-2 py-0.5 rounded-full bg-white/20">{label}</span>
             </div>
-          )}
-          {note && <p className="text-xs text-emerald-50/90 mt-2 border-t border-white/20 pt-2 whitespace-pre-wrap">備註：{note}</p>}
+            {task.description && <p className="text-sm text-emerald-50 mt-1.5 leading-relaxed whitespace-pre-wrap">{task.description}</p>}
+            <div className="flex items-center gap-1 text-[11px] text-emerald-50 mt-2">
+              <Calendar size={12} /> {formatDateRange(task.start_date, task.end_date)}
+            </div>
+            {categories.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {categories.map((c) => (
+                  <span key={c} className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full">{c}</span>
+                ))}
+              </div>
+            )}
+            {note && <p className="text-xs text-emerald-50/90 mt-2 border-t border-white/20 pt-2 whitespace-pre-wrap">備註：{note}</p>}
+          </div>
         </div>
       </div>
     </div>
