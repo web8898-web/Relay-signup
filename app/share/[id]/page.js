@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Share2, CheckCircle2, AlertCircle, CalendarDays, MessageCircleMore } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-import { buildFlexMessage, buildShareText, lineShareUrl, isQueueTask } from "@/lib/utils";
+import { buildFlexMessage, buildShareText, lineShareUrl, isQueueTask, getTaskBannerUrl } from "@/lib/utils";
 import { initLiff, liff } from "@/lib/liff";
 
 const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
@@ -98,6 +98,8 @@ export default function ShareAgainPage() {
     );
   }
 
+  const bannerUrl = getTaskBannerUrl(task);
+
   return (
     <main className="relative flex min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,#d1fae5_0%,#ecfdf5_28%,#ffffff_68%)] px-5 py-8">
       <div className="pointer-events-none absolute -right-16 top-8 h-44 w-44 rounded-full bg-emerald-200/30 blur-3xl" />
@@ -118,7 +120,20 @@ export default function ShareAgainPage() {
           </div>
         </div>
 
-        <div className="share-foreground-card relative -mt-5 px-5 pb-6">
+        {bannerUrl && (
+          <div className="share-banner-card relative z-10 -mt-5 px-5">
+            <div className="aspect-[1200/630] w-full overflow-hidden rounded-[22px] border border-white/90 bg-emerald-50 shadow-[0_14px_34px_-22px_rgba(15,118,110,0.55)]">
+              <img
+                src={bannerUrl}
+                alt={`${task.title} 活動橫幅`}
+                className="h-full w-full object-cover"
+                loading="eager"
+              />
+            </div>
+          </div>
+        )}
+
+        <div className={`share-foreground-card relative px-5 pb-6 ${bannerUrl ? "mt-4" : "-mt-5"}`}>
           <div className="rounded-[26px] border border-emerald-100 bg-white px-5 py-5 text-left shadow-[0_12px_36px_-22px_rgba(15,118,110,0.38)]">
             <div className="flex items-start gap-3">
               <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-500">
@@ -172,6 +187,17 @@ export default function ShareAgainPage() {
           }
         }
 
+        @keyframes shareBannerSlideIn {
+          0% {
+            opacity: 0;
+            transform: translate3d(0, 42px, 0) scale(0.99);
+          }
+          100% {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1);
+          }
+        }
+
         @keyframes shareForegroundSlideIn {
           0% {
             opacity: 0;
@@ -188,6 +214,12 @@ export default function ShareAgainPage() {
           will-change: transform, opacity;
         }
 
+        .share-banner-card {
+          opacity: 0;
+          animation: shareBannerSlideIn 620ms cubic-bezier(0.16, 1, 0.3, 1) 260ms both;
+          will-change: transform, opacity;
+        }
+
         .share-foreground-card {
           opacity: 0;
           animation: shareForegroundSlideIn 680ms cubic-bezier(0.16, 1, 0.3, 1) 500ms both;
@@ -196,6 +228,7 @@ export default function ShareAgainPage() {
 
         @media (prefers-reduced-motion: reduce) {
           .share-background-card,
+          .share-banner-card,
           .share-foreground-card {
             animation-duration: 1ms;
             animation-delay: 0ms;
