@@ -84,20 +84,20 @@ const antiFlashScript = `
       launch.id = "app-launch-splash";
       launch.setAttribute("aria-label", "${APP_TITLE} 啟動畫面");
       launch.style.cssText =
-        "position:fixed;top:0;left:0;right:auto;bottom:auto;width:100vw;height:100dvh;min-height:100%;z-index:2147483647;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#10b981;border-radius:0;box-shadow:none;opacity:1;transform:translateZ(0);transition:top 760ms cubic-bezier(.22,1,.36,1),left 760ms cubic-bezier(.22,1,.36,1),width 760ms cubic-bezier(.22,1,.36,1),height 760ms cubic-bezier(.22,1,.36,1),border-radius 760ms cubic-bezier(.22,1,.36,1),box-shadow 760ms cubic-bezier(.22,1,.36,1),opacity 320ms ease;";
+        "position:fixed;top:0;left:0;right:auto;bottom:auto;width:100vw;height:100dvh;min-height:100%;z-index:2147483647;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#10b981;border-radius:0;box-shadow:none;opacity:1;transform:translateZ(0);transition:top 620ms cubic-bezier(.22,1,.36,1),left 620ms cubic-bezier(.22,1,.36,1),width 620ms cubic-bezier(.22,1,.36,1),height 620ms cubic-bezier(.22,1,.36,1),border-radius 620ms cubic-bezier(.22,1,.36,1),box-shadow 620ms cubic-bezier(.22,1,.36,1),opacity 260ms ease;";
       launch.innerHTML =
         '<style>' +
         '@keyframes relayLaunchLogo{0%{opacity:0;transform:translate3d(0,14px,0) scale(.78)}72%{opacity:1;transform:translate3d(0,-1px,0) scale(1.025)}100%{opacity:1;transform:translate3d(0,0,0) scale(1)}}' +
         '@keyframes relayLaunchTitle{0%{opacity:0;transform:translate3d(0,12px,0)}100%{opacity:1;transform:translate3d(0,0,0)}}' +
         '@keyframes relayLaunchDot{0%,100%{opacity:.34;transform:scale(.86)}45%{opacity:1;transform:scale(1.12)}}' +
-        '.relay-launch-wrap{position:absolute;left:50%;top:50%;width:min(86vw,380px);display:flex;flex-direction:column;align-items:center;text-align:center;color:#fff;transform:translate3d(-50%,-52%,0);transform-origin:center;opacity:1;transition:opacity 360ms ease,transform 760ms cubic-bezier(.22,1,.36,1)}' +
-        '.relay-launch-logo-wrap{width:92px;height:92px;display:flex;align-items:center;justify-content:center;animation:relayLaunchLogo 650ms cubic-bezier(.16,1,.3,1) 180ms both}' +
+        '.relay-launch-wrap{position:absolute;left:50%;top:50%;width:min(86vw,380px);display:flex;flex-direction:column;align-items:center;text-align:center;color:#fff;transform:translate3d(-50%,-52%,0);transform-origin:center;opacity:1;transition:opacity 300ms ease,transform 620ms cubic-bezier(.22,1,.36,1)}' +
+        '.relay-launch-logo-wrap{width:92px;height:92px;display:flex;align-items:center;justify-content:center;animation:relayLaunchLogo 560ms cubic-bezier(.16,1,.3,1) 120ms both}' +
         '.relay-launch-logo{width:74px;height:74px;display:block}' +
-        '.relay-launch-title{margin-top:20px;font-size:clamp(29px,7.7vw,38px);font-weight:800;letter-spacing:-.04em;line-height:1.1;white-space:nowrap;animation:relayLaunchTitle 520ms cubic-bezier(.22,.8,.3,1) 800ms both}' +
-        '.relay-launch-subtitle{margin-top:12px;font-size:14px;font-weight:600;letter-spacing:.08em;color:rgba(255,255,255,.82);animation:relayLaunchTitle 460ms ease-out 1080ms both}' +
-        '.relay-launch-dots{margin-top:52px;display:flex;align-items:center;gap:11px;opacity:1;transition:opacity 220ms ease}' +
-        '.relay-launch-dot{width:9px;height:9px;border-radius:9999px;background:#fff;animation:relayLaunchDot 950ms ease-in-out infinite}' +
-        '.relay-launch-dot:nth-child(2){animation-delay:160ms}.relay-launch-dot:nth-child(3){animation-delay:320ms}' +
+        '.relay-launch-title{margin-top:20px;font-size:clamp(29px,7.7vw,38px);font-weight:800;letter-spacing:-.04em;line-height:1.1;white-space:nowrap;animation:relayLaunchTitle 440ms cubic-bezier(.22,.8,.3,1) 620ms both}' +
+        '.relay-launch-subtitle{margin-top:12px;font-size:14px;font-weight:600;letter-spacing:.08em;color:rgba(255,255,255,.82);animation:relayLaunchTitle 400ms ease-out 860ms both}' +
+        '.relay-launch-dots{margin-top:52px;display:flex;align-items:center;gap:11px;opacity:1;transition:opacity 180ms ease}' +
+        '.relay-launch-dot{width:9px;height:9px;border-radius:9999px;background:#fff;animation:relayLaunchDot 820ms ease-in-out infinite}' +
+        '.relay-launch-dot:nth-child(2){animation-delay:140ms}.relay-launch-dot:nth-child(3){animation-delay:280ms}' +
         '#app-launch-splash.relay-launch-handoff .relay-launch-wrap{opacity:0;transform:translate3d(-50%,-58%,0) scale(.9)}' +
         '#app-launch-splash.relay-launch-handoff .relay-launch-dots{opacity:0}' +
         '#app-launch-splash.relay-launch-fade{opacity:0!important;pointer-events:none}' +
@@ -144,16 +144,16 @@ const antiFlashScript = `
         launch.style.boxShadow = style.boxShadow || "0 4px 6px rgba(0,0,0,.12)";
       }
 
-      window.setTimeout(morphIntoHomeHero, 2850);
+      window.setTimeout(morphIntoHomeHero, 2050);
 
       window.setTimeout(function () {
         launch.classList.add("relay-launch-fade");
-      }, 3650);
+      }, 2700);
 
       window.setTimeout(function () {
         launch.remove();
         document.documentElement.style.overflow = previousOverflow;
-      }, 4000);
+      }, 3000);
     };
 
     if (window.location.pathname === "/") {
