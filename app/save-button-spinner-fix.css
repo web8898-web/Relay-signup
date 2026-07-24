@@ -1,0 +1,34 @@
+@keyframes save-task-spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/*
+  LINE 內建瀏覽器在旋轉 SVG 時，偶爾會把 SVG 合成層顯示成白色方塊。
+  儲存中改用純 CSS 圓形邊框動畫，確保背景完全透明。
+*/
+[data-tour="save"] > button:disabled svg {
+  display: none !important;
+}
+
+[data-tour="save"] > button:disabled::before {
+  content: "";
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 1rem;
+  box-sizing: border-box;
+  border: 2px solid rgba(255, 255, 255, 0.38);
+  border-top-color: #ffffff;
+  border-radius: 9999px;
+  background: transparent !important;
+  box-shadow: none !important;
+  animation: save-task-spinner-rotate 0.72s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-tour="save"] > button:disabled::before {
+    animation-duration: 1.4s;
+  }
+}
