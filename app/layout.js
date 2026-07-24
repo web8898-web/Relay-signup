@@ -26,7 +26,6 @@ import TaskCategorySelectionMode from "@/components/TaskCategorySelectionMode";
 import EditTaskConfigMarkerFix from "@/components/EditTaskConfigMarkerFix";
 import TutorialCloseButtonFeedback from "@/components/TutorialCloseButtonFeedback";
 import CreateTaskBannerCollapse from "@/components/CreateTaskBannerCollapse";
-import TaskModeHelpCollapseFix from "@/components/TaskModeHelpCollapseFix";
 import CreateTaskLeaveGuard from "@/components/CreateTaskLeaveGuard";
 
 const APP_TITLE = "接龍報名小助手";
@@ -130,7 +129,6 @@ export default function RootLayout({ children }) {
         <TaskCategorySelectionMode />
         <EditTaskConfigMarkerFix />
         <TutorialCloseButtonFeedback />
-        <TaskModeHelpCollapseFix />
         <CreateTaskLeaveGuard />
         <div className="w-full max-w-md mx-auto min-h-screen bg-white shadow-xl relative flex flex-col">
           {children}
