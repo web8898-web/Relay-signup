@@ -73,7 +73,7 @@ const antiFlashScript = `
     var metaTitle = document.querySelector('meta[name="title"]');
     if (metaTitle) metaTitle.setAttribute("content", "${APP_TITLE}");
 
-    var launchKey = "relay_launch_splash_v20260724_1";
+    var launchKey = "relay_launch_splash_v20260725_2";
     var shouldShowLaunch = window.location.pathname === "/" && !window.localStorage.getItem(launchKey);
 
     if (shouldShowLaunch) {
@@ -84,30 +84,29 @@ const antiFlashScript = `
       launch.id = "app-launch-splash";
       launch.setAttribute("aria-label", "${APP_TITLE} 啟動畫面");
       launch.style.cssText =
-        "position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;overflow:hidden;background:linear-gradient(160deg,#34d399 0%,#10b981 38%,#059669 100%);opacity:1;transition:opacity 560ms ease;";
+        "position:fixed;top:0;left:0;right:auto;bottom:auto;width:100vw;height:100dvh;min-height:100%;z-index:2147483647;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#10b981;border-radius:0;box-shadow:none;opacity:1;transform:translateZ(0);transition:top 820ms cubic-bezier(.22,1,.36,1),left 820ms cubic-bezier(.22,1,.36,1),width 820ms cubic-bezier(.22,1,.36,1),height 820ms cubic-bezier(.22,1,.36,1),border-radius 820ms cubic-bezier(.22,1,.36,1),box-shadow 820ms cubic-bezier(.22,1,.36,1),opacity 380ms ease;";
       launch.innerHTML =
         '<style>' +
-        '@keyframes relayLaunchLogo{0%{opacity:0;transform:translate3d(0,18px,0) scale(.72)}70%{opacity:1;transform:translate3d(0,-2px,0) scale(1.035)}100%{opacity:1;transform:translate3d(0,0,0) scale(1)}}' +
-        '@keyframes relayLaunchTitle{0%{opacity:0;transform:translate3d(0,14px,0)}100%{opacity:1;transform:translate3d(0,0,0)}}' +
-        '@keyframes relayLaunchDot{0%,100%{opacity:.3;transform:scale(.82)}45%{opacity:1;transform:scale(1.12)}}' +
-        '@keyframes relayLaunchRing{0%{opacity:0;transform:scale(.72)}100%{opacity:.22;transform:scale(1)}}' +
-        '#app-launch-splash.relay-launch-exit{opacity:0!important;pointer-events:none}' +
-        '.relay-launch-wrap{width:min(86vw,380px);display:flex;flex-direction:column;align-items:center;text-align:center;color:#fff;transform:translateY(-2vh)}' +
-        '.relay-launch-logo-wrap{position:relative;width:150px;height:150px;display:flex;align-items:center;justify-content:center;animation:relayLaunchLogo 760ms cubic-bezier(.16,1,.3,1) 340ms both}' +
-        '.relay-launch-ring{position:absolute;inset:-34px;border:1px solid rgba(255,255,255,.55);border-radius:9999px;animation:relayLaunchRing 900ms ease-out 500ms both}' +
-        '.relay-launch-logo{width:118px;height:118px;display:block}' +
-        '.relay-launch-title{margin-top:24px;font-size:clamp(30px,8vw,42px);font-weight:800;letter-spacing:-.04em;line-height:1.1;white-space:nowrap;animation:relayLaunchTitle 620ms cubic-bezier(.22,.8,.3,1) 1180ms both}' +
-        '.relay-launch-subtitle{margin-top:12px;font-size:14px;font-weight:600;letter-spacing:.08em;color:rgba(255,255,255,.8);animation:relayLaunchTitle 560ms ease-out 1540ms both}' +
-        '.relay-launch-dots{margin-top:54px;display:flex;align-items:center;gap:11px}' +
+        '@keyframes relayLaunchLogo{0%{opacity:0;transform:translate3d(0,14px,0) scale(.78)}72%{opacity:1;transform:translate3d(0,-1px,0) scale(1.025)}100%{opacity:1;transform:translate3d(0,0,0) scale(1)}}' +
+        '@keyframes relayLaunchTitle{0%{opacity:0;transform:translate3d(0,12px,0)}100%{opacity:1;transform:translate3d(0,0,0)}}' +
+        '@keyframes relayLaunchDot{0%,100%{opacity:.34;transform:scale(.86)}45%{opacity:1;transform:scale(1.12)}}' +
+        '.relay-launch-wrap{position:absolute;left:50%;top:50%;width:min(86vw,380px);display:flex;flex-direction:column;align-items:center;text-align:center;color:#fff;transform:translate3d(-50%,-52%,0);transform-origin:center;opacity:1;transition:opacity 420ms ease,transform 820ms cubic-bezier(.22,1,.36,1)}' +
+        '.relay-launch-logo-wrap{width:92px;height:92px;display:flex;align-items:center;justify-content:center;animation:relayLaunchLogo 720ms cubic-bezier(.16,1,.3,1) 260ms both}' +
+        '.relay-launch-logo{width:74px;height:74px;display:block}' +
+        '.relay-launch-title{margin-top:20px;font-size:clamp(29px,7.7vw,38px);font-weight:800;letter-spacing:-.04em;line-height:1.1;white-space:nowrap;animation:relayLaunchTitle 580ms cubic-bezier(.22,.8,.3,1) 980ms both}' +
+        '.relay-launch-subtitle{margin-top:12px;font-size:14px;font-weight:600;letter-spacing:.08em;color:rgba(255,255,255,.82);animation:relayLaunchTitle 520ms ease-out 1320ms both}' +
+        '.relay-launch-dots{margin-top:52px;display:flex;align-items:center;gap:11px;opacity:1;transition:opacity 240ms ease}' +
         '.relay-launch-dot{width:9px;height:9px;border-radius:9999px;background:#fff;animation:relayLaunchDot 1050ms ease-in-out infinite}' +
         '.relay-launch-dot:nth-child(2){animation-delay:180ms}.relay-launch-dot:nth-child(3){animation-delay:360ms}' +
-        '@media(prefers-reduced-motion:reduce){.relay-launch-logo-wrap,.relay-launch-ring,.relay-launch-title,.relay-launch-subtitle,.relay-launch-dot{animation-duration:1ms!important;animation-delay:0ms!important}}' +
+        '#app-launch-splash.relay-launch-handoff .relay-launch-wrap{opacity:0;transform:translate3d(-50%,-58%,0) scale(.9)}' +
+        '#app-launch-splash.relay-launch-handoff .relay-launch-dots{opacity:0}' +
+        '#app-launch-splash.relay-launch-fade{opacity:0!important;pointer-events:none}' +
+        '@media(prefers-reduced-motion:reduce){.relay-launch-logo-wrap,.relay-launch-title,.relay-launch-subtitle,.relay-launch-dot{animation-duration:1ms!important;animation-delay:0ms!important}.relay-launch-wrap,#app-launch-splash{transition-duration:1ms!important}}' +
         '</style>' +
         '<div class="relay-launch-wrap">' +
           '<div class="relay-launch-logo-wrap">' +
-            '<div class="relay-launch-ring"></div>' +
-            '<svg class="relay-launch-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" aria-hidden="true">' +
-              '<path d="M22 105L28.5 86.5C20.5 77.8 16 66.3 16 54C16 28.6 36.8 8 62.5 8C88.2 8 109 28.6 109 54C109 79.4 88.2 100 62.5 100C52.1 100 42.5 96.6 34.8 90.9L22 105Z" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>' +
+            '<svg class="relay-launch-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+              '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" stroke="white" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>' +
             '</svg>' +
           '</div>' +
           '<div class="relay-launch-title">${APP_TITLE}</div>' +
@@ -117,9 +116,39 @@ const antiFlashScript = `
 
       document.documentElement.appendChild(launch);
 
+      function findHomeHero() {
+        var candidates = document.querySelectorAll(".bg-emerald-500.text-white");
+        for (var i = 0; i < candidates.length; i += 1) {
+          var rect = candidates[i].getBoundingClientRect();
+          if (rect.width > 280 && rect.height > 220 && rect.top >= -2) return candidates[i];
+        }
+        return null;
+      }
+
+      function morphIntoHomeHero() {
+        var hero = findHomeHero();
+        if (!hero) {
+          launch.classList.add("relay-launch-fade");
+          return;
+        }
+
+        var rect = hero.getBoundingClientRect();
+        var style = window.getComputedStyle(hero);
+        launch.classList.add("relay-launch-handoff");
+        launch.style.top = rect.top + "px";
+        launch.style.left = rect.left + "px";
+        launch.style.width = rect.width + "px";
+        launch.style.height = rect.height + "px";
+        launch.style.minHeight = "0";
+        launch.style.borderRadius = style.borderRadius || "0 0 40px 40px";
+        launch.style.boxShadow = style.boxShadow || "0 4px 6px rgba(0,0,0,.12)";
+      }
+
+      window.setTimeout(morphIntoHomeHero, 3650);
+
       window.setTimeout(function () {
-        launch.classList.add("relay-launch-exit");
-      }, 4400);
+        launch.classList.add("relay-launch-fade");
+      }, 4560);
 
       window.setTimeout(function () {
         try {
