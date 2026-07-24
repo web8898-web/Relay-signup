@@ -52,6 +52,7 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
   const [maxSignups, setMaxSignups] = useState("");
   const [quantityUnit, setQuantityUnit] = useState("");
   const [taskMode, setTaskMode] = useState("normal");
+  const [shareEnabled, setShareEnabled] = useState(false);
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -72,6 +73,11 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
       target: "title",
       title: "填寫任務標題",
       text: "先幫這個任務取個名字，例如「週日爬山健行」「週五團購水果」。標題是唯一必填的欄位。",
+    },
+    {
+      target: "banner",
+      title: "加入活動橫幅圖（選填）",
+      text: "想讓接龍更有辨識度，可以點擊展開並上傳圖片。建議尺寸為 1200 × 630，會顯示在接龍頁、轉分享畫面與 LINE 分享卡片；沒有圖片也可以直接略過。",
     },
     {
       target: "description",
@@ -117,6 +123,7 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
     maxSignups.trim() !== "" ||
     quantityUnit.trim() !== "" ||
     taskMode !== "normal" ||
+    shareEnabled ||
     note.trim() !== "" ||
     startDate !== defaults.current.start_date ||
     endDate !== defaults.current.end_date;
@@ -208,6 +215,12 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
 
   return (
     <div className="flex-1 flex flex-col relative min-w-0">
+      <span
+        hidden
+        data-native-share-state="true"
+        data-share-enabled={shareEnabled ? "true" : "false"}
+      />
+
       <div className="flex-1 px-6 py-4 flex flex-col gap-5 overflow-y-auto">
         {error && <p className="text-xs text-rose-500">{error}</p>}
         <Field label="任務標題" required error={titleMissing ? "請填寫任務標題" : ""} tourId="title">
@@ -408,6 +421,32 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
                       className={fieldClass}
                     />
                   </Field>
+
+                  <div
+                    data-create-share-toggle="true"
+                    data-native-share-toggle="true"
+                    data-share-enabled={shareEnabled ? "true" : "false"}
+                    className="rounded-2xl border border-emerald-100 bg-emerald-50/40 px-3.5 py-3"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-emerald-700">接龍卡片顯示分享圖示</p>
+                        <p className="mt-0.5 whitespace-nowrap text-[clamp(9px,2.45vw,11px)] leading-relaxed text-gray-400">
+                          方便報名者將同一個接龍轉傳到其他群組。
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-label="接龍卡片顯示分享圖示"
+                        aria-checked={shareEnabled}
+                        onClick={() => setShareEnabled((enabled) => !enabled)}
+                        className={`relative h-7 w-12 shrink-0 rounded-full transition ${shareEnabled ? "bg-emerald-500" : "bg-gray-200"}`}
+                      >
+                        <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-all ${shareEnabled ? "left-6" : "left-1"}`} />
+                      </button>
+                    </div>
+                  </div>
                 </>
               )}
             </div>
