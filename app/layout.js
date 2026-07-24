@@ -2,6 +2,7 @@ import "./globals.css";
 import "./task-card-actions.css";
 import "./love-layer-fix.css";
 import "./login-love-visibility.css";
+import "./save-button-spinner-fix.css";
 import LiffBootstrap from "@/components/LiffBootstrap";
 import LiffTransitionOverlay from "@/components/LiffTransitionOverlay";
 import QueueLiveStatusLabel from "@/components/QueueLiveStatusLabel";
