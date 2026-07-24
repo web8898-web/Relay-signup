@@ -5,7 +5,6 @@ import "./login-love-visibility.css";
 import "./save-button-spinner-fix.css";
 import LiffBootstrap from "@/components/LiffBootstrap";
 import LiffTransitionOverlay from "@/components/LiffTransitionOverlay";
-import HomeLaunchSplashTrigger from "@/components/HomeLaunchSplashTrigger";
 import QueueLiveStatusLabel from "@/components/QueueLiveStatusLabel";
 import QueueMascotReference from "@/components/QueueMascotReference";
 import QueueClosedMascotFix from "@/components/QueueClosedMascotFix";
@@ -156,7 +155,12 @@ const antiFlashScript = `
       }, 3000);
     };
 
-    if (window.location.pathname === "/") {
+    var isInternalHomeReturn = false;
+    try {
+      isInternalHomeReturn = window.sessionStorage.getItem("relay_home_return_expand") === "1";
+    } catch (e) {}
+
+    if (window.location.pathname === "/" && !isInternalHomeReturn) {
       window.__relayShowLaunchSplash();
       return;
     }
@@ -197,7 +201,6 @@ export default function RootLayout({ children }) {
       <body className="bg-gradient-to-b from-emerald-50 via-white to-emerald-50 min-h-screen">
         <LiffBootstrap />
         <LiffTransitionOverlay />
-        <HomeLaunchSplashTrigger />
         <QueueLiveStatusLabel />
         <QueueMascotReference />
         <QueueClosedMascotFix />
