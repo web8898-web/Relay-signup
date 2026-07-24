@@ -149,11 +149,6 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
     return () => window.removeEventListener("popstate", handlePopState);
   }, [dirty]);
 
-  function handleBackClick() {
-    if (dirty) setShowLeaveConfirm(true);
-    else onLeave();
-  }
-
   function handleTaskModeChange(value) {
     setTaskMode(value);
     if (value === "queue") {
@@ -201,7 +196,10 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
           max_signups: maxSignups,
           quantity_unit: taskMode === "queue" ? "" : quantityUnit,
           task_mode: taskMode,
-          note: note.trim(),
+          note: [
+            note.trim(),
+            taskMode === "normal" && shareEnabled ? "__relay_native_share_enabled__" : "",
+          ].filter(Boolean).join("\n"),
         }),
       });
       const data = await res.json();
@@ -217,6 +215,7 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
     <div className="flex-1 flex flex-col relative min-w-0">
       <span
         hidden
+        data-create-share-toggle="true"
         data-native-share-state="true"
         data-share-enabled={shareEnabled ? "true" : "false"}
       />
