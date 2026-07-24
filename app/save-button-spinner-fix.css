@@ -1,12 +1,25 @@
-@keyframes save-task-spinner-rotate {
-  to {
-    transform: rotate(360deg);
+@keyframes save-task-spinner-cycle {
+  0% {
+    border-color: #ffffff rgba(255, 255, 255, 0.22) rgba(255, 255, 255, 0.22) rgba(255, 255, 255, 0.22);
+  }
+  25% {
+    border-color: rgba(255, 255, 255, 0.22) #ffffff rgba(255, 255, 255, 0.22) rgba(255, 255, 255, 0.22);
+  }
+  50% {
+    border-color: rgba(255, 255, 255, 0.22) rgba(255, 255, 255, 0.22) #ffffff rgba(255, 255, 255, 0.22);
+  }
+  75% {
+    border-color: rgba(255, 255, 255, 0.22) rgba(255, 255, 255, 0.22) rgba(255, 255, 255, 0.22) #ffffff;
+  }
+  100% {
+    border-color: #ffffff rgba(255, 255, 255, 0.22) rgba(255, 255, 255, 0.22) rgba(255, 255, 255, 0.22);
   }
 }
 
 /*
-  LINE 內建瀏覽器在旋轉 SVG 時，偶爾會把 SVG 合成層顯示成白色方塊。
-  儲存中改用純 CSS 圓形邊框動畫，確保背景完全透明。
+  iPhone 的 LINE WebView 會把 transform 旋轉中的 SVG／圓形邊框提升成
+  獨立合成圖層，偶爾把該圖層的矩形底色一起顯示出來。
+  因此完全不旋轉任何元素，改用四邊亮度循環製造旋轉感，避免方形底色。
 */
 [data-tour="save"] > button:disabled svg {
   display: none !important;
@@ -19,12 +32,18 @@
   height: 1rem;
   flex: 0 0 1rem;
   box-sizing: border-box;
-  border: 2px solid rgba(255, 255, 255, 0.38);
-  border-top-color: #ffffff;
-  border-radius: 9999px;
-  background: transparent !important;
+  border-width: 2px;
+  border-style: solid;
+  border-radius: 50%;
+  background-color: transparent !important;
+  background-image: none !important;
   box-shadow: none !important;
-  animation: save-task-spinner-rotate 0.72s linear infinite;
+  outline: none !important;
+  filter: none !important;
+  transform: none !important;
+  clip-path: circle(50%);
+  -webkit-clip-path: circle(50%);
+  animation: save-task-spinner-cycle 0.72s steps(4, end) infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
