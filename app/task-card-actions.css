@@ -33,3 +33,17 @@
   height: 58% !important;
   background: rgba(148, 163, 184, 0.24) !important;
 }
+
+/* 首頁主視覺 Logo：移除半透明方形底，保留純白氣泡並略微放大。 */
+.bg-emerald-500.text-white .w-14.h-14.rounded-2xl.bg-white\/20.flex.items-center.justify-center.mb-4 {
+  background: transparent !important;
+  border-radius: 0 !important;
+  justify-content: flex-start !important;
+  box-shadow: none !important;
+}
+
+.bg-emerald-500.text-white .w-14.h-14.rounded-2xl.bg-white\/20.flex.items-center.justify-center.mb-4 > svg {
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  stroke-width: 1.9 !important;
+}
