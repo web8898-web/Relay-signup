@@ -8,6 +8,7 @@ const MARKERS = new Set([
   "__relay_category_multiple__",
   "__relay_share_enabled__",
   "__relay_share_disabled__",
+  "__relay_native_share_enabled__",
   "__relay_queue_mode__",
 ]);
 const BANNER_PREFIX = "__relay_banner_url__:";
