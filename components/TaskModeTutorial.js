@@ -100,22 +100,55 @@ function bindAdvancedAutoPosition(advanced, section) {
 
 function modeHelpHtml() {
   return `
-    <div class="task-mode-help-card">
-      <div class="task-mode-help-title">📖 不知道怎麼選？</div>
-      <div class="task-mode-help-grid">
-        <button type="button" data-task-tutorial="general" class="task-mode-help-option">
-          <span class="task-mode-help-name">一般報名</span>
-          <span class="task-mode-help-copy">統計名單、活動報名、團購與課程</span>
-          <span class="task-mode-help-link">▶ 查看教學</span>
-        </button>
-        <button type="button" data-task-tutorial="queue" class="task-mode-help-option">
-          <span class="task-mode-help-name">現場排隊</span>
-          <span class="task-mode-help-copy">即時順位、候位與現場服務</span>
-          <span class="task-mode-help-link">▶ 查看教學</span>
-        </button>
+    <div class="task-mode-help-card" data-task-mode-help-card>
+      <button type="button" class="task-mode-help-summary" data-task-mode-help-toggle aria-expanded="false">
+        <span class="task-mode-help-summary-title">📖 不知道怎麼選？</span>
+        <span class="task-mode-help-summary-action" data-task-mode-help-action>展開閱讀</span>
+      </button>
+      <div class="task-mode-help-content" data-task-mode-help-content data-expanded="false" aria-hidden="true">
+        <div class="task-mode-help-content-inner">
+          <div class="task-mode-help-grid">
+            <button type="button" data-task-tutorial="general" class="task-mode-help-option">
+              <span class="task-mode-help-name">一般報名</span>
+              <span class="task-mode-help-copy">統計名單、活動報名、團購與課程</span>
+              <span class="task-mode-help-link">▶ 查看教學</span>
+            </button>
+            <button type="button" data-task-tutorial="queue" class="task-mode-help-option">
+              <span class="task-mode-help-name">現場排隊</span>
+              <span class="task-mode-help-copy">即時順位、候位與現場服務</span>
+              <span class="task-mode-help-link">▶ 查看教學</span>
+            </button>
+          </div>
+          <p class="task-mode-help-tip">💡 需要「統計名單」選一般報名；需要「即時順位」選現場排隊。</p>
+        </div>
       </div>
-      <p class="task-mode-help-tip">💡 需要「統計名單」選一般報名；需要「即時順位」選現場排隊。</p>
     </div>`;
+}
+
+function bindModeHelpToggle(card) {
+  if (!(card instanceof HTMLElement) || card.dataset.modeHelpToggleBound === "true") return;
+  const toggle = card.querySelector("[data-task-mode-help-toggle]");
+  const content = card.querySelector("[data-task-mode-help-content]");
+  const action = card.querySelector("[data-task-mode-help-action]");
+  if (!(toggle instanceof HTMLButtonElement) || !(content instanceof HTMLElement)) return;
+
+  card.dataset.modeHelpToggleBound = "true";
+  let expanded = false;
+
+  const refresh = () => {
+    toggle.setAttribute("aria-expanded", String(expanded));
+    content.dataset.expanded = String(expanded);
+    content.setAttribute("aria-hidden", String(!expanded));
+    content.style.maxHeight = expanded ? `${content.scrollHeight + 8}px` : "0px";
+    if (action instanceof HTMLElement) action.textContent = expanded ? "收起" : "展開閱讀";
+  };
+
+  toggle.addEventListener("click", () => {
+    expanded = !expanded;
+    refresh();
+  });
+
+  refresh();
 }
 
 function ensureStyles() {
@@ -123,8 +156,14 @@ function ensureStyles() {
   const style = document.createElement("style");
   style.id = "task-mode-tutorial-styles";
   style.textContent = `
-    .task-mode-help-card{margin-top:14px;padding:14px;border:1px solid #d9f1e5;border-radius:22px;background:linear-gradient(135deg,#f2fff8,#fff);box-shadow:0 8px 24px rgba(22,148,106,.06)}
-    .task-mode-help-title{font-size:14px;font-weight:800;color:#256b55;margin-bottom:10px}
+    .task-mode-help-card{margin-top:14px;padding:0;overflow:hidden;border:1px solid #d9f1e5;border-radius:22px;background:linear-gradient(135deg,#f2fff8,#fff);box-shadow:0 8px 24px rgba(22,148,106,.06)}
+    .task-mode-help-summary{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;background:transparent;text-align:left;touch-action:manipulation;transition:background-color 160ms ease,transform 120ms ease}
+    .task-mode-help-summary:active{background:#e9fbf2;transform:scale(.992)}
+    .task-mode-help-summary-title{font-size:14px;font-weight:800;color:#256b55}
+    .task-mode-help-summary-action{flex-shrink:0;border-radius:999px;background:#e9fbf2;padding:7px 12px;font-size:11px;font-weight:800;color:#16946a}
+    .task-mode-help-content{max-height:0;overflow:hidden;opacity:0;border-top:1px solid transparent;transition:max-height 420ms cubic-bezier(.22,.8,.3,1),opacity 220ms ease,border-color 220ms ease}
+    .task-mode-help-content[data-expanded="true"]{opacity:1;border-top-color:#d9f1e5}
+    .task-mode-help-content-inner{padding:12px 14px 14px}
     .task-mode-help-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
     .task-mode-help-option{display:flex;flex-direction:column;align-items:flex-start;text-align:left;min-width:0;padding:12px;border:1px solid #dfeee7;border-radius:17px;background:#fff;cursor:pointer;touch-action:manipulation;transform:translateZ(0);transition:transform 120ms ease,background-color 120ms ease,border-color 120ms ease,box-shadow 120ms ease}
     .task-mode-help-option:active,.task-mode-help-option.task-mode-help-pressed{transform:scale(.965) translateY(1px);background:#e9fbf2;border-color:#7ddbb6;box-shadow:inset 0 2px 7px rgba(22,148,106,.14)}
@@ -164,7 +203,7 @@ function ensureStyles() {
     .task-tutorial-soft-in{animation:taskTutorialSoftIn 280ms cubic-bezier(.22,.8,.3,1) both}
 
     @media(prefers-reduced-motion:reduce){
-      .task-tutorial-backdrop-open,.task-tutorial-backdrop-close,.task-tutorial-sheet-open,.task-tutorial-sheet-close,.task-tutorial-soft-out,.task-tutorial-soft-in{animation-duration:1ms!important;animation-delay:0ms!important}
+      .task-mode-help-summary,.task-mode-help-content,.task-tutorial-backdrop-open,.task-tutorial-backdrop-close,.task-tutorial-sheet-open,.task-tutorial-sheet-close,.task-tutorial-soft-out,.task-tutorial-soft-in{animation-duration:1ms!important;animation-delay:0ms!important;transition-duration:1ms!important}
     }
   `;
   document.head.appendChild(style);
@@ -226,6 +265,9 @@ export default function TaskModeTutorial() {
           section.insertAdjacentElement("afterend", holder);
         }
       }
+
+      document.querySelectorAll("[data-task-mode-help-card]").forEach(bindModeHelpToggle);
+
       const advanced = findLeaf("進階設定");
       if (advanced) {
         const advancedSection = findSection(advanced, ["進階設定"]) || advanced.parentElement;
