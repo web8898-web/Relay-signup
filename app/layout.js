@@ -156,11 +156,45 @@ const antiFlashScript = `
     };
 
     var isInternalHomeReturn = false;
+    var isDeepLinkDestination = false;
     try {
       isInternalHomeReturn = window.sessionStorage.getItem("relay_home_return_expand") === "1";
+
+      var params = new URLSearchParams(window.location.search);
+      var rawLiffState = params.get("liff.state");
+      if (!rawLiffState && window.location.hash.indexOf("liff.state=") !== -1) {
+        rawLiffState = new URLSearchParams(window.location.hash.slice(1)).get("liff.state");
+      }
+
+      if (rawLiffState) {
+        var decodedState = rawLiffState;
+        for (var decodeCount = 0; decodeCount < 2; decodeCount += 1) {
+          try {
+            var nextState = decodeURIComponent(decodedState);
+            if (nextState === decodedState) break;
+            decodedState = nextState;
+          } catch (decodeError) {
+            break;
+          }
+        }
+
+        var targetUrl = new URL(decodedState || "/", window.location.origin);
+        isDeepLinkDestination = targetUrl.pathname !== "/";
+      }
+
+      if (!isDeepLinkDestination) {
+        var redirectRaw = window.sessionStorage.getItem("liff-redirect-after-login");
+        if (redirectRaw) {
+          try {
+            var redirectData = JSON.parse(redirectRaw);
+            var redirectPath = String(redirectData.path || "");
+            isDeepLinkDestination = redirectPath && new URL(redirectPath, window.location.origin).pathname !== "/";
+          } catch (redirectError) {}
+        }
+      }
     } catch (e) {}
 
-    if (window.location.pathname === "/" && !isInternalHomeReturn) {
+    if (window.location.pathname === "/" && !isInternalHomeReturn && !isDeepLinkDestination) {
       window.__relayShowLaunchSplash();
       return;
     }
