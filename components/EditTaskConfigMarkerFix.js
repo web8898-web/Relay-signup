@@ -9,13 +9,15 @@ const MARKERS = new Set([
   "__relay_share_enabled__",
   "__relay_share_disabled__",
   "__relay_native_share_enabled__",
+  "__relay_native_share_disabled__",
   "__relay_queue_mode__",
 ]);
 const BANNER_PREFIX = "__relay_banner_url__:";
+const INTERNAL_MARKER_PATTERN = /^__relay_[a-z0-9_]+__(?::.*)?$/i;
 
 function isMarker(value) {
   const text = String(value || "").trim();
-  return MARKERS.has(text) || text.startsWith(BANNER_PREFIX);
+  return MARKERS.has(text) || text.startsWith(BANNER_PREFIX) || INTERNAL_MARKER_PATTERN.test(text);
 }
 
 function markerLines(value) {
@@ -41,6 +43,29 @@ function setNativeValue(element, value) {
   setter?.call(element, value);
   element.dispatchEvent(new Event("input", { bubbles: true }));
   element.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+function cleanVisibleTaskNotes(savedMarkers) {
+  document.querySelectorAll("p").forEach((element) => {
+    if (!(element instanceof HTMLParagraphElement)) return;
+    const text = element.textContent || "";
+    const found = markerLines(text);
+    if (!found.length) return;
+
+    found.forEach((marker) => savedMarkers.add(marker));
+    const cleaned = cleanText(text);
+
+    if (!cleaned) {
+      element.style.setProperty("display", "none", "important");
+      element.setAttribute("aria-hidden", "true");
+      return;
+    }
+
+    if (cleaned !== text.trim()) {
+      element.textContent = cleaned;
+      element.setAttribute("data-relay-marker-cleaned", "true");
+    }
+  });
 }
 
 export default function EditTaskConfigMarkerFix() {
@@ -78,7 +103,11 @@ export default function EditTaskConfigMarkerFix() {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         const pageText = document.body?.innerText || "";
-        if (!pageText.includes("編輯任務")) return;
+        const isTaskListPage = pathname.includes("my-tasks");
+        const isEditScreen = pageText.includes("編輯任務");
+        if (!isTaskListPage && !isEditScreen) return;
+
+        if (isTaskListPage) cleanVisibleTaskNotes(savedMarkers.current);
 
         document.querySelectorAll("input, textarea").forEach((element) => {
           if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)) return;
