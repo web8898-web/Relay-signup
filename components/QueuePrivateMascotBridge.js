@@ -5,6 +5,8 @@ import { useEffect } from "react";
 const SLOT_ATTR = "data-private-queue-inline-mascot-slot";
 const TRIGGER_ATTR = "data-private-queue-inline-mascot-trigger";
 const HIDDEN_BADGE_ATTR = "data-private-queue-hidden-rank-badge";
+const LOADING_CARD_ATTR = "data-queue-loading-enhanced";
+const LOADING_COUNT_ATTR = "data-queue-loading-count";
 const STYLE_ID = "private-queue-status-polish";
 const TRIGGER_TEXT = "目前等待順位";
 
@@ -16,11 +18,28 @@ function findStatusLabel() {
   );
 }
 
+function findLoadingText() {
+  return [...document.querySelectorAll("div, p, span")].find(
+    (element) =>
+      element instanceof HTMLElement &&
+      element.textContent?.trim() === "正在同步排隊狀態…"
+  );
+}
+
 function ensurePolishStyles() {
   if (document.getElementById(STYLE_ID)) return;
   const style = document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = `
+    @keyframes queueSyncSpin { to { transform: rotate(360deg); } }
+    @keyframes queueSyncDot {
+      0%,70%,100% { opacity:.28; transform:translateY(0) scale(.9); }
+      35% { opacity:1; transform:translateY(-3px) scale(1.08); }
+    }
+    @keyframes queueSyncGlow {
+      0%,100% { opacity:.42; transform:scale(.94); }
+      50% { opacity:.82; transform:scale(1.05); }
+    }
     [data-private-queue-inline-mascot-slot] {
       width: 132px !important;
       height: 111px !important;
@@ -65,12 +84,8 @@ function ensurePolishStyles() {
       line-height: 1.2 !important;
       box-shadow: 0 4px 12px rgba(15,23,42,.035) !important;
     }
-    [data-private-queue-info-grid] {
-      margin-top: 15px !important;
-    }
-    [data-private-queue-wait-label] {
-      color: #9ca3af !important;
-    }
+    [data-private-queue-info-grid] { margin-top: 15px !important; }
+    [data-private-queue-wait-label] { color: #9ca3af !important; }
     [data-private-queue-wait-value] {
       font-size: 15px !important;
       line-height: 1.25 !important;
@@ -80,8 +95,84 @@ function ensurePolishStyles() {
       color: rgba(244,63,94,.76) !important;
       box-shadow: none !important;
     }
-    [data-private-queue-cancel]:active {
-      background: rgba(255,241,242,.72) !important;
+    [data-private-queue-cancel]:active { background: rgba(255,241,242,.72) !important; }
+    [data-queue-loading-enhanced="true"] {
+      position: relative !important;
+      min-height: 150px !important;
+      overflow: hidden !important;
+      background: linear-gradient(135deg,rgba(236,253,245,.94),rgba(255,255,255,.98),rgba(239,246,255,.9)) !important;
+    }
+    [data-queue-loading-enhanced="true"] > :not(.queue-sync-overlay) { opacity: 0 !important; }
+    .queue-sync-overlay {
+      position:absolute;
+      inset:0;
+      z-index:3;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:7px;
+      padding:22px 18px;
+      text-align:center;
+      pointer-events:none;
+    }
+    .queue-sync-icon-wrap {
+      position:relative;
+      width:46px;
+      height:46px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .queue-sync-glow {
+      position:absolute;
+      inset:3px;
+      border-radius:9999px;
+      background:rgba(16,185,129,.12);
+      animation:queueSyncGlow 1.35s ease-in-out infinite;
+    }
+    .queue-sync-spinner {
+      position:relative;
+      width:30px;
+      height:30px;
+      border-radius:9999px;
+      border:3px solid rgba(16,185,129,.18);
+      border-top-color:#10b981;
+      border-right-color:#34d399;
+      animation:queueSyncSpin .82s linear infinite;
+    }
+    .queue-sync-title {
+      color:#047857;
+      font-size:14px;
+      font-weight:800;
+      letter-spacing:.01em;
+    }
+    .queue-sync-subtitle {
+      color:rgba(4,120,87,.62);
+      font-size:11px;
+      font-weight:600;
+    }
+    .queue-sync-dots {
+      display:flex;
+      align-items:center;
+      gap:5px;
+      margin-top:1px;
+    }
+    .queue-sync-dot {
+      width:6px;
+      height:6px;
+      border-radius:9999px;
+      background:#34d399;
+      animation:queueSyncDot 1s ease-in-out infinite;
+    }
+    .queue-sync-dot:nth-child(2) { animation-delay:.14s; }
+    .queue-sync-dot:nth-child(3) { animation-delay:.28s; }
+    .queue-loading-count-label {
+      display:inline-flex !important;
+      align-items:center !important;
+      min-width:84px;
+      color:#047857 !important;
+      font-weight:800 !important;
     }
     @media (max-width: 360px) {
       [data-private-queue-inline-mascot-slot],
@@ -89,12 +180,77 @@ function ensurePolishStyles() {
         width: 120px !important;
         height: 101px !important;
       }
-      [data-private-queue-rank] {
-        font-size: 46px !important;
-      }
+      [data-private-queue-rank] { font-size: 46px !important; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .queue-sync-spinner,.queue-sync-glow,.queue-sync-dot { animation-duration:1ms !important; }
     }
   `;
   document.head.appendChild(style);
+}
+
+function restoreLoadingEnhancement() {
+  document.querySelectorAll(`[${LOADING_CARD_ATTR}]`).forEach((card) => {
+    if (!(card instanceof HTMLElement)) return;
+    card.querySelectorAll(":scope > .queue-sync-overlay").forEach((overlay) => overlay.remove());
+    card.removeAttribute(LOADING_CARD_ATTR);
+  });
+
+  document.querySelectorAll(`[${LOADING_COUNT_ATTR}]`).forEach((element) => {
+    if (!(element instanceof HTMLElement)) return;
+    const original = element.getAttribute(LOADING_COUNT_ATTR);
+    if (original !== null) element.textContent = original;
+    element.removeAttribute(LOADING_COUNT_ATTR);
+    element.classList.remove("queue-loading-count-label");
+  });
+}
+
+function enhanceLoadingState() {
+  const loadingText = findLoadingText();
+  if (!(loadingText instanceof HTMLElement)) {
+    restoreLoadingEnhancement();
+    return;
+  }
+
+  const card = loadingText.parentElement;
+  if (!(card instanceof HTMLElement)) return;
+
+  card.setAttribute(LOADING_CARD_ATTR, "true");
+
+  if (!card.querySelector(":scope > .queue-sync-overlay")) {
+    const overlay = document.createElement("div");
+    overlay.className = "queue-sync-overlay";
+    overlay.setAttribute("role", "status");
+    overlay.setAttribute("aria-live", "polite");
+    overlay.innerHTML = `
+      <div class="queue-sync-icon-wrap" aria-hidden="true">
+        <span class="queue-sync-glow"></span>
+        <span class="queue-sync-spinner"></span>
+      </div>
+      <div class="queue-sync-title">正在更新排隊狀態</div>
+      <div class="queue-sync-subtitle">請稍候，正在取得最新順位</div>
+      <div class="queue-sync-dots" aria-hidden="true">
+        <span class="queue-sync-dot"></span>
+        <span class="queue-sync-dot"></span>
+        <span class="queue-sync-dot"></span>
+      </div>
+    `;
+    card.appendChild(overlay);
+  }
+
+  const countText = [...document.querySelectorAll("span")].find(
+    (element) =>
+      element instanceof HTMLElement &&
+      /^目前\s*\d+\s*位等待中$/.test(element.textContent?.trim() || "")
+  );
+
+  if (countText instanceof HTMLElement) {
+    if (!countText.hasAttribute(LOADING_COUNT_ATTR)) {
+      countText.setAttribute(LOADING_COUNT_ATTR, countText.textContent || "");
+    }
+    countText.textContent = "正在更新";
+    countText.classList.add("queue-loading-count-label");
+  }
 }
 
 function restoreHiddenRankBadges() {
@@ -176,6 +332,7 @@ function polishStatusContent(label) {
 function ensureSingleInlineMascot() {
   ensurePolishStyles();
   removeOldFloatingMascots();
+  enhanceLoadingState();
 
   const label = findStatusLabel();
   const allSlots = [...document.querySelectorAll(`[${SLOT_ATTR}]`)];
@@ -265,6 +422,7 @@ export default function QueuePrivateMascotBridge() {
       window.cancelAnimationFrame(frame);
       document.querySelectorAll(`[${SLOT_ATTR}], [${TRIGGER_ATTR}]`).forEach((element) => element.remove());
       restoreHiddenRankBadges();
+      restoreLoadingEnhancement();
       removeOldFloatingMascots();
       document.getElementById(STYLE_ID)?.remove();
     };
