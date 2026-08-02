@@ -48,30 +48,30 @@ function ensureStyles() {
     .queue-reference-read .queue-reference-rest-arm{opacity:0}
 
     .queue-reference-phone .queue-reference-body,
-    .queue-reference-phone .queue-reference-head{animation:queueReferencePhone 4.6s ease-in-out 1;transform-box:fill-box;transform-origin:center bottom}
+    .queue-reference-phone .queue-reference-head{animation:queueReferencePhone 4.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center bottom}
     .queue-reference-phone .queue-reference-phone-prop,
-    .queue-reference-phone .queue-reference-phone-hands{animation:queueReferenceItemIn 4.6s ease-in-out 1}
-    .queue-reference-look .queue-reference-head{animation:queueReferenceLook 2.8s ease-in-out 1;transform-box:fill-box;transform-origin:center}
+    .queue-reference-phone .queue-reference-phone-hands{animation:queueReferenceItemIn 4.6s ease-in-out infinite}
+    .queue-reference-look .queue-reference-head{animation:queueReferenceLook 2.8s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
     .queue-reference-yawn .queue-reference-body,
-    .queue-reference-yawn .queue-reference-head{animation:queueReferenceYawn 3s ease-in-out 1;transform-box:fill-box;transform-origin:center bottom}
+    .queue-reference-yawn .queue-reference-head{animation:queueReferenceYawn 3s ease-in-out infinite;transform-box:fill-box;transform-origin:center bottom}
     .queue-reference-yawn .queue-reference-normal-mouth{opacity:0}
     .queue-reference-yawn .queue-reference-yawn-mouth,
-    .queue-reference-yawn .queue-reference-yawn-hand{animation:queueReferenceHandsIn 3s ease-in-out 1}
+    .queue-reference-yawn .queue-reference-yawn-hand{animation:queueReferenceHandsIn 3s ease-in-out infinite}
     .queue-reference-stretch .queue-reference-body,
-    .queue-reference-stretch .queue-reference-head{animation:queueReferenceStretch 3.2s ease-in-out 1;transform-box:fill-box;transform-origin:center bottom}
-    .queue-reference-stretch .queue-reference-stretch-hands{animation:queueReferenceHandsIn 3.2s ease-in-out 1}
+    .queue-reference-stretch .queue-reference-head{animation:queueReferenceStretch 3.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center bottom}
+    .queue-reference-stretch .queue-reference-stretch-hands{animation:queueReferenceHandsIn 3.2s ease-in-out infinite}
     .queue-reference-watch .queue-reference-body,
-    .queue-reference-watch .queue-reference-head{animation:queueReferenceWatch 2.8s ease-in-out 1;transform-box:fill-box;transform-origin:center bottom}
+    .queue-reference-watch .queue-reference-head{animation:queueReferenceWatch 2.8s ease-in-out infinite;transform-box:fill-box;transform-origin:center bottom}
     .queue-reference-watch .queue-reference-watch-prop,
-    .queue-reference-watch .queue-reference-watch-hands{animation:queueReferenceHandsIn 2.8s ease-in-out 1}
+    .queue-reference-watch .queue-reference-watch-hands{animation:queueReferenceHandsIn 2.8s ease-in-out infinite}
     .queue-reference-drink .queue-reference-body,
-    .queue-reference-drink .queue-reference-head{animation:queueReferenceDrink 3.8s ease-in-out 1;transform-box:fill-box;transform-origin:center bottom}
+    .queue-reference-drink .queue-reference-head{animation:queueReferenceDrink 3.8s ease-in-out infinite;transform-box:fill-box;transform-origin:center bottom}
     .queue-reference-drink .queue-reference-drink-prop,
-    .queue-reference-drink .queue-reference-drink-hands{animation:queueReferenceItemIn 3.8s ease-in-out 1}
+    .queue-reference-drink .queue-reference-drink-hands{animation:queueReferenceItemIn 3.8s ease-in-out infinite}
     .queue-reference-read .queue-reference-body,
-    .queue-reference-read .queue-reference-head{animation:queueReferenceRead 4.2s ease-in-out 1;transform-box:fill-box;transform-origin:center bottom}
+    .queue-reference-read .queue-reference-head{animation:queueReferenceRead 4.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center bottom}
     .queue-reference-read .queue-reference-book-prop,
-    .queue-reference-read .queue-reference-book-hands{animation:queueReferenceItemIn 4.2s ease-in-out 1}
+    .queue-reference-read .queue-reference-book-hands{animation:queueReferenceItemIn 4.2s ease-in-out infinite}
 
     .queue-reference-speech{position:fixed;left:0;top:0;transform:translateX(-50%);min-width:112px;max-width:180px;padding:7px 10px;border:1px solid #b7e4d2;border-radius:14px;background:#f0fff8;color:#16745b;font-size:12px;font-weight:700;line-height:1.35;white-space:nowrap;box-shadow:0 6px 16px rgba(15,118,90,.12);z-index:2147483000;pointer-events:none;animation:queueReferenceBubble 2s ease both}
     .queue-reference-speech::after{content:"";position:absolute;left:50%;bottom:-6px;width:10px;height:10px;background:#f0fff8;border-right:1px solid #b7e4d2;border-bottom:1px solid #b7e4d2;transform:translateX(-50%) rotate(45deg)}
@@ -121,7 +121,28 @@ function mascotSvg() {
 
 function clearAction(mascot) {
   ACTION_CLASSES.forEach((name) => mascot.classList.remove(name));
-  mascot.dataset.referenceActionActive = "false";
+}
+
+function actionForRank(rank) {
+  if (rank <= 1) return "queue-reference-stretch";
+  if (rank === 2) return "queue-reference-watch";
+  if (rank <= 4) return "queue-reference-look";
+  if (rank <= 9) return "queue-reference-drink";
+  return "queue-reference-phone";
+}
+
+function applyRankAction(mascot, rank) {
+  if (!(mascot instanceof HTMLElement)) return;
+  const action = actionForRank(rank);
+  const previousAction = mascot.dataset.rankAction || "";
+  if (previousAction === action) return;
+  clearAction(mascot);
+  mascot.dataset.rankAction = action;
+  mascot.classList.add(action);
+  mascot.setAttribute(
+    "aria-label",
+    rank <= 1 ? "即將輪到，準備起身" : rank === 2 ? "第二位，查看時間" : rank <= 4 ? "接近順位，開始注意" : rank <= 9 ? "等待中，喝杯飲料" : "等待中，看看手機"
+  );
 }
 
 function blink(mascot) {
@@ -137,38 +158,6 @@ function scheduleBlink(mascot) {
     if (!mascot.isConnected) return;
     const timer = window.setTimeout(() => { blink(mascot); next(); }, 4000 + Math.floor(Math.random() * 8000));
     mascot.dataset.referenceBlinkTimer = String(timer);
-  };
-  next();
-}
-
-function chooseAction() {
-  const actions = [
-    ["queue-reference-phone", 4600], ["queue-reference-look", 2800], ["queue-reference-yawn", 3000],
-    ["queue-reference-stretch", 3200], ["queue-reference-watch", 2800], ["queue-reference-drink", 3800], ["queue-reference-read", 4200],
-  ];
-  return actions[Math.floor(Math.random() * actions.length)];
-}
-
-function playAction(mascot) {
-  if (!(mascot instanceof HTMLElement) || !mascot.isConnected || document.hidden || mascot.dataset.referenceActionActive === "true") return;
-  const [className, duration] = chooseAction();
-  clearAction(mascot);
-  mascot.dataset.referenceActionActive = "true";
-  mascot.classList.add(className);
-  const timer = window.setTimeout(() => clearAction(mascot), duration);
-  mascot.dataset.referenceActionTimer = String(timer);
-}
-
-function scheduleActions(mascot) {
-  if (mascot.dataset.referenceActionScheduled === "true") return;
-  mascot.dataset.referenceActionScheduled = "true";
-  let first = true;
-  const next = () => {
-    if (!mascot.isConnected) return;
-    const delay = first ? 6000 + Math.floor(Math.random() * 6000) : 20000 + Math.floor(Math.random() * 40000);
-    first = false;
-    const timer = window.setTimeout(() => { playAction(mascot); next(); }, delay);
-    mascot.dataset.referenceActionScheduleTimer = String(timer);
   };
   next();
 }
@@ -230,6 +219,7 @@ function installReferenceMascot(root = document.body) {
     if (!(mascot instanceof HTMLElement)) return;
     const previousRank = Number(mascot.dataset.currentRank || 0);
     mascot.dataset.currentRank = rank ? String(rank) : "";
+    applyRankAction(mascot, rank || 10);
     if (rank === 1 && previousRank !== 1) {
       mascot.classList.remove("queue-reference-first");
       void mascot.offsetWidth;
@@ -237,7 +227,6 @@ function installReferenceMascot(root = document.body) {
       window.setTimeout(() => mascot.classList.remove("queue-reference-first"), 620);
     }
     scheduleBlink(mascot);
-    scheduleActions(mascot);
     scheduleSpeech(mascot);
   });
 }
@@ -260,7 +249,7 @@ export default function QueueMascotReference() {
       window.cancelAnimationFrame(frame);
       document.querySelectorAll(".queue-reference-speech").forEach((bubble) => bubble.remove());
       document.querySelectorAll("[data-reference-queue-mascot]").forEach((m) => {
-        ["referenceBlinkTimer","referenceActionTimer","referenceActionScheduleTimer","referenceSpeechTimer"].forEach((key) => {
+        ["referenceBlinkTimer","referenceSpeechTimer"].forEach((key) => {
           const timer = Number(m.dataset[key]);
           if (timer) window.clearTimeout(timer);
         });
