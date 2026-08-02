@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 const SLOT_ATTR = "data-private-queue-inline-mascot-slot";
 const TRIGGER_ATTR = "data-private-queue-inline-mascot-trigger";
+const HIDDEN_BADGE_ATTR = "data-private-queue-hidden-rank-badge";
 const TRIGGER_TEXT = "目前等待順位";
 
 function findStatusLabel() {
@@ -12,6 +13,14 @@ function findStatusLabel() {
       element instanceof HTMLElement &&
       element.textContent?.trim() === "你的排隊狀態"
   );
+}
+
+function restoreHiddenRankBadges() {
+  document.querySelectorAll(`[${HIDDEN_BADGE_ATTR}]`).forEach((element) => {
+    if (!(element instanceof HTMLElement)) return;
+    element.style.removeProperty("display");
+    element.removeAttribute(HIDDEN_BADGE_ATTR);
+  });
 }
 
 function removeOldFloatingMascots() {
@@ -39,6 +48,7 @@ function ensureSingleInlineMascot() {
   if (!(label instanceof HTMLElement) || !(label.parentElement instanceof HTMLElement)) {
     allSlots.forEach((element) => element.remove());
     allTriggers.forEach((element) => element.remove());
+    restoreHiddenRankBadges();
     return;
   }
 
@@ -68,10 +78,24 @@ function ensureSingleInlineMascot() {
       "position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important;";
   }
 
-  // 以正常文件流固定在「你的排隊狀態」正上方，不再使用 fixed / absolute 浮動定位。
   if (slot.nextElementSibling !== trigger || trigger.nextElementSibling !== label) {
     parent.insertBefore(slot, label);
     parent.insertBefore(trigger, label);
+  }
+
+  // 原本 React 畫面最上方的藍色順位圓圈會與小人下方的「第 N 位」重複。
+  // 保留 DOM 節點避免破壞 React 更新，只在排隊狀態存在時隱藏該圓圈。
+  const rankBadge = slot.previousElementSibling;
+  document.querySelectorAll(`[${HIDDEN_BADGE_ATTR}]`).forEach((element) => {
+    if (element !== rankBadge && element instanceof HTMLElement) {
+      element.style.removeProperty("display");
+      element.removeAttribute(HIDDEN_BADGE_ATTR);
+    }
+  });
+
+  if (rankBadge instanceof HTMLElement) {
+    rankBadge.setAttribute(HIDDEN_BADGE_ATTR, "true");
+    rankBadge.style.setProperty("display", "none", "important");
   }
 }
 
@@ -100,6 +124,7 @@ export default function QueuePrivateMascotBridge() {
       window.removeEventListener("pageshow", apply);
       window.cancelAnimationFrame(frame);
       document.querySelectorAll(`[${SLOT_ATTR}], [${TRIGGER_ATTR}]`).forEach((element) => element.remove());
+      restoreHiddenRankBadges();
       removeOldFloatingMascots();
     };
   }, []);
