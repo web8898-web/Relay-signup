@@ -5,6 +5,7 @@ import { useEffect } from "react";
 const SLOT_ATTR = "data-private-queue-inline-mascot-slot";
 const TRIGGER_ATTR = "data-private-queue-inline-mascot-trigger";
 const HIDDEN_BADGE_ATTR = "data-private-queue-hidden-rank-badge";
+const STYLE_ID = "private-queue-status-polish";
 const TRIGGER_TEXT = "目前等待順位";
 
 function findStatusLabel() {
@@ -13,6 +14,87 @@ function findStatusLabel() {
       element instanceof HTMLElement &&
       element.textContent?.trim() === "你的排隊狀態"
   );
+}
+
+function ensurePolishStyles() {
+  if (document.getElementById(STYLE_ID)) return;
+  const style = document.createElement("style");
+  style.id = STYLE_ID;
+  style.textContent = `
+    [data-private-queue-inline-mascot-slot] {
+      width: 132px !important;
+      height: 111px !important;
+      margin: 0 auto 2px !important;
+      display: flex !important;
+      align-items: flex-end !important;
+      justify-content: center !important;
+    }
+    [data-private-queue-inline-mascot-slot] .queue-reference-mascot {
+      width: 132px !important;
+      height: 111px !important;
+      margin: 0 auto !important;
+    }
+    [data-private-queue-status-label] {
+      margin-top: 4px !important;
+      font-size: 12px !important;
+      letter-spacing: .08em !important;
+    }
+    [data-private-queue-name] {
+      margin-top: 4px !important;
+      font-size: 20px !important;
+      line-height: 1.25 !important;
+      color: #374151 !important;
+    }
+    [data-private-queue-rank] {
+      margin-top: 2px !important;
+      font-size: 52px !important;
+      line-height: 1.08 !important;
+      letter-spacing: -.055em !important;
+      color: #0369a1 !important;
+    }
+    [data-private-queue-ahead] {
+      display: inline-flex !important;
+      width: fit-content !important;
+      margin: 10px auto 0 !important;
+      padding: 6px 13px !important;
+      border: 1px solid rgba(14,165,233,.14) !important;
+      border-radius: 9999px !important;
+      background: rgba(255,255,255,.78) !important;
+      color: #374151 !important;
+      font-size: 14px !important;
+      line-height: 1.2 !important;
+      box-shadow: 0 4px 12px rgba(15,23,42,.035) !important;
+    }
+    [data-private-queue-info-grid] {
+      margin-top: 15px !important;
+    }
+    [data-private-queue-wait-label] {
+      color: #9ca3af !important;
+    }
+    [data-private-queue-wait-value] {
+      font-size: 15px !important;
+      line-height: 1.25 !important;
+    }
+    [data-private-queue-cancel] {
+      border-color: rgba(244,63,94,.25) !important;
+      color: rgba(244,63,94,.76) !important;
+      box-shadow: none !important;
+    }
+    [data-private-queue-cancel]:active {
+      background: rgba(255,241,242,.72) !important;
+    }
+    @media (max-width: 360px) {
+      [data-private-queue-inline-mascot-slot],
+      [data-private-queue-inline-mascot-slot] .queue-reference-mascot {
+        width: 120px !important;
+        height: 101px !important;
+      }
+      [data-private-queue-rank] {
+        font-size: 46px !important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 function restoreHiddenRankBadges() {
@@ -38,7 +120,61 @@ function removeOldFloatingMascots() {
     });
 }
 
+function normalizeWaitText(value) {
+  const text = String(value || "").trim();
+  if (!text) return text;
+  if (text.startsWith("已等待")) return text;
+  return `已等待 ${text.replace(/前$/, "").trim()}`;
+}
+
+function polishStatusContent(label) {
+  if (!(label instanceof HTMLElement)) return;
+
+  const name = label.nextElementSibling;
+  const rank = name?.nextElementSibling;
+  const ahead = rank?.nextElementSibling;
+  const infoGrid = ahead?.nextElementSibling;
+
+  label.setAttribute("data-private-queue-status-label", "true");
+  if (name instanceof HTMLElement) name.setAttribute("data-private-queue-name", "true");
+  if (rank instanceof HTMLElement) rank.setAttribute("data-private-queue-rank", "true");
+  if (ahead instanceof HTMLElement) ahead.setAttribute("data-private-queue-ahead", "true");
+
+  if (infoGrid instanceof HTMLElement) {
+    infoGrid.setAttribute("data-private-queue-info-grid", "true");
+    const cards = [...infoGrid.children].filter((item) => item instanceof HTMLElement);
+    const waitCard = cards[1];
+    if (waitCard instanceof HTMLElement) {
+      const waitLabel = waitCard.querySelector("p:first-child");
+      const waitValue = waitCard.querySelector("p:nth-child(2)");
+      if (waitLabel instanceof HTMLElement) {
+        waitLabel.setAttribute("data-private-queue-wait-label", "true");
+        if (waitLabel.textContent?.trim() === "加入時間") waitLabel.textContent = "等待時間";
+      }
+      if (waitValue instanceof HTMLElement) {
+        waitValue.setAttribute("data-private-queue-wait-value", "true");
+        const textNode = [...waitValue.childNodes].find(
+          (node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim()
+        );
+        if (textNode) {
+          const nextText = normalizeWaitText(textNode.textContent);
+          if (textNode.textContent !== ` ${nextText}`) textNode.textContent = ` ${nextText}`;
+        }
+      }
+    }
+  }
+
+  const card = label.closest("div.bg-gradient-to-br");
+  card?.querySelectorAll("button").forEach((button) => {
+    if (!(button instanceof HTMLElement)) return;
+    if (button.textContent?.includes("取消排隊")) {
+      button.setAttribute("data-private-queue-cancel", "true");
+    }
+  });
+}
+
 function ensureSingleInlineMascot() {
+  ensurePolishStyles();
   removeOldFloatingMascots();
 
   const label = findStatusLabel();
@@ -83,8 +219,6 @@ function ensureSingleInlineMascot() {
     parent.insertBefore(trigger, label);
   }
 
-  // 原本 React 畫面最上方的藍色順位圓圈會與小人下方的「第 N 位」重複。
-  // 保留 DOM 節點避免破壞 React 更新，只在排隊狀態存在時隱藏該圓圈。
   const rankBadge = slot.previousElementSibling;
   document.querySelectorAll(`[${HIDDEN_BADGE_ATTR}]`).forEach((element) => {
     if (element !== rankBadge && element instanceof HTMLElement) {
@@ -97,6 +231,8 @@ function ensureSingleInlineMascot() {
     rankBadge.setAttribute(HIDDEN_BADGE_ATTR, "true");
     rankBadge.style.setProperty("display", "none", "important");
   }
+
+  polishStatusContent(label);
 }
 
 export default function QueuePrivateMascotBridge() {
@@ -117,15 +253,20 @@ export default function QueuePrivateMascotBridge() {
       characterData: true,
     });
 
+    const clockTimer = window.setInterval(apply, 30000);
     window.addEventListener("pageshow", apply);
+    document.addEventListener("visibilitychange", apply);
 
     return () => {
       observer.disconnect();
+      window.clearInterval(clockTimer);
       window.removeEventListener("pageshow", apply);
+      document.removeEventListener("visibilitychange", apply);
       window.cancelAnimationFrame(frame);
       document.querySelectorAll(`[${SLOT_ATTR}], [${TRIGGER_ATTR}]`).forEach((element) => element.remove());
       restoreHiddenRankBadges();
       removeOldFloatingMascots();
+      document.getElementById(STYLE_ID)?.remove();
     };
   }, []);
 
