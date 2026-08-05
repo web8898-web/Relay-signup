@@ -48,6 +48,13 @@ export function shouldOfferEditTaskTour() {
   }
 }
 
+export function markEditTaskTourSeen() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY, "1");
+  } catch (e) {}
+}
+
 export default function EditTaskTour({ open, onClose }) {
   const [stepIndex, setStepIndex] = useState(0);
   const [rect, setRect] = useState(null);
@@ -84,26 +91,20 @@ export default function EditTaskTour({ open, onClose }) {
   }, [rect]);
 
   function finish() {
-    try {
-      localStorage.setItem(STORAGE_KEY, "1");
-    } catch (e) {}
+    markEditTaskTourSeen();
     setStepIndex(0);
     onClose();
-  }
-
-  function skip() {
-    finish();
   }
 
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-[80]" aria-modal="true" role="dialog" aria-label="編輯任務教學">
-      <div className="absolute inset-0 bg-slate-950/55" />
+      {!rect && <div className="absolute inset-0 bg-slate-950/55" />}
 
       {rect && (
         <div
-          className="absolute rounded-[22px] border-2 border-white bg-transparent shadow-[0_0_0_9999px_rgba(2,6,23,0.03),0_0_0_6px_rgba(16,185,129,0.25)] pointer-events-none transition-all duration-200"
+          className="absolute rounded-[22px] border-2 border-white bg-transparent shadow-[0_0_0_9999px_rgba(2,6,23,0.56),0_0_0_6px_rgba(16,185,129,0.25)] pointer-events-none transition-all duration-200"
           style={{
             left: Math.max(8, rect.left - 8),
             top: Math.max(8, rect.top - 8),
@@ -115,7 +116,7 @@ export default function EditTaskTour({ open, onClose }) {
 
       <button
         type="button"
-        onClick={skip}
+        onClick={finish}
         className="absolute right-4 top-4 rounded-full bg-white/95 p-2 text-gray-500 shadow-sm"
         aria-label="跳過教學"
       >
@@ -139,7 +140,7 @@ export default function EditTaskTour({ open, onClose }) {
         <div className="mt-5 flex items-center justify-between gap-2">
           <button
             type="button"
-            onClick={skip}
+            onClick={finish}
             className="px-2 py-2 text-xs font-medium text-gray-400"
           >
             跳過教學
