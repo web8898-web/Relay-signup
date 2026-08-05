@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, HelpCircle } from "lucide-react";
 
 const HOME_RETURN_ANIMATION_KEY = "relay_home_return_expand";
 
@@ -24,6 +24,23 @@ export function TopBar({ title, backHref, onBack, right }) {
     onBack?.();
   }
 
+  function openEditTaskTour() {
+    const existingButton = document.querySelector('[aria-label="查看編輯教學"]');
+    existingButton?.click();
+  }
+
+  const editHelpButton = title === "編輯任務" ? (
+    <button
+      type="button"
+      onClick={openEditTaskTour}
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-white transition hover:bg-white/25 active:scale-95"
+      aria-label="開啟編輯任務教學"
+      title="編輯任務教學"
+    >
+      <HelpCircle size={18} />
+    </button>
+  ) : null;
+
   const bar = (
     <div className="fixed top-0 left-1/2 z-[9999] w-full max-w-md -translate-x-1/2 bg-emerald-500 text-white px-4 py-4 flex items-center gap-3 shadow-sm">
       {backHref ? (
@@ -36,7 +53,7 @@ export function TopBar({ title, backHref, onBack, right }) {
         </button>
       ) : null}
       <p className="font-bold flex-1 truncate">{title}</p>
-      {right}
+      {right || editHelpButton}
     </div>
   );
 
