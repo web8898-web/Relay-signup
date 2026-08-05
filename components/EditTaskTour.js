@@ -81,14 +81,34 @@ export default function EditTaskTour({ open, onClose }) {
   }, [open, step.target]);
 
   const cardStyle = useMemo(() => {
-    if (!rect) return { left: 20, right: 20, bottom: 24 };
+    const horizontal = { left: 20, right: 20 };
+    if (!rect) return { ...horizontal, bottom: 24 };
+
     const viewportHeight = typeof window === "undefined" ? 800 : window.innerHeight;
+
+    // 最後兩步的目標都位於頁面底部，教學卡固定放在頂部，
+    // 避免遮住「本次修改」與「儲存變更」。
+    if (stepIndex >= 3) {
+      return { ...horizontal, top: 76 };
+    }
+
     const spaceBelow = viewportHeight - rect.bottom;
     if (spaceBelow > 230) {
-      return { left: 20, right: 20, top: Math.min(rect.bottom + 14, viewportHeight - 220) };
+      return {
+        ...horizontal,
+        top: Math.min(rect.bottom + 14, viewportHeight - 220),
+      };
     }
-    return { left: 20, right: 20, bottom: 24 };
-  }, [rect]);
+
+    const cardHeight = 210;
+    const safeTop = 76;
+    const preferredTop = rect.top - cardHeight - 14;
+    if (preferredTop >= safeTop) {
+      return { ...horizontal, top: preferredTop };
+    }
+
+    return { ...horizontal, bottom: 24 };
+  }, [rect, stepIndex]);
 
   function finish() {
     markEditTaskTourSeen();
