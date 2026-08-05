@@ -3,6 +3,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { HelpCircle, X } from "lucide-react";
 
 const STORAGE_KEY = "relay_edit_task_tour_done";
+const CARD_HEIGHT = 190;
+const CARD_GAP = 12;
+const SAFE_TOP = 76;
 
 const STEPS = [
   {
@@ -37,6 +40,19 @@ function getTargetElement(name) {
   return document.querySelector(`[data-edit-tour="${name}"]`);
 }
 
+function placeTarget(element, index) {
+  if (!element) return null;
+
+  // 最後兩步的說明必須和目標保持在同一視線範圍內。
+  // 將目標靠近畫面下方，保留上方空間顯示教學卡。
+  element.scrollIntoView({
+    behavior: "auto",
+    block: index >= 3 ? "end" : "center",
+  });
+
+  return element.getBoundingClientRect();
+}
+
 export function shouldOfferEditTaskTour() {
   if (typeof window === "undefined") return false;
   try {
@@ -56,41 +72,31 @@ export function markEditTaskTourSeen() {
 export default function EditTaskTour({ open, onClose }) {
   const [stepIndex, setStepIndex] = useState(0);
   const [rect, setRect] = useState(null);
-  const [visible, setVisible] = useState(false);
   const frameRef = useRef(null);
 
   const step = STEPS[stepIndex];
   const isLast = stepIndex === STEPS.length - 1;
 
   useEffect(() => {
-    if (!open) {
-      setVisible(false);
-      return;
-    }
+    if (!open) return;
 
-    setVisible(false);
     const element = getTargetElement(step.target);
     if (!element) {
       setRect(null);
-      setVisible(true);
       return;
     }
 
-    // LINE 內建瀏覽器對 smooth scroll 加上持續 scroll 監聽容易掉幀。
-    // 改為一次完成捲動，再用兩個 animation frame 等待版面穩定後定位。
-    element.scrollIntoView({ behavior: "auto", block: "center" });
-
+    // 立即捲動後，在下一個繪製幀確認一次位置。
+    // 不先隱藏卡片，避免切換步驟時整個畫面閃爍。
+    setRect(placeTarget(element, stepIndex));
     frameRef.current = requestAnimationFrame(() => {
-      frameRef.current = requestAnimationFrame(() => {
-        setRect(element.getBoundingClientRect());
-        setVisible(true);
-      });
+      setRect(element.getBoundingClientRect());
     });
 
     return () => {
       if (frameRef.current) cancelAnimationFrame(frameRef.current);
     };
-  }, [open, step.target]);
+  }, [open, step.target, stepIndex]);
 
   useEffect(() => {
     if (!open) return;
@@ -117,23 +123,23 @@ export default function EditTaskTour({ open, onClose }) {
 
     const viewportHeight = typeof window === "undefined" ? 800 : window.innerHeight;
 
+    // 第 4、5 步固定貼在目標上方，讓說明和被說明內容相鄰。
     if (stepIndex >= 3) {
-      return { ...horizontal, top: 76 };
+      const top = Math.max(SAFE_TOP, rect.top - CARD_HEIGHT - CARD_GAP);
+      return { ...horizontal, top };
     }
 
     const spaceBelow = viewportHeight - rect.bottom;
-    if (spaceBelow > 230) {
+    if (spaceBelow >= CARD_HEIGHT + CARD_GAP + 12) {
       return {
         ...horizontal,
-        top: Math.min(rect.bottom + 14, viewportHeight - 220),
+        top: rect.bottom + CARD_GAP,
       };
     }
 
-    const cardHeight = 210;
-    const safeTop = 76;
-    const preferredTop = rect.top - cardHeight - 14;
-    if (preferredTop >= safeTop) {
-      return { ...horizontal, top: preferredTop };
+    const top = rect.top - CARD_HEIGHT - CARD_GAP;
+    if (top >= SAFE_TOP) {
+      return { ...horizontal, top };
     }
 
     return { ...horizontal, bottom: 24 };
@@ -146,7 +152,12 @@ export default function EditTaskTour({ open, onClose }) {
   }
 
   function goToStep(nextIndex) {
-    setVisible(false);
+    const nextStep = STEPS[nextIndex];
+    const element = getTargetElement(nextStep.target);
+
+    // 在同一次點擊中先定位目標，再更新步驟內容，
+    // 避免先清空或淡出造成白閃與遮罩閃爍。
+    if (element) setRect(placeTarget(element, nextIndex));
     setStepIndex(nextIndex);
   }
 
@@ -158,9 +169,7 @@ export default function EditTaskTour({ open, onClose }) {
 
       {rect && (
         <div
-          className={`absolute rounded-[22px] border-2 border-white bg-transparent shadow-[0_0_0_9999px_rgba(2,6,23,0.56),0_0_0_6px_rgba(16,185,129,0.25)] pointer-events-none will-change-transform transition-[opacity,transform] duration-150 ease-out ${
-            visible ? "opacity-100 scale-100" : "opacity-0 scale-[0.99]"
-          }`}
+          className="absolute rounded-[22px] border-2 border-white bg-transparent shadow-[0_0_0_9999px_rgba(2,6,23,0.56),0_0_0_6px_rgba(16,185,129,0.25)] pointer-events-none transition-[top,left,width,height] duration-100 ease-out"
           style={{
             left: Math.max(8, rect.left - 8),
             top: Math.max(8, rect.top - 8),
@@ -180,9 +189,7 @@ export default function EditTaskTour({ open, onClose }) {
       </button>
 
       <div
-        className={`absolute rounded-3xl bg-white p-5 shadow-2xl will-change-transform transition-[opacity,transform] duration-150 ease-out ${
-          visible ? "translate-y-0 opacity-100" : "translate-y-1.5 opacity-0"
-        }`}
+        className="absolute rounded-3xl bg-white p-5 shadow-2xl transition-[top,bottom] duration-100 ease-out"
         style={cardStyle}
       >
         <div className="flex items-start gap-3">
