@@ -1,13 +1,14 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2, CheckCircle2, X, LogIn, MessageCircle, AlertTriangle } from "lucide-react";
+import { Loader2, CheckCircle2, X, LogIn, MessageCircle, AlertTriangle, HelpCircle } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import LoadingBubble from "@/components/LoadingBubble";
 import AutoGrowTextarea from "@/components/AutoGrowTextarea";
 import DatePickerField from "@/components/DatePickerField";
 import TaskGoneIllustration from "@/components/TaskGoneIllustration";
 import FadeIn from "@/components/FadeIn";
+import EditTaskTour, { shouldOfferEditTaskTour } from "@/components/EditTaskTour";
 import { useLineProfile } from "@/lib/useLineProfile";
 import { chipClass } from "@/lib/utils";
 import { supabase } from "@/lib/supabaseClient";
@@ -114,6 +115,8 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [showTourPrompt, setShowTourPrompt] = useState(false);
+  const [showTour, setShowTour] = useState(false);
   const isQueueMode = task.task_mode === "queue";
 
   const original = useRef({
@@ -136,6 +139,23 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
     maxSignups !== original.current.max_signups ||
     quantityUnit !== original.current.quantity_unit ||
     note !== original.current.note;
+
+  const changes = useMemo(() => {
+    const items = [];
+    if (title !== original.current.title || description !== original.current.description) items.push("任務內容");
+    if (startDate !== original.current.start_date || endDate !== original.current.end_date) items.push("活動日期");
+    if (JSON.stringify(categories) !== JSON.stringify(original.current.categories)) items.push("分類");
+    if (maxSignups !== original.current.max_signups) items.push("人數上限");
+    if (quantityUnit !== original.current.quantity_unit) items.push("數量單位");
+    if (note !== original.current.note) items.push("備註");
+    return items;
+  }, [title, description, categories, startDate, endDate, maxSignups, quantityUnit, note]);
+
+  useEffect(() => {
+    if (!shouldOfferEditTaskTour()) return;
+    const timer = setTimeout(() => setShowTourPrompt(true), 450);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     function handleBeforeUnload(e) {
@@ -168,6 +188,7 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
     if (v && !categories.includes(v)) setCategories([...categories, v]);
     setCatInput("");
   }
+
   function removeCategory(c) {
     setCategories(categories.filter((x) => x !== c));
   }
@@ -206,88 +227,111 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
   return (
     <div className="flex-1 flex flex-col relative min-w-0">
       <TopBar title="編輯任務" onBack={handleBackClick} />
+
+      <button
+        type="button"
+        onClick={() => setShowTour(true)}
+        className="absolute right-5 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-gray-100 bg-white text-gray-400 shadow-sm transition hover:border-emerald-200 hover:text-emerald-500 active:scale-95"
+        aria-label="查看編輯教學"
+        title="查看編輯教學"
+      >
+        <HelpCircle size={16} />
+      </button>
+
       <div className="flex-1 px-6 py-5 flex flex-col gap-5 overflow-y-auto">
         {error && <p className="text-xs text-rose-500">{error}</p>}
-        <Field label="任務標題">
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-300"
-          />
-        </Field>
-        <Field label="簡介">
-          <AutoGrowTextarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            minRows={2}
-            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-300"
-          />
-        </Field>
-        {!isQueueMode && (
-          <Field label="分類（自訂，選填）">
-            <div className="flex gap-2">
-              <input
-                value={catInput}
-                onChange={(e) => setCatInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCategory())}
-                placeholder="例如：職位分類、組別分類、產品分類"
-                className="flex-1 border border-gray-200 rounded-2xl px-4 py-2.5 text-sm placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-300"
-              />
-              <button onClick={addCategory} className="px-4 rounded-2xl bg-white border border-emerald-500 text-emerald-500 text-sm font-medium hover:bg-emerald-50 transition shrink-0">新增</button>
-            </div>
-            <p className="text-[11px] text-gray-400 mt-1.5 px-0.5">輸入文字後，按「新增」或按 Enter 加入一個分類</p>
-            {categories.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-3">
-                {categories.map((c) => (
-                  <span key={c} className={`text-xs px-3 py-1 rounded-full border flex items-center gap-1 ${chipClass(c)}`}>
-                    {c}
-                    <button onClick={() => removeCategory(c)}><X size={12} /></button>
-                  </span>
-                ))}
-              </div>
-            )}
-          </Field>
-        )}
-        <Field label="日期">
-          <div className="flex items-center gap-2">
-            <DatePickerField
-              value={startDate}
-              onChange={setStartDate}
-              className="flex-1 border border-gray-200 rounded-2xl px-3 py-2.5 text-sm"
-              maxDate={endDate}
-              rangeErrorMessage="起始日期不能晚於結束日期"
-            />
-            <span className="text-gray-300">~</span>
-            <DatePickerField
-              value={endDate}
-              onChange={setEndDate}
-              className="flex-1 border border-gray-200 rounded-2xl px-3 py-2.5 text-sm"
-              minDate={startDate}
-              rangeErrorMessage="結束日期不能早於起始日期"
-            />
-          </div>
-        </Field>
-        <Field label="報名人數上限（選填，不填代表不限人數）">
-          <input
-            type="number"
-            min="1"
-            inputMode="numeric"
-            value={maxSignups}
-            onChange={(e) => setMaxSignups(e.target.value)}
-            placeholder="例如：20"
-            className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-300"
-          />
-        </Field>
-        {!isQueueMode && (
-          <Field label="數量單位（選填，例如：份、斤、個——填了報名的人才會看到數量欄位）">
+
+        <div data-edit-tour="edit-content" className="flex flex-col gap-5 rounded-[22px]">
+          <Field label="任務標題">
             <input
-              value={quantityUnit}
-              onChange={(e) => setQuantityUnit(e.target.value)}
-              placeholder="例如：份"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-300"
             />
           </Field>
-        )}
+          <Field label="簡介">
+            <AutoGrowTextarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              minRows={2}
+              className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-300"
+            />
+          </Field>
+        </div>
+
+        <div data-edit-tour="edit-settings" className="flex flex-col gap-5 rounded-[22px]">
+          {!isQueueMode && (
+            <Field label="分類（自訂，選填）">
+              <div className="flex gap-2">
+                <input
+                  value={catInput}
+                  onChange={(e) => setCatInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCategory())}
+                  placeholder="例如：職位分類、組別分類、產品分類"
+                  className="flex-1 border border-gray-200 rounded-2xl px-4 py-2.5 text-sm placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                />
+                <button onClick={addCategory} className="px-4 rounded-2xl bg-white border border-emerald-500 text-emerald-500 text-sm font-medium hover:bg-emerald-50 transition shrink-0">新增</button>
+              </div>
+              <p className="text-[11px] text-gray-400 mt-1.5 px-0.5">輸入文字後，按「新增」或按 Enter 加入一個分類</p>
+              {categories.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {categories.map((c) => (
+                    <span key={c} className={`text-xs px-3 py-1 rounded-full border flex items-center gap-1 ${chipClass(c)}`}>
+                      {c}
+                      <button onClick={() => removeCategory(c)}><X size={12} /></button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </Field>
+          )}
+
+          <Field label="報名人數上限（選填，不填代表不限人數）">
+            <input
+              type="number"
+              min="1"
+              inputMode="numeric"
+              value={maxSignups}
+              onChange={(e) => setMaxSignups(e.target.value)}
+              placeholder="例如：20"
+              className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-300"
+            />
+          </Field>
+
+          {!isQueueMode && (
+            <Field label="數量單位（選填，例如：份、斤、個——填了報名的人才會看到數量欄位）">
+              <input
+                value={quantityUnit}
+                onChange={(e) => setQuantityUnit(e.target.value)}
+                placeholder="例如：份"
+                className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              />
+            </Field>
+          )}
+        </div>
+
+        <div data-edit-tour="edit-date" className="rounded-[22px]">
+          <Field label="日期">
+            <div className="flex items-center gap-2">
+              <DatePickerField
+                value={startDate}
+                onChange={setStartDate}
+                className="flex-1 border border-gray-200 rounded-2xl px-3 py-2.5 text-sm"
+                maxDate={endDate}
+                rangeErrorMessage="起始日期不能晚於結束日期"
+              />
+              <span className="text-gray-300">~</span>
+              <DatePickerField
+                value={endDate}
+                onChange={setEndDate}
+                className="flex-1 border border-gray-200 rounded-2xl px-3 py-2.5 text-sm"
+                minDate={startDate}
+                rangeErrorMessage="結束日期不能早於起始日期"
+              />
+            </div>
+          </Field>
+        </div>
+
         <Field label="備註">
           <AutoGrowTextarea
             value={note}
@@ -296,8 +340,19 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
             className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm placeholder:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-300"
           />
         </Field>
+
+        <div data-edit-tour="edit-summary" className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
+          <p className="text-xs font-semibold text-gray-600">本次修改</p>
+          {changes.length > 0 ? (
+            <p className="mt-1.5 text-xs leading-relaxed text-gray-500">已變更：{changes.join("、")}</p>
+          ) : (
+            <p className="mt-1.5 text-xs text-gray-400">目前沒有尚未儲存的變更。</p>
+          )}
+          <p className="mt-1 text-[11px] leading-relaxed text-gray-400">儲存前請確認修改內容，避免參與者收到錯誤資訊。</p>
+        </div>
       </div>
-      <div className="px-6 pb-6 pt-2">
+
+      <div className="px-6 pb-6 pt-2" data-edit-tour="edit-save">
         <button
           onClick={handleSave}
           disabled={!title.trim() || saving}
@@ -307,6 +362,39 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
           儲存變更
         </button>
       </div>
+
+      {showTourPrompt && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/45 p-6" onClick={() => setShowTourPrompt(false)}>
+          <div className="w-full max-w-xs rounded-3xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+              <HelpCircle size={20} />
+            </div>
+            <p className="font-semibold text-gray-800">第一次編輯任務嗎？</p>
+            <p className="mt-1.5 text-sm leading-relaxed text-gray-500">用幾個步驟帶你確認修改位置。教學只會高亮畫面，不會改動或儲存任何資料。</p>
+            <div className="mt-5 flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowTourPrompt(false);
+                  setShowTour(true);
+                }}
+                className="w-full rounded-full bg-emerald-500 py-2.5 text-sm font-semibold text-white"
+              >
+                開始教學
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowTourPrompt(false)}
+                className="w-full rounded-full py-2 text-xs font-medium text-gray-400"
+              >
+                直接編輯
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <EditTaskTour open={showTour} onClose={() => setShowTour(false)} />
 
       {showLeaveConfirm && (
         <div
