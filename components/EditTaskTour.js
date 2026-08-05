@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { HelpCircle, X } from "lucide-react";
 
 const STORAGE_KEY = "relay_edit_task_tour_done";
@@ -32,11 +32,9 @@ const STEPS = [
   },
 ];
 
-function getTargetRect(name) {
+function getTargetElement(name) {
   if (typeof document === "undefined") return null;
-  const element = document.querySelector(`[data-edit-tour="${name}"]`);
-  if (!element) return null;
-  return element.getBoundingClientRect();
+  return document.querySelector(`[data-edit-tour="${name}"]`);
 }
 
 export function shouldOfferEditTaskTour() {
@@ -58,25 +56,58 @@ export function markEditTaskTourSeen() {
 export default function EditTaskTour({ open, onClose }) {
   const [stepIndex, setStepIndex] = useState(0);
   const [rect, setRect] = useState(null);
+  const [visible, setVisible] = useState(false);
+  const frameRef = useRef(null);
 
   const step = STEPS[stepIndex];
   const isLast = stepIndex === STEPS.length - 1;
 
   useEffect(() => {
-    if (!open) return;
-    const update = () => {
-      const nextRect = getTargetRect(step.target);
-      setRect(nextRect);
-      const element = document.querySelector(`[data-edit-tour="${step.target}"]`);
-      element?.scrollIntoView({ behavior: "smooth", block: "center" });
-    };
-    const timer = setTimeout(update, 80);
-    window.addEventListener("resize", update);
-    window.addEventListener("scroll", update, true);
+    if (!open) {
+      setVisible(false);
+      return;
+    }
+
+    setVisible(false);
+    const element = getTargetElement(step.target);
+    if (!element) {
+      setRect(null);
+      setVisible(true);
+      return;
+    }
+
+    // LINE 內建瀏覽器對 smooth scroll 加上持續 scroll 監聽容易掉幀。
+    // 改為一次完成捲動，再用兩個 animation frame 等待版面穩定後定位。
+    element.scrollIntoView({ behavior: "auto", block: "center" });
+
+    frameRef.current = requestAnimationFrame(() => {
+      frameRef.current = requestAnimationFrame(() => {
+        setRect(element.getBoundingClientRect());
+        setVisible(true);
+      });
+    });
+
     return () => {
-      clearTimeout(timer);
-      window.removeEventListener("resize", update);
-      window.removeEventListener("scroll", update, true);
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    };
+  }, [open, step.target]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    let resizeFrame = null;
+    const handleResize = () => {
+      if (resizeFrame) cancelAnimationFrame(resizeFrame);
+      resizeFrame = requestAnimationFrame(() => {
+        const element = getTargetElement(step.target);
+        if (element) setRect(element.getBoundingClientRect());
+      });
+    };
+
+    window.addEventListener("resize", handleResize, { passive: true });
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      if (resizeFrame) cancelAnimationFrame(resizeFrame);
     };
   }, [open, step.target]);
 
@@ -86,8 +117,6 @@ export default function EditTaskTour({ open, onClose }) {
 
     const viewportHeight = typeof window === "undefined" ? 800 : window.innerHeight;
 
-    // 最後兩步的目標都位於頁面底部，教學卡固定放在頂部，
-    // 避免遮住「本次修改」與「儲存變更」。
     if (stepIndex >= 3) {
       return { ...horizontal, top: 76 };
     }
@@ -116,6 +145,11 @@ export default function EditTaskTour({ open, onClose }) {
     onClose();
   }
 
+  function goToStep(nextIndex) {
+    setVisible(false);
+    setStepIndex(nextIndex);
+  }
+
   if (!open) return null;
 
   return (
@@ -124,7 +158,9 @@ export default function EditTaskTour({ open, onClose }) {
 
       {rect && (
         <div
-          className="absolute rounded-[22px] border-2 border-white bg-transparent shadow-[0_0_0_9999px_rgba(2,6,23,0.56),0_0_0_6px_rgba(16,185,129,0.25)] pointer-events-none transition-all duration-200"
+          className={`absolute rounded-[22px] border-2 border-white bg-transparent shadow-[0_0_0_9999px_rgba(2,6,23,0.56),0_0_0_6px_rgba(16,185,129,0.25)] pointer-events-none will-change-transform transition-[opacity,transform] duration-150 ease-out ${
+            visible ? "opacity-100 scale-100" : "opacity-0 scale-[0.99]"
+          }`}
           style={{
             left: Math.max(8, rect.left - 8),
             top: Math.max(8, rect.top - 8),
@@ -143,7 +179,12 @@ export default function EditTaskTour({ open, onClose }) {
         <X size={18} />
       </button>
 
-      <div className="absolute rounded-3xl bg-white p-5 shadow-2xl" style={cardStyle}>
+      <div
+        className={`absolute rounded-3xl bg-white p-5 shadow-2xl will-change-transform transition-[opacity,transform] duration-150 ease-out ${
+          visible ? "translate-y-0 opacity-100" : "translate-y-1.5 opacity-0"
+        }`}
+        style={cardStyle}
+      >
         <div className="flex items-start gap-3">
           <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
             <HelpCircle size={18} />
@@ -169,16 +210,16 @@ export default function EditTaskTour({ open, onClose }) {
             {stepIndex > 0 && (
               <button
                 type="button"
-                onClick={() => setStepIndex((value) => value - 1)}
-                className="rounded-full border border-gray-200 px-4 py-2 text-xs font-semibold text-gray-600"
+                onClick={() => goToStep(stepIndex - 1)}
+                className="rounded-full border border-gray-200 px-4 py-2 text-xs font-semibold text-gray-600 active:scale-95"
               >
                 上一步
               </button>
             )}
             <button
               type="button"
-              onClick={() => (isLast ? finish() : setStepIndex((value) => value + 1))}
-              className="rounded-full bg-emerald-500 px-5 py-2 text-xs font-semibold text-white shadow-sm shadow-emerald-100"
+              onClick={() => (isLast ? finish() : goToStep(stepIndex + 1))}
+              className="rounded-full bg-emerald-500 px-5 py-2 text-xs font-semibold text-white shadow-sm shadow-emerald-100 active:scale-95"
             >
               {isLast ? "完成教學" : "下一步"}
             </button>
