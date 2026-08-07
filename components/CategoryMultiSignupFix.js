@@ -3,12 +3,28 @@
 import { useEffect } from "react";
 
 const INPUT_CLASS = "category-multi-signup-input w-full border border-gray-200 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 transition";
+const CONFIG_PREFIX = "__relay_";
+
+function isConfigMarker(value) {
+  return String(value || "").trim().startsWith(CONFIG_PREFIX);
+}
+
+function getAvailableCategories() {
+  const title = [...document.querySelectorAll("p")].find((el) =>
+    (el.textContent || "").includes("選擇您要報名的類別")
+  );
+  const scroller = title?.nextElementSibling?.querySelector?.("div.flex") || title?.parentElement?.querySelector?.("div.flex");
+  if (!scroller) return [];
+  return [...scroller.querySelectorAll("button")]
+    .map((button) => (button.textContent || "").trim())
+    .filter((text) => text && !isConfigMarker(text));
+}
 
 function isEligiblePage() {
   const categoryTitle = [...document.querySelectorAll("p")].find((el) =>
     (el.textContent || "").includes("選擇您要報名的類別")
   );
-  if (!categoryTitle) return false;
+  if (!categoryTitle || getAvailableCategories().length === 0) return false;
 
   const hasStepperButtons = [...document.querySelectorAll("button")].some((button) => {
     const label = button.getAttribute("aria-label") || "";
@@ -22,17 +38,6 @@ function findPrimaryNameInput() {
     const placeholder = input.getAttribute("placeholder") || "";
     return placeholder === "你的姓名" || placeholder.includes("報名姓名");
   });
-}
-
-function getAvailableCategories() {
-  const title = [...document.querySelectorAll("p")].find((el) =>
-    (el.textContent || "").includes("選擇您要報名的類別")
-  );
-  const scroller = title?.nextElementSibling?.querySelector?.("div.flex") || title?.parentElement?.querySelector?.("div.flex");
-  if (!scroller) return [];
-  return [...scroller.querySelectorAll("button")]
-    .map((button) => (button.textContent || "").trim())
-    .filter(Boolean);
 }
 
 function createCategorySelector(categories) {
@@ -63,6 +68,8 @@ function createCategorySelector(categories) {
 
 function createProxyRow(container) {
   const categories = getAvailableCategories();
+  if (!categories.length) return;
+
   const row = document.createElement("div");
   row.className = "category-multi-signup-row flex flex-col gap-2 rounded-2xl border border-emerald-100 bg-white/70 p-2.5";
 
@@ -87,7 +94,9 @@ function collectEntries(primary) {
   const proxyEntries = [...document.querySelectorAll(".category-multi-signup-row")]
     .map((row) => ({
       name: (row.querySelector("input.category-multi-signup-input")?.value || "").trim(),
-      categories: [...row.querySelectorAll("button[data-category][data-selected='true']")].map((button) => button.dataset.category),
+      categories: [...row.querySelectorAll("button[data-category][data-selected='true']")]
+        .map((button) => button.dataset.category)
+        .filter((category) => category && !isConfigMarker(category)),
     }))
     .filter((entry) => entry.name);
   return { primaryName, proxyEntries };
@@ -104,7 +113,7 @@ function ensureRows(container) {
   const hasPrimaryName = !!primary?.value?.trim();
   const rows = [...container.querySelectorAll(".category-multi-signup-row")];
 
-  if (!hasPrimaryName) {
+  if (!hasPrimaryName || getAvailableCategories().length === 0) {
     rows.forEach((row) => row.remove());
     updateHint(container);
     return;
@@ -151,7 +160,7 @@ export default function CategoryMultiSignupFix() {
     const originalFetch = window.fetch;
     let suppressRemountUntilFormReset = false;
 
-    window.fetch = async (input, init = {}) => {
+    const wrappedFetch = async (input, init = {}) => {
       const url = typeof input === "string" ? input : input?.url || "";
       const isSignupPost = url.includes("/api/signups") && String(init?.method || "GET").toUpperCase() === "POST" && isEligiblePage();
 
@@ -172,8 +181,6 @@ export default function CategoryMultiSignupFix() {
         suppressRemountUntilFormReset = true;
         removeInjectedFields();
 
-        // React 會在成功後清空主姓名欄位；等它完成再解除暫停，
-        // 避免舊的代報姓名與分類被 MutationObserver 重新掛回畫面。
         let checks = 0;
         const waitForReset = window.setInterval(() => {
           checks += 1;
@@ -189,6 +196,7 @@ export default function CategoryMultiSignupFix() {
 
       return response;
     };
+    window.fetch = wrappedFetch;
 
     let frame = 0;
     const refresh = () => {
@@ -206,7 +214,7 @@ export default function CategoryMultiSignupFix() {
     observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
-      window.fetch = originalFetch;
+      if (window.fetch === wrappedFetch) window.fetch = originalFetch;
       observer.disconnect();
       cancelAnimationFrame(frame);
       removeInjectedFields();
