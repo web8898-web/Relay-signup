@@ -77,7 +77,7 @@ export default function EditTaskConfigMarkerFix() {
     if (!likelyEditPage) return;
 
     const originalFetch = window.fetch;
-    window.fetch = (input, init = {}) => {
+    const wrappedFetch = (input, init = {}) => {
       const url = typeof input === "string" ? input : input?.url || "";
       const method = String(init?.method || "GET").toUpperCase();
       if (url.includes("/api/tasks/") && (method === "PUT" || method === "PATCH") && typeof init.body === "string") {
@@ -100,6 +100,7 @@ export default function EditTaskConfigMarkerFix() {
       }
       return originalFetch(input, init);
     };
+    window.fetch = wrappedFetch;
 
     let frame = 0;
     const apply = () => {
@@ -141,7 +142,7 @@ export default function EditTaskConfigMarkerFix() {
     const interval = window.setInterval(apply, 500);
 
     return () => {
-      window.fetch = originalFetch;
+      if (window.fetch === wrappedFetch) window.fetch = originalFetch;
       observer.disconnect();
       window.clearInterval(interval);
       cancelAnimationFrame(frame);
