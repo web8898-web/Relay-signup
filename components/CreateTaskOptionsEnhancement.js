@@ -4,109 +4,10 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { initLiff, liff } from "@/lib/liff";
 
-const SINGLE_MARKER = "__relay_category_single__";
-const MULTIPLE_MARKER = "__relay_category_multiple__";
 const BANNER_PREFIX = "__relay_banner_url__:";
-const CATEGORY_MARKERS = new Set([SINGLE_MARKER, MULTIPLE_MARKER]);
 
-let categoryMode = "multiple";
-let categoryRequired = false;
 let bannerUrl = "";
 let bannerUploading = false;
-
-function buttonClass(selected) {
-  return `flex-1 rounded-xl px-3 py-1.5 text-xs font-semibold transition active:scale-[0.98] ${
-    selected
-      ? "bg-emerald-500 text-white shadow-sm"
-      : "bg-white text-gray-500 border border-gray-200"
-  }`;
-}
-
-function helpText() {
-  if (categoryMode === "single" && categoryRequired) return "每位報名者只能選擇一個類別，而且必須選擇。";
-  if (categoryMode === "single") return "每位報名者最多選擇一個類別，也可以不選。";
-  if (categoryRequired) return "每位報名者可以選擇多個類別，至少要選一個。";
-  return "每位報名者可以選擇多個類別，也可以不選。";
-}
-
-function refreshOptionGroup(root) {
-  root.querySelectorAll("button[data-category-mode]").forEach((button) => {
-    button.className = buttonClass(button.dataset.categoryMode === categoryMode);
-  });
-  root.querySelectorAll("button[data-category-required]").forEach((button) => {
-    button.className = buttonClass(button.dataset.categoryRequired === String(categoryRequired));
-  });
-  const help = root.querySelector("[data-category-mode-help]");
-  if (help) help.textContent = helpText();
-}
-
-function createOptionButton(label, dataName, value, root) {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.textContent = label;
-  button.dataset[dataName] = String(value);
-  button.addEventListener("click", () => {
-    if (dataName === "categoryMode") categoryMode = value;
-    else categoryRequired = value;
-    refreshOptionGroup(root);
-  });
-  return button;
-}
-
-function findVisibleCategoryTitle() {
-  const titles = [...document.querySelectorAll("p")].filter(
-    (element) => (element.textContent || "").trim() === "報名類別"
-  );
-  return titles.find((element) => element.getClientRects().length > 0) || titles[0] || null;
-}
-
-function mountCategoryMode() {
-  const title = findVisibleCategoryTitle();
-  const field = title?.parentElement;
-  if (!(title instanceof HTMLElement) || !(field instanceof HTMLElement)) return;
-
-  const roots = [...document.querySelectorAll("[data-create-category-mode]")].filter(
-    (element) => element instanceof HTMLElement
-  );
-  let root = roots.find((element) => field.contains(element)) || roots[0] || null;
-
-  roots.forEach((element) => {
-    if (root && element !== root) element.remove();
-  });
-
-  if (!(root instanceof HTMLElement)) {
-    root = document.createElement("div");
-    root.dataset.createCategoryMode = "true";
-    root.className = "mb-4 rounded-2xl border border-emerald-100 bg-emerald-50/40 p-3";
-
-    const modeLabel = document.createElement("p");
-    modeLabel.className = "mb-1.5 text-[11px] font-semibold text-emerald-700";
-    modeLabel.textContent = "類別選擇方式";
-
-    const modeGroup = document.createElement("div");
-    modeGroup.className = "flex gap-2";
-    modeGroup.appendChild(createOptionButton("單選", "categoryMode", "single", root));
-    modeGroup.appendChild(createOptionButton("複選", "categoryMode", "multiple", root));
-
-    const requiredLabel = document.createElement("p");
-    requiredLabel.className = "mb-1.5 mt-3 text-[11px] font-semibold text-emerald-700";
-    requiredLabel.textContent = "報名時是否必選";
-
-    const requiredGroup = document.createElement("div");
-    requiredGroup.className = "flex gap-2";
-    requiredGroup.appendChild(createOptionButton("必須選", "categoryRequired", true, root));
-    requiredGroup.appendChild(createOptionButton("可不選", "categoryRequired", false, root));
-
-    const help = document.createElement("p");
-    help.dataset.categoryModeHelp = "true";
-    help.className = "mt-2 whitespace-nowrap text-[clamp(9px,2.55vw,11px)] leading-relaxed text-gray-400";
-
-    root.append(modeLabel, modeGroup, requiredLabel, requiredGroup, help);
-  }
-
-  if (title.nextElementSibling !== root) title.insertAdjacentElement("afterend", root);
-  refreshOptionGroup(root);
-}
 
 async function compressBanner(file) {
   const objectUrl = URL.createObjectURL(file);
@@ -288,17 +189,6 @@ function enhanceTaskPayload(input, init = {}) {
 
   try {
     const body = JSON.parse(init.body);
-    const categories = Array.isArray(body.categories)
-      ? body.categories.filter((item) => !CATEGORY_MARKERS.has(String(item)))
-      : [];
-
-    if (categories.length > 0) {
-      const marker = categoryMode === "multiple" ? MULTIPLE_MARKER : SINGLE_MARKER;
-      categories.push(marker);
-      if (categoryRequired) categories.push(marker);
-    }
-    body.categories = categories;
-
     const cleanNote = String(body.note || "")
       .split(/\r?\n/)
       .filter((line) => !line.trim().startsWith(BANNER_PREFIX))
@@ -307,7 +197,6 @@ function enhanceTaskPayload(input, init = {}) {
     body.note = [cleanNote, bannerUrl ? `${BANNER_PREFIX}${bannerUrl}` : ""]
       .filter(Boolean)
       .join("\n");
-
     return { ...init, body: JSON.stringify(body) };
   } catch (error) {
     return init;
@@ -319,20 +208,18 @@ export default function CreateTaskOptionsEnhancement() {
 
   useEffect(() => {
     if (pathname !== "/create") return;
-    categoryMode = "multiple";
-    categoryRequired = false;
     bannerUrl = "";
     bannerUploading = false;
 
     const originalFetch = window.fetch;
-    window.fetch = (input, init) => originalFetch(input, enhanceTaskPayload(input, init));
+    const wrappedFetch = (input, init) => originalFetch(input, enhanceTaskPayload(input, init));
+    window.fetch = wrappedFetch;
 
     let frame = 0;
     const refresh = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         mountBanner();
-        mountCategoryMode();
         keepDescriptionsOnOneLine();
       });
     };
@@ -342,10 +229,10 @@ export default function CreateTaskOptionsEnhancement() {
     observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
-      window.fetch = originalFetch;
+      if (window.fetch === wrappedFetch) window.fetch = originalFetch;
       observer.disconnect();
       cancelAnimationFrame(frame);
-      document.querySelectorAll("[data-create-task-banner], [data-create-category-mode]").forEach((el) => el.remove());
+      document.querySelectorAll("[data-create-task-banner]").forEach((el) => el.remove());
       bannerUrl = "";
       bannerUploading = false;
     };
