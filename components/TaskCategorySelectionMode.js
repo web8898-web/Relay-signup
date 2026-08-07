@@ -29,18 +29,20 @@ function hideConfigMarkers() {
   });
 }
 
-function updateCopy(mode) {
+function modeSuffix(mode, required) {
+  if (mode === "single") return required ? "單選・必選" : "單選";
+  return required ? "可複選・必選" : "可複選";
+}
+
+function updateCopy(mode, required) {
+  const suffix = modeSuffix(mode, required);
   [...document.querySelectorAll("p")].forEach((element) => {
     const text = (element.textContent || "").trim();
     if (!text.includes("選擇您要報名的類別")) return;
-    element.textContent = mode === "single"
-      ? "👉 選擇您要報名的類別（單選）"
-      : "👉 選擇您要報名的類別（可複選）";
+    element.textContent = `👉 選擇您要報名的類別（${suffix}）`;
   });
   [...document.querySelectorAll(".category-multi-signup-categories > p")].forEach((element) => {
-    element.textContent = mode === "single"
-      ? "👉 選擇代報者的分類（單選）"
-      : "👉 選擇代報者的分類（可複選）";
+    element.textContent = `👉 選擇代報者的分類（${suffix}）`;
   });
 }
 
@@ -53,6 +55,7 @@ export default function TaskCategorySelectionMode() {
 
     let active = true;
     let mode = "multiple";
+    let required = false;
     let frame = 0;
     let changing = false;
 
@@ -60,7 +63,7 @@ export default function TaskCategorySelectionMode() {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         hideConfigMarkers();
-        updateCopy(mode);
+        updateCopy(mode, required);
       });
     };
 
@@ -92,6 +95,8 @@ export default function TaskCategorySelectionMode() {
         : categories.includes(MULTIPLE_MARKER)
           ? "multiple"
           : "multiple";
+      const marker = mode === "single" ? SINGLE_MARKER : MULTIPLE_MARKER;
+      required = categories.filter((item) => item === marker).length >= 2;
       refresh();
     })();
 
