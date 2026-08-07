@@ -6,15 +6,11 @@ import { initLiff, liff } from "@/lib/liff";
 
 const SINGLE_MARKER = "__relay_category_single__";
 const MULTIPLE_MARKER = "__relay_category_multiple__";
-const SHARE_ON_MARKER = "__relay_share_enabled__";
-const SHARE_OFF_MARKER = "__relay_share_disabled__";
 const BANNER_PREFIX = "__relay_banner_url__:";
 const CATEGORY_MARKERS = new Set([SINGLE_MARKER, MULTIPLE_MARKER]);
-const SHARE_MARKERS = new Set([SHARE_ON_MARKER, SHARE_OFF_MARKER]);
 
 let categoryMode = "multiple";
 let categoryRequired = false;
-let shareEnabled = false;
 let bannerUrl = "";
 let bannerUploading = false;
 
@@ -38,8 +34,7 @@ function refreshOptionGroup(root) {
     button.className = buttonClass(button.dataset.categoryMode === categoryMode);
   });
   root.querySelectorAll("button[data-category-required]").forEach((button) => {
-    const selected = button.dataset.categoryRequired === String(categoryRequired);
-    button.className = buttonClass(selected);
+    button.className = buttonClass(button.dataset.categoryRequired === String(categoryRequired));
   });
   const help = root.querySelector("[data-category-mode-help]");
   if (help) help.textContent = helpText();
@@ -58,86 +53,59 @@ function createOptionButton(label, dataName, value, root) {
   return button;
 }
 
-function mountCategoryMode() {
-  if (document.querySelector("[data-create-category-mode]")) return;
-  const title = [...document.querySelectorAll("p")].find(
+function findVisibleCategoryTitle() {
+  const titles = [...document.querySelectorAll("p")].filter(
     (element) => (element.textContent || "").trim() === "報名類別"
   );
-  const field = title?.parentElement;
-  if (!(field instanceof HTMLElement)) return;
-
-  const root = document.createElement("div");
-  root.dataset.createCategoryMode = "true";
-  root.className = "mb-4 rounded-2xl border border-emerald-100 bg-emerald-50/40 p-3";
-
-  const modeLabel = document.createElement("p");
-  modeLabel.className = "mb-1.5 text-[11px] font-semibold text-emerald-700";
-  modeLabel.textContent = "類別選擇方式";
-
-  const modeGroup = document.createElement("div");
-  modeGroup.className = "flex gap-2";
-  modeGroup.appendChild(createOptionButton("單選", "categoryMode", "single", root));
-  modeGroup.appendChild(createOptionButton("複選", "categoryMode", "multiple", root));
-
-  const requiredLabel = document.createElement("p");
-  requiredLabel.className = "mb-1.5 mt-3 text-[11px] font-semibold text-emerald-700";
-  requiredLabel.textContent = "報名時是否必選";
-
-  const requiredGroup = document.createElement("div");
-  requiredGroup.className = "flex gap-2";
-  requiredGroup.appendChild(createOptionButton("必須選", "categoryRequired", true, root));
-  requiredGroup.appendChild(createOptionButton("可不選", "categoryRequired", false, root));
-
-  const help = document.createElement("p");
-  help.dataset.categoryModeHelp = "true";
-  help.className = "mt-2 whitespace-nowrap text-[clamp(9px,2.55vw,11px)] leading-relaxed text-gray-400";
-
-  root.append(modeLabel, modeGroup, requiredLabel, requiredGroup, help);
-  title.insertAdjacentElement("afterend", root);
-  refreshOptionGroup(root);
+  return titles.find((element) => element.getClientRects().length > 0) || titles[0] || null;
 }
 
-function mountShareToggle() {
-  if (document.querySelector("[data-create-share-toggle]")) return;
-  const advancedBody = [...document.querySelectorAll("div")].find((element) => {
-    const className = String(element.className || "");
-    return className.includes("border-t") && className.includes("border-emerald-100") &&
-      (element.textContent || "").includes("任務模式");
+function mountCategoryMode() {
+  const title = findVisibleCategoryTitle();
+  const field = title?.parentElement;
+  if (!(title instanceof HTMLElement) || !(field instanceof HTMLElement)) return;
+
+  const roots = [...document.querySelectorAll("[data-create-category-mode]")].filter(
+    (element) => element instanceof HTMLElement
+  );
+  let root = roots.find((element) => field.contains(element)) || roots[0] || null;
+
+  roots.forEach((element) => {
+    if (root && element !== root) element.remove();
   });
-  if (!(advancedBody instanceof HTMLElement)) return;
 
-  const root = document.createElement("div");
-  root.dataset.createShareToggle = "true";
-  root.className = "rounded-2xl border border-emerald-100 bg-emerald-50/40 px-3.5 py-3";
+  if (!(root instanceof HTMLElement)) {
+    root = document.createElement("div");
+    root.dataset.createCategoryMode = "true";
+    root.className = "mb-4 rounded-2xl border border-emerald-100 bg-emerald-50/40 p-3";
 
-  const row = document.createElement("div");
-  row.className = "flex items-center justify-between gap-3";
+    const modeLabel = document.createElement("p");
+    modeLabel.className = "mb-1.5 text-[11px] font-semibold text-emerald-700";
+    modeLabel.textContent = "類別選擇方式";
 
-  const copy = document.createElement("div");
-  copy.className = "min-w-0 flex-1";
-  copy.innerHTML = `
-    <p class="text-xs font-semibold text-emerald-700">接龍卡片顯示分享圖示</p>
-    <p class="mt-0.5 whitespace-nowrap text-[clamp(9px,2.45vw,11px)] leading-relaxed text-gray-400">方便報名者將同一個接龍轉傳到其他群組。</p>
-  `;
+    const modeGroup = document.createElement("div");
+    modeGroup.className = "flex gap-2";
+    modeGroup.appendChild(createOptionButton("單選", "categoryMode", "single", root));
+    modeGroup.appendChild(createOptionButton("複選", "categoryMode", "multiple", root));
 
-  const toggle = document.createElement("button");
-  toggle.type = "button";
-  toggle.setAttribute("role", "switch");
-  toggle.setAttribute("aria-label", "接龍卡片顯示分享圖示");
-  const refresh = () => {
-    toggle.setAttribute("aria-checked", shareEnabled ? "true" : "false");
-    toggle.className = `relative h-7 w-12 shrink-0 rounded-full transition ${shareEnabled ? "bg-emerald-500" : "bg-gray-200"}`;
-    toggle.innerHTML = `<span class="absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-all ${shareEnabled ? "left-6" : "left-1"}"></span>`;
-  };
-  toggle.addEventListener("click", () => {
-    shareEnabled = !shareEnabled;
-    refresh();
-  });
-  refresh();
+    const requiredLabel = document.createElement("p");
+    requiredLabel.className = "mb-1.5 mt-3 text-[11px] font-semibold text-emerald-700";
+    requiredLabel.textContent = "報名時是否必選";
 
-  row.append(copy, toggle);
-  root.appendChild(row);
-  advancedBody.appendChild(root);
+    const requiredGroup = document.createElement("div");
+    requiredGroup.className = "flex gap-2";
+    requiredGroup.appendChild(createOptionButton("必須選", "categoryRequired", true, root));
+    requiredGroup.appendChild(createOptionButton("可不選", "categoryRequired", false, root));
+
+    const help = document.createElement("p");
+    help.dataset.categoryModeHelp = "true";
+    help.className = "mt-2 whitespace-nowrap text-[clamp(9px,2.55vw,11px)] leading-relaxed text-gray-400";
+
+    root.append(modeLabel, modeGroup, requiredLabel, requiredGroup, help);
+  }
+
+  if (title.nextElementSibling !== root) title.insertAdjacentElement("afterend", root);
+  refreshOptionGroup(root);
 }
 
 async function compressBanner(file) {
@@ -321,8 +289,9 @@ function enhanceTaskPayload(input, init = {}) {
   try {
     const body = JSON.parse(init.body);
     const categories = Array.isArray(body.categories)
-      ? body.categories.filter((item) => !CATEGORY_MARKERS.has(String(item)) && !SHARE_MARKERS.has(String(item)))
+      ? body.categories.filter((item) => !CATEGORY_MARKERS.has(String(item)))
       : [];
+
     if (categories.length > 0) {
       const marker = categoryMode === "multiple" ? MULTIPLE_MARKER : SINGLE_MARKER;
       categories.push(marker);
@@ -332,14 +301,13 @@ function enhanceTaskPayload(input, init = {}) {
 
     const cleanNote = String(body.note || "")
       .split(/\r?\n/)
-      .filter((line) => !SHARE_MARKERS.has(line.trim()) && !line.trim().startsWith(BANNER_PREFIX))
+      .filter((line) => !line.trim().startsWith(BANNER_PREFIX))
       .join("\n")
       .trim();
-    body.note = [
-      cleanNote,
-      shareEnabled ? SHARE_ON_MARKER : SHARE_OFF_MARKER,
-      bannerUrl ? `${BANNER_PREFIX}${bannerUrl}` : "",
-    ].filter(Boolean).join("\n");
+    body.note = [cleanNote, bannerUrl ? `${BANNER_PREFIX}${bannerUrl}` : ""]
+      .filter(Boolean)
+      .join("\n");
+
     return { ...init, body: JSON.stringify(body) };
   } catch (error) {
     return init;
@@ -353,7 +321,6 @@ export default function CreateTaskOptionsEnhancement() {
     if (pathname !== "/create") return;
     categoryMode = "multiple";
     categoryRequired = false;
-    shareEnabled = false;
     bannerUrl = "";
     bannerUploading = false;
 
@@ -366,10 +333,10 @@ export default function CreateTaskOptionsEnhancement() {
       frame = requestAnimationFrame(() => {
         mountBanner();
         mountCategoryMode();
-        mountShareToggle();
         keepDescriptionsOnOneLine();
       });
     };
+
     refresh();
     const observer = new MutationObserver(refresh);
     observer.observe(document.body, { childList: true, subtree: true });
@@ -378,7 +345,7 @@ export default function CreateTaskOptionsEnhancement() {
       window.fetch = originalFetch;
       observer.disconnect();
       cancelAnimationFrame(frame);
-      document.querySelectorAll("[data-create-task-banner], [data-create-category-mode], [data-create-share-toggle]").forEach((el) => el.remove());
+      document.querySelectorAll("[data-create-task-banner], [data-create-category-mode]").forEach((el) => el.remove());
       bannerUrl = "";
       bannerUploading = false;
     };
