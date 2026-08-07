@@ -31,29 +31,6 @@ function ensureStyles() {
   document.head.appendChild(style);
 }
 
-function ensureCategoryControlsAttached() {
-  const titles = [...document.querySelectorAll("p")].filter(
-    (element) => (element.textContent || "").trim() === "報名類別"
-  );
-  const title = titles.find((element) => element.getClientRects().length > 0) || titles[0];
-  const field = title?.parentElement;
-  if (!(title instanceof HTMLElement) || !(field instanceof HTMLElement)) return;
-
-  const roots = [...document.querySelectorAll("[data-create-category-mode]")].filter(
-    (element) => element instanceof HTMLElement
-  );
-  if (roots.length === 0) return;
-
-  const activeRoot = roots.find((root) => field.contains(root)) || roots[roots.length - 1];
-  roots.forEach((root) => {
-    if (root !== activeRoot) root.remove();
-  });
-
-  if (title.nextElementSibling !== activeRoot) {
-    title.insertAdjacentElement("afterend", activeRoot);
-  }
-}
-
 function enhanceBanner(section) {
   if (!(section instanceof HTMLElement) || section.dataset.bannerCollapseEnhanced === "true") return;
   section.dataset.bannerCollapseEnhanced = "true";
@@ -156,7 +133,6 @@ export default function CreateTaskBannerCollapse() {
       frame = requestAnimationFrame(() => {
         const section = document.querySelector("[data-create-task-banner]");
         if (section instanceof HTMLElement) enhanceBanner(section);
-        ensureCategoryControlsAttached();
       });
     };
 
