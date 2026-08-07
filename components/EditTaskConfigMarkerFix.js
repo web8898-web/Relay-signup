@@ -85,8 +85,11 @@ export default function EditTaskConfigMarkerFix() {
           const body = JSON.parse(init.body);
           if (Array.isArray(body.categories)) {
             const cleanCategories = body.categories.filter((item) => !isMarker(item));
-            const categoryMarkers = [...savedMarkers.current].filter((item) => item.includes("category_") || item === "__relay_queue_mode__");
-            body.categories = [...cleanCategories, ...categoryMarkers];
+            const queueMarkers = [...savedMarkers.current].filter((item) => item === "__relay_queue_mode__");
+            const categoryMarkers = cleanCategories.length > 0
+              ? [...savedMarkers.current].filter((item) => item.includes("category_"))
+              : [];
+            body.categories = [...cleanCategories, ...categoryMarkers, ...queueMarkers];
           }
           if (Object.prototype.hasOwnProperty.call(body, "note")) {
             const noteMarkers = [...savedMarkers.current].filter((item) => item.includes("share_") || item.startsWith(BANNER_PREFIX));
