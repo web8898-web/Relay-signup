@@ -12,9 +12,22 @@ import Toast from "@/components/Toast";
 import QuantityStepper from "@/components/QuantityStepper";
 import ConfettiSuccess from "@/components/ConfettiSuccess";
 import { supabase } from "@/lib/supabaseClient";
-import { taskStatus, isHeadcountUnit, isQueueTask as isQueueTaskConfig } from "@/lib/utils";
+import { taskStatus, isHeadcountUnit, isQueueTask as isQueueTaskConfig, getVisibleCategories } from "@/lib/utils";
 import { getOwnerToken, getMySignupIds, rememberMySignup, forgetMySignup } from "@/lib/ownerToken";
 import { useScrollFadeRight } from "@/lib/useScrollFadeRight";
+
+const CATEGORY_SINGLE_MARKER = "__relay_category_single__";
+const CATEGORY_MULTIPLE_MARKER = "__relay_category_multiple__";
+
+function isConfiguredCategoryRequired(task) {
+  const raw = Array.isArray(task?.categories) ? task.categories : [];
+  const marker = raw.includes(CATEGORY_SINGLE_MARKER)
+    ? CATEGORY_SINGLE_MARKER
+    : raw.includes(CATEGORY_MULTIPLE_MARKER)
+      ? CATEGORY_MULTIPLE_MARKER
+      : null;
+  return marker ? raw.filter((item) => item === marker).length >= 2 : false;
+}
 
 export default function TaskDetailClient() {
   const { id } = useParams();
@@ -47,7 +60,8 @@ export default function TaskDetailClient() {
   const formSectionRef = useRef(null);
   const prevViewOnlyRef = useRef(viewOnly);
   const nameInputRef = useRef(null);
-  const [catScrollRef, catSentinelRef, catCanScrollRight] = useScrollFadeRight(!loading && task?.categories?.length > 0);
+  const visibleTaskCategories = task ? getVisibleCategories(task.categories) : [];
+  const [catScrollRef, catSentinelRef, catCanScrollRight] = useScrollFadeRight(!loading && visibleTaskCategories.length > 0);
 
   useEffect(() => {
     if (prevViewOnlyRef.current && !viewOnly) {
@@ -132,12 +146,12 @@ export default function TaskDetailClient() {
     ? countableSignups.reduce((sum, s) => sum + (s.quantity ?? 1), 0)
     : countableSignups.length;
   const full = task?.max_signups ? totalHeadcount >= task.max_signups : false;
-  const allowMulti = task ? !isQueueTask && (!task.categories || task.categories.length === 0) && !task.quantity_unit : false;
+  const taskHasCategories = !isQueueTask && visibleTaskCategories.length > 0;
+  const allowMulti = task ? !isQueueTask && !taskHasCategories && !task.quantity_unit : false;
   const filledNames = names.map((n) => n.trim()).filter(Boolean);
   const isMultiActive = allowMulti && filledNames.length >= 2;
-  const taskHasCategories = !isQueueTask && task?.categories?.length > 0;
   const usesPerCategoryQuantity = !isQueueTask && !!task?.quantity_unit && taskHasCategories;
-  const categoryRequired = usesPerCategoryQuantity && !headcountMode;
+  const categoryRequired = taskHasCategories && (isConfiguredCategoryRequired(task) || (usesPerCategoryQuantity && !headcountMode));
   const usesStandaloneQuantity =
     !isQueueTask &&
     !!task?.quantity_unit &&
@@ -207,7 +221,7 @@ export default function TaskDetailClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           task_id: task.id,
-          categories: !isQueueTask && task.categories?.length > 0 ? categories : [],
+          categories: taskHasCategories ? categories : [],
           name: allowMulti ? names[0].trim() : name.trim(),
           names: allowMulti && filledNames.length >= 2 ? filledNames : undefined,
           note: isQueueTask || isMultiActive ? "" : note.trim(),
@@ -464,7 +478,7 @@ export default function TaskDetailClient() {
           <ThreadList
             signups={queueDisplaySignups}
             myIds={myIds}
-            categories={task.categories}
+            categories={visibleTaskCategories}
             quantityUnit={task.quantity_unit}
             nameOnly={viewOnly || isQueueTask}
             closed={closed}
@@ -494,12 +508,14 @@ export default function TaskDetailClient() {
           </div>
         ) : (
           <div ref={formSectionRef} className="px-6 pb-6 pt-3 border-t-2 border-emerald-100 bg-emerald-50/40 min-w-0 overflow-hidden">
-            {!isQueueTask && task.categories?.length > 0 && (
+            {taskHasCategories && (
               <>
-                <p className="text-[11px] font-semibold text-emerald-700 mb-1.5 px-0.5">👉 選擇您要報名的類別（可複選）</p>
+                <p className="text-[11px] font-semibold text-emerald-700 mb-1.5 px-0.5">
+                  👉 選擇您要報名的類別{categoryRequired ? "（必選）" : "（可複選）"}
+                </p>
                 <div className={`relative -mx-1 ${categoryError ? "ring-1 ring-rose-300 rounded-xl" : ""}`}>
                   <div ref={catScrollRef} className="flex gap-1.5 overflow-x-auto pb-2 mb-1 px-1">
-                    {task.categories.map((c) => (
+                    {visibleTaskCategories.map((c) => (
                       <button
                         key={c}
                         onClick={() => toggleCategory(c)}
