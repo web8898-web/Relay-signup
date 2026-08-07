@@ -16,6 +16,8 @@ const fieldClass =
 
 const CATEGORY_EXAMPLES = ["帶小孩", "帶朋友", "素食", "葷食"];
 const UNIT_EXAMPLES = ["盒", "份", "張", "包", "人", "個"];
+const CATEGORY_SINGLE_MARKER = "__relay_category_single__";
+const CATEGORY_MULTIPLE_MARKER = "__relay_category_multiple__";
 const TASK_MODES = [
   {
     value: "normal",
@@ -28,6 +30,21 @@ const TASK_MODES = [
     desc: "適合候位、推拿、現場服務，可邊報名邊處理。",
   },
 ];
+
+function categoryOptionClass(selected) {
+  return `flex-1 rounded-xl px-3 py-1.5 text-xs font-semibold transition active:scale-[0.98] ${
+    selected
+      ? "bg-emerald-500 text-white shadow-sm"
+      : "bg-white text-gray-500 border border-gray-200"
+  }`;
+}
+
+function categoryHelpText(mode, required) {
+  if (mode === "single" && required) return "每位報名者只能選擇一個類別，而且必須選擇。";
+  if (mode === "single") return "每位報名者最多選擇一個類別，也可以不選。";
+  if (required) return "每位報名者可以選擇多個類別，至少要選一個。";
+  return "每位報名者可以選擇多個類別，也可以不選。";
+}
 
 export default function CreateTaskPage() {
   const router = useRouter();
@@ -47,6 +64,8 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
   const [description, setDescription] = useState("");
   const [categories, setCategories] = useState([]);
   const [catInput, setCatInput] = useState("");
+  const [categoryMode, setCategoryMode] = useState("multiple");
+  const [categoryRequired, setCategoryRequired] = useState(false);
   const [startDate, setStartDate] = useState(todayStr());
   const [endDate, setEndDate] = useState(todayStr());
   const [maxSignups, setMaxSignups] = useState("");
@@ -120,6 +139,8 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
     description.trim() !== "" ||
     categories.length > 0 ||
     catInput.trim() !== "" ||
+    categoryMode !== "multiple" ||
+    categoryRequired ||
     maxSignups.trim() !== "" ||
     quantityUnit.trim() !== "" ||
     taskMode !== "normal" ||
@@ -154,6 +175,8 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
     if (value === "queue") {
       setCategories([]);
       setCatInput("");
+      setCategoryMode("multiple");
+      setCategoryRequired(false);
       setQuantityUnit("");
     }
   }
@@ -170,6 +193,12 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
 
   function removeCategory(c) {
     setCategories(categories.filter((x) => x !== c));
+  }
+
+  function categoriesForSave() {
+    if (taskMode === "queue" || categories.length === 0) return [];
+    const marker = categoryMode === "single" ? CATEGORY_SINGLE_MARKER : CATEGORY_MULTIPLE_MARKER;
+    return categoryRequired ? [...categories, marker, marker] : [...categories, marker];
   }
 
   async function handleSave() {
@@ -190,7 +219,7 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
         body: JSON.stringify({
           title: title.trim(),
           description: description.trim(),
-          categories: taskMode === "queue" ? [] : categories,
+          categories: categoriesForSave(),
           start_date: startDate,
           end_date: endDate,
           max_signups: maxSignups,
@@ -349,6 +378,49 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
               ) : (
                 <>
                   <Field label="報名類別">
+                    <div data-create-category-mode="true" className="mb-4 rounded-2xl border border-emerald-100 bg-emerald-50/40 p-3">
+                      <p className="mb-1.5 text-[11px] font-semibold text-emerald-700">類別選擇方式</p>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          data-category-mode="single"
+                          onClick={() => setCategoryMode("single")}
+                          className={categoryOptionClass(categoryMode === "single")}
+                        >
+                          單選
+                        </button>
+                        <button
+                          type="button"
+                          data-category-mode="multiple"
+                          onClick={() => setCategoryMode("multiple")}
+                          className={categoryOptionClass(categoryMode === "multiple")}
+                        >
+                          複選
+                        </button>
+                      </div>
+                      <p className="mb-1.5 mt-3 text-[11px] font-semibold text-emerald-700">報名時是否必選</p>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          data-category-required="true"
+                          onClick={() => setCategoryRequired(true)}
+                          className={categoryOptionClass(categoryRequired)}
+                        >
+                          必須選
+                        </button>
+                        <button
+                          type="button"
+                          data-category-required="false"
+                          onClick={() => setCategoryRequired(false)}
+                          className={categoryOptionClass(!categoryRequired)}
+                        >
+                          可不選
+                        </button>
+                      </div>
+                      <p data-category-mode-help="true" className="mt-2 whitespace-nowrap text-[clamp(9px,2.55vw,11px)] leading-relaxed text-gray-400">
+                        {categoryHelpText(categoryMode, categoryRequired)}
+                      </p>
+                    </div>
                     <p className="text-[11px] text-gray-400 mb-2 px-0.5 leading-relaxed">
                       讓報名者選擇項目，例如：帶小孩、帶朋友、素食、葷食。
                     </p>
