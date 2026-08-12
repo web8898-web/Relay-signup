@@ -10,11 +10,14 @@ const PAIRS = [
   ["任務建立成功！","Task created successfully!"],["已分享成功！","Shared successfully!"],["你的接龍已建立完成，下一步分享到 LINE 群組。","Your signup task is ready. Next, share it to a LINE group."],["接下來就等大家開始報名吧。","Now just wait for everyone to sign up."],
   ["接龍任務","Signup Task"],["分享到 LINE","Share to LINE"],["開啟中","Opening"],["開啟中…","Opening…"],["收起預覽","Hide Preview"],["預覽任務","Preview Task"],["複製連結","Copy Link"],["回到任務清單","Back to Task List"],
   ["這是分享到 LINE 群組時，成員會看到的卡片樣式","This is the card members will see when shared to a LINE group."],["最後一步：分享到 LINE","Final step: Share to LINE"],["任務建立好了！按這個按鈕，把報名卡片分享到 LINE 群組或好友，大家點報名卡片就能直接報名。","Your task is ready. Tap this button to share the signup card to a LINE group or friend. People can tap the card to sign up directly."],
-  ["完成教學","Finish Tutorial"],["跳過教學","Skip Tutorial"],["上一步","Back"],["下一步","Next"],["分享已送出","Share sent"],["卡片分享失敗，改用文字分享","Card sharing failed. Switching to text sharing."],["已複製分享文字","Share text copied"],["複製失敗，請手動選取文字","Copy failed. Please select and copy the text manually."],
+  ["完成教學","Finish Tutorial"],["略過教學","Skip Tutorial"],["跳過教學","Skip Tutorial"],["上一步","Back"],["下一步","Next"],["看完了","Done"],["分享已送出","Share sent"],["卡片分享失敗，改用文字分享","Card sharing failed. Switching to text sharing."],["已複製分享文字","Share text copied"],["複製失敗，請手動選取文字","Copy failed. Please select and copy the text manually."],
   ["任務標題","Task Title"],["簡介","Description"],["日期","Date"],["備註","Notes"],["活動橫幅圖","Event Banner"],["選填","Optional"],["新增圖片","Add Image"],["＋ 新增圖片","+ Add Image"],["讓接龍頁與分享卡更有辨識度","Make the signup page and share card easier to recognize"],
   ["報名人數上限（選填，不填代表不限人數）","Signup Limit (optional; leave blank for unlimited)"],["進階設定","Advanced Settings"],["需要調整任務模式、分類或統計數量時再設定，沒有需要可以略過。","Only open these settings when you need task modes, categories, or quantity tracking."],
-  ["任務模式","Task Mode"],["預設一般報名即可；現場排隊適合需要邊報名邊處理的情境。","Standard Signup works for most cases. On-site Queue is for situations handled while people wait."],["一般報名","Standard Signup"],["適合活動、聚餐、課程，報名結束後再確認名單。","For events, gatherings, or classes where you review the list after signup."],["現場排隊","On-site Queue"],["適合候位、推拿、現場服務，可邊報名邊處理。","For waiting lists and on-site services handled in real time."],
+  ["任務模式","Task Mode"],["預設一般報名即可；現場排隊適合需要邊報名邊處理的情境。","Standard Signup works for most cases. On-site Queue is for situations handled while people wait."],["一般報名","Standard Signup"],["適合活動、聚餐、課程，報名結束後再確認名單。","For events, gatherings, or classes where you review the list after signup."],["適合事先收集報名名單，活動開始前即可確認人數。","Collect signup lists in advance and confirm attendance before the event starts."],["現場排隊","On-site Queue"],["適合候位、推拿、現場服務，可邊報名邊處理。","For waiting lists and on-site services handled in real time."],["適合現場候位與排隊，客人加入後可依序叫號服務。","For on-site waiting and queues where guests are served in order."],
   ["現場排隊已簡化表單","On-site Queue uses a simplified form"],["現場排隊只收姓名，不使用報名類別與數量單位，避免排隊流程變複雜。","On-site Queue only collects names and does not use categories or quantity units."],
+  ["不知道怎麼選？","Not sure which to choose?"],["📖 不知道怎麼選？","📖 Not sure which to choose?"],["展開閱讀","Read More"],["收起","Collapse"],["統計名單、活動報名、團購與課程","Lists, event signups, group buys, and classes"],["即時順位、候位與現場服務","Live queue positions and on-site services"],["▶ 查看教學","▶ View Tutorial"],["💡 需要「統計名單」選一般報名；需要「即時順位」選現場排隊。","💡 Choose Standard Signup for lists; choose On-site Queue for live positions."],
+  ["一般報名教學","Standard Signup Tutorial"],["適合聚餐、旅遊、課程、團購與活動報名","For gatherings, trips, classes, group buys, and event signups"],["填寫標題、日期、簡介與需要的分類。","Enter the title, dates, description, and any categories you need."],["建立完成後，把任務卡片或連結分享到群組。","After creating it, share the task card or link to your group."],["參加者完成報名","Participants Sign Up"],["參加者輸入姓名與資料，不需要登入即可報名。","Participants enter their name and details; no login is required."],["主辦人管理名單","Organizer Manages the List"],["查看、統計、下載名單，活動結束後再完成任務。","Review, summarize, and download the list, then complete the task after the event."],
+  ["現場排隊教學","On-site Queue Tutorial"],["適合候位、按摩、美容、美甲與現場服務","For waiting lists, massage, beauty, nail, and on-site services"],["建立排隊任務","Create Queue Task"],["填寫標題、排隊期間、簡介與現場備註。","Enter the title, queue period, description, and on-site notes."],["分享連結或 QR Code","Share Link or QR Code"],["讓現場客人掃描後直接加入排隊。","Let guests scan the code and join the queue directly."],["客人查看順位","Guests View Position"],["加入後會看到目前順位與前方等待人數。","After joining, guests can see their current position and how many people are ahead."],["主辦人依序完成","Organizer Serves in Order"],["點擊完成目前第一位，後方名單會自動往前遞補。","Complete the first person in line and everyone behind will move forward automatically."],
   ["報名類別","Signup Categories"],["讓報名者選擇項目，例如：帶小孩、帶朋友、素食、葷食。","Let participants choose options such as bringing children, bringing friends, vegetarian, or non-vegetarian."],["類別選擇方式","Category Selection"],["單選","Single"],["複選","Multiple"],["報名時是否必選","Category Requirement"],["必須選","Required"],["可不選","Optional"],
   ["每位報名者只能選擇一個類別，而且必須選擇。","Each participant must select exactly one category."],["每位報名者最多選擇一個類別，也可以不選。","Each participant may select at most one category, or none."],["每位報名者可以選擇多個類別，至少要選一個。","Each participant may select multiple categories and must select at least one."],["每位報名者可以選擇多個類別，也可以不選。","Each participant may select multiple categories, or none."],
   ["新增","Add"],["輸入文字後，按「新增」或按 Enter 加入一個分類","Type a category, then tap Add or press Enter."],["數量單位","Quantity Unit"],["如果一個人可以報名多份才需要填，例如：盒、份、張、包、人、個。","Set this only when one person can register multiple quantities, such as items, boxes, or people."],["接龍卡片顯示分享圖示","Show share icon on signup card"],["方便報名者將同一個接龍轉傳到其他群組。","Lets participants forward the same signup to other groups."],
@@ -47,6 +50,7 @@ function translateDynamic(text) {
   if (TEXT_MAP.has(trimmed)) return text.replace(trimmed, TEXT_MAP.get(trimmed));
   let m = trimmed.match(/^(\d{4})年(\d{1,2})月(\d{1,2})日(?:\s*\(([日一二三四五六])\))?$/); if (m) return formatEnglishDate(m[1],m[2],m[3],m[4]);
   m = trimmed.match(/^(\d{4})年(\d{1,2})月(\d{1,2})日\s*\(([日一二三四五六])\)\s*~\s*(\d{1,2})月(\d{1,2})日\s*\(([日一二三四五六])\)$/); if (m) return `${formatEnglishDate(m[1],m[2],m[3],m[4])} ~ ${formatEnglishDate(m[1],m[5],m[6],m[7])}`;
+  m = trimmed.match(/^查看(.+)教學$/); if (m) return `View ${m[1]} Tutorial`;
   m = trimmed.match(/^已截止\s*·\s*(\d+)\s*人已報名$/); if (m) return `${m[1]} signed up · Closed`;
   m = trimmed.match(/^進行中\s*·\s*(\d+)\s*人已報名$/); if (m) return `${m[1]} signed up · Active`;
   m = trimmed.match(/^(\d+)\s*人已報名$/); if (m) return `${m[1]} signed up`;
@@ -90,17 +94,32 @@ export function getClientLanguage() {
 export default function GlobalLocaleBridge() {
   const pathname = usePathname();
   useEffect(() => {
+    const onLanguageChange = (event) => {
+      const next = event?.detail?.language === "en" ? "en" : "zh";
+      try { localStorage.setItem(LANGUAGE_KEY, next); } catch {}
+      window.location.reload();
+    };
+    window.addEventListener("relay-language-change", onLanguageChange);
+
     const language = getClientLanguage();
     try { localStorage.setItem(LANGUAGE_KEY, language); } catch {}
     document.documentElement.lang = language === "en" ? "en" : "zh-Hant";
     document.documentElement.dataset.relayLanguage = language;
-    if (language !== "en") return;
+
+    let observer = null;
     let frame = 0;
-    const apply = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(() => translateTree(document.body)); };
-    apply();
-    const observer = new MutationObserver(apply);
-    observer.observe(document.body, { childList:true, subtree:true, characterData:true, attributes:true, attributeFilter:["placeholder","aria-label","title"] });
-    return () => { observer.disconnect(); cancelAnimationFrame(frame); };
+    if (language === "en") {
+      const apply = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(() => translateTree(document.body)); };
+      apply();
+      observer = new MutationObserver(apply);
+      observer.observe(document.body, { childList:true, subtree:true, characterData:true, attributes:true, attributeFilter:["placeholder","aria-label","title"] });
+    }
+
+    return () => {
+      window.removeEventListener("relay-language-change", onLanguageChange);
+      observer?.disconnect();
+      cancelAnimationFrame(frame);
+    };
   }, [pathname]);
   return null;
 }
