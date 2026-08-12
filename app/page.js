@@ -91,6 +91,12 @@ export default function HomePage() {
     try {
       localStorage.setItem(HOME_LANGUAGE_KEY, nextLanguage);
     } catch (e) {}
+    if (typeof document !== "undefined") {
+      document.documentElement.lang = nextLanguage === "en" ? "en" : "zh-Hant";
+      document.documentElement.dataset.relayLanguage = nextLanguage;
+      document.title = nextLanguage === "en" ? "Relay Signup Assistant" : "接龍報名小助手";
+    }
+    window.dispatchEvent(new CustomEvent("relay-language-change", { detail: { language: nextLanguage } }));
   }
 
   useEffect(() => {
@@ -165,7 +171,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className={`flex-1 flex flex-col min-w-0 ${isTransitioning ? "pointer-events-none" : ""}`}>
+    <div data-no-auto-i18n="true" className={`flex-1 flex flex-col min-w-0 ${isTransitioning ? "pointer-events-none" : ""}`}>
       <div
         className={`relative bg-emerald-500 text-white shadow-md overflow-hidden transform-gpu will-change-[height,border-radius,transform,opacity] transition-[height,min-height,padding,border-radius,box-shadow,opacity] duration-[560ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
           heroCollapsed
@@ -310,12 +316,8 @@ export default function HomePage() {
           </FadeIn>
         )}
 
-        <div className="flex-1 flex items-center justify-center min-h-[92px]">
-          <div
-            className="inline-flex items-center rounded-full border border-gray-200 bg-white p-1 shadow-sm"
-            role="group"
-            aria-label="Language"
-          >
+        <div className="flex justify-center pt-7 pb-2">
+          <div className="inline-flex items-center rounded-full border border-gray-200 bg-white p-1 shadow-sm" role="group" aria-label="Language">
             <button
               type="button"
               onClick={() => changeLanguage("zh")}
