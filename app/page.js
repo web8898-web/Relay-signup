@@ -87,6 +87,7 @@ export default function HomePage() {
   const copy = COPY[language];
 
   function changeLanguage(nextLanguage) {
+    if (nextLanguage === language) return;
     setLanguage(nextLanguage);
     try {
       localStorage.setItem(HOME_LANGUAGE_KEY, nextLanguage);
@@ -96,7 +97,6 @@ export default function HomePage() {
       document.documentElement.dataset.relayLanguage = nextLanguage;
       document.title = nextLanguage === "en" ? "Relay Signup Assistant" : "接龍報名小助手";
     }
-    window.dispatchEvent(new CustomEvent("relay-language-change", { detail: { language: nextLanguage } }));
   }
 
   useEffect(() => {
