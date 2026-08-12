@@ -8,11 +8,50 @@ import OnboardingTour, {
   resetOnboarding,
 } from "@/components/OnboardingTour";
 import FadeIn from "@/components/FadeIn";
-import HomeLoveSupport from "@/components/HomeLoveSupport";
 import { useLineProfile } from "@/lib/useLineProfile";
 import { avatarClass } from "@/lib/utils";
 
 const HOME_RETURN_ANIMATION_KEY = "relay_home_return_expand";
+const HOME_LANGUAGE_KEY = "relay_home_language";
+
+const COPY = {
+  zh: {
+    appName: "接龍報名小助手",
+    hero: "像在聊天室接龍一樣，開一個任務，讓大家一則一則回覆完成報名。",
+    create: "建立任務",
+    createDesc: "建立任務並分享到群組",
+    tasks: "任務清單",
+    tasksDesc: "管理你建立的任務",
+    loginFirst: "使用前，請先用 LINE 登入",
+    loginDesc: "登入後即可建立任務、管理報名名單",
+    loginButton: "使用 LINE 登入",
+    loggingIn: "正在登入",
+    replay: "播放建立任務教學",
+    copyrightCompany: "豐碩企業有限公司",
+    copyright: "版權所有",
+    tourTitle: "先建立第一個任務",
+    tourText: "點「建立任務」後，照著基本欄位填寫就能完成。分類、數量單位已放在進階設定，有需要再展開。",
+    tourFinish: "好，開始建立",
+  },
+  en: {
+    appName: "Relay Signup Assistant",
+    hero: "Create a signup task like a chat relay and let everyone reply one by one to complete their registration.",
+    create: "Create Task",
+    createDesc: "Create a task and share it with your group",
+    tasks: "Task List",
+    tasksDesc: "Manage the tasks you created",
+    loginFirst: "Please sign in with LINE to continue",
+    loginDesc: "Sign in to create tasks and manage signup lists",
+    loginButton: "Sign in with LINE",
+    loggingIn: "Signing in",
+    replay: "Replay Create Task Tutorial",
+    copyrightCompany: "Fengshuo Enterprise Co., Ltd.",
+    copyright: "All rights reserved",
+    tourTitle: "Create your first task",
+    tourText: "Tap “Create Task” and complete the basic fields. Categories and quantity units are under Advanced Settings, so you only need to open them when required.",
+    tourFinish: "Start creating",
+  },
+};
 
 function shouldPlayHomeReturnAnimation() {
   if (typeof window === "undefined") return false;
@@ -22,6 +61,15 @@ function shouldPlayHomeReturnAnimation() {
     return shouldPlay;
   } catch (e) {
     return false;
+  }
+}
+
+function initialLanguage() {
+  if (typeof window === "undefined") return "zh";
+  try {
+    return localStorage.getItem(HOME_LANGUAGE_KEY) === "en" ? "en" : "zh";
+  } catch (e) {
+    return "zh";
   }
 }
 
@@ -35,6 +83,15 @@ export default function HomePage() {
   const [sessionAuthed, setSessionAuthed] = useState(false);
   const [transitionTo, setTransitionTo] = useState(null);
   const [returnExpanding, setReturnExpanding] = useState(() => shouldPlayHomeReturnAnimation());
+  const [language, setLanguage] = useState(() => initialLanguage());
+  const copy = COPY[language];
+
+  function changeLanguage(nextLanguage) {
+    setLanguage(nextLanguage);
+    try {
+      localStorage.setItem(HOME_LANGUAGE_KEY, nextLanguage);
+    } catch (e) {}
+  }
 
   useEffect(() => {
     if (!returnExpanding) return;
@@ -95,7 +152,11 @@ export default function HomePage() {
   const isTransitioning = !!transitionTo;
   const heroCollapsed = isTransitioning || returnExpanding;
   const contentHiddenForMorph = isTransitioning || returnExpanding;
-  const transitionTitle = transitionTo === "/create" ? "建立任務" : transitionTo === "/my-tasks" ? "任務清單" : "接龍報名小助手";
+  const transitionTitle = transitionTo === "/create"
+    ? copy.create
+    : transitionTo === "/my-tasks"
+      ? copy.tasks
+      : copy.appName;
 
   function navigateWithHeroCollapse(path) {
     if (isTransitioning) return;
@@ -150,9 +211,9 @@ export default function HomePage() {
           <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mb-4">
             <MessageCircle size={28} />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">接龍報名小助手</h1>
+          <h1 className={`${language === "en" ? "text-[28px]" : "text-3xl"} font-bold tracking-tight`}>{copy.appName}</h1>
           <p className="text-emerald-50 mt-2 text-sm leading-relaxed">
-            像在聊天室接龍一樣，開一個任務，讓大家一則一則回覆完成報名。
+            {copy.hero}
           </p>
         </div>
       </div>
@@ -171,7 +232,7 @@ export default function HomePage() {
                 <MessageCircle size={24} />
               </div>
             </div>
-            <div className="flex gap-2 mt-0.5" aria-label="正在登入">
+            <div className="flex gap-2 mt-0.5" aria-label={copy.loggingIn}>
               {[0, 1, 2].map((i) => (
                 <span
                   key={i}
@@ -182,7 +243,7 @@ export default function HomePage() {
               ))}
             </div>
             <p className="text-[11px] text-gray-400 mt-2.5 tracking-wide">
-              正在登入<span className="text-emerald-400">•••</span>
+              {copy.loggingIn}<span className="text-emerald-400">•••</span>
             </p>
           </div>
         ) : loading ? null : !profile ? (
@@ -190,15 +251,15 @@ export default function HomePage() {
             <div className="w-16 h-16 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-200 mb-5">
               <MessageCircle size={24} />
             </div>
-            <p className="font-semibold text-gray-800">使用前，請先用 LINE 登入</p>
+            <p className="font-semibold text-gray-800">{copy.loginFirst}</p>
             <p className="text-xs text-gray-400 mt-1.5">
-              登入後即可建立任務、管理報名名單
+              {copy.loginDesc}
             </p>
             <button
               onClick={login}
               className="mt-6 w-full bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white font-semibold rounded-full py-3.5 flex items-center justify-center gap-2 shadow-lg shadow-emerald-200 transition"
             >
-              使用 LINE 登入
+              {copy.loginButton}
             </button>
             {error && <p className="text-xs text-rose-500 mt-3">{error}</p>}
           </div>
@@ -213,8 +274,8 @@ export default function HomePage() {
                 <ClipboardList size={22} />
               </div>
               <div className="flex-1">
-                <p className="font-semibold text-gray-800">任務清單</p>
-                <p className="text-xs text-gray-400 mt-0.5">{profile ? "管理你建立的任務" : "使用前，請先用 LINE 登入"}</p>
+                <p className="font-semibold text-gray-800">{copy.tasks}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{profile ? copy.tasksDesc : copy.loginFirst}</p>
               </div>
               <ChevronRight size={18} className="text-gray-300 group-hover:text-emerald-400" />
             </button>
@@ -229,8 +290,8 @@ export default function HomePage() {
                 <PenLine size={22} />
               </div>
               <div className="flex-1">
-                <p className="font-semibold text-gray-800">建立任務</p>
-                <p className="text-xs text-gray-400 mt-0.5">{profile ? "建立任務並分享到群組" : "使用前，請先用 LINE 登入"}</p>
+                <p className="font-semibold text-gray-800">{copy.create}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{profile ? copy.createDesc : copy.loginFirst}</p>
               </div>
               <ChevronRight size={18} className="text-gray-300 group-hover:text-emerald-400" />
             </button>
@@ -244,12 +305,40 @@ export default function HomePage() {
               style={{ color: "#8A94A3" }}
             >
               <RotateCcw size={13} className="shrink-0 text-emerald-500 transition-colors duration-200 group-active:text-emerald-500" />
-              <span className="group-active:text-emerald-500">播放建立任務教學</span>
+              <span className="group-active:text-emerald-500">{copy.replay}</span>
             </button>
           </FadeIn>
         )}
 
-        <HomeLoveSupport profile={profile} onRequireLogin={login} />
+        <div className="flex-1 flex items-center justify-center min-h-[92px]">
+          <div
+            className="inline-flex items-center rounded-full border border-gray-200 bg-white p-1 shadow-sm"
+            role="group"
+            aria-label="Language"
+          >
+            <button
+              type="button"
+              onClick={() => changeLanguage("zh")}
+              aria-pressed={language === "zh"}
+              className={`min-w-[58px] rounded-full px-3 py-2 text-xs font-semibold transition ${
+                language === "zh" ? "bg-emerald-500 text-white shadow-sm" : "text-gray-400 hover:text-emerald-600"
+              }`}
+            >
+              繁中
+            </button>
+            <span className="px-0.5 text-xs text-gray-300" aria-hidden="true">•</span>
+            <button
+              type="button"
+              onClick={() => changeLanguage("en")}
+              aria-pressed={language === "en"}
+              className={`min-w-[50px] rounded-full px-3 py-2 text-xs font-semibold transition ${
+                language === "en" ? "bg-emerald-500 text-white shadow-sm" : "text-gray-400 hover:text-emerald-600"
+              }`}
+            >
+              EN
+            </button>
+          </div>
+        </div>
 
         <div className="mt-auto text-center text-[11px] text-gray-300 pt-8">
           © 2026{" "}
@@ -259,9 +348,9 @@ export default function HomePage() {
             rel="noopener noreferrer"
             className="hover:text-gray-400 transition"
           >
-            豐碩企業有限公司
+            {copy.copyrightCompany}
           </a>{" "}
-          版權所有
+          {copy.copyright}
         </div>
       </div>
 
@@ -271,11 +360,11 @@ export default function HomePage() {
             {
               target: "create-entry",
               tapTarget: true,
-              title: "先建立第一個任務",
-              text: "點「建立任務」後，照著基本欄位填寫就能完成。分類、數量單位已放在進階設定，有需要再展開。",
+              title: copy.tourTitle,
+              text: copy.tourText,
             },
           ]}
-          finishLabel="好，開始建立"
+          finishLabel={copy.tourFinish}
           onFinish={() => {
             setShowTour(false);
             router.push("/create");
