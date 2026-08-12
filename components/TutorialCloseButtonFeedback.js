@@ -41,11 +41,37 @@ function ensureStyle() {
   document.head.appendChild(style);
 }
 
+function isEnglishMode() {
+  if (document.documentElement.dataset.relayLanguage === "en") return true;
+  try {
+    return localStorage.getItem("relay_home_language") === "en";
+  } catch {
+    return false;
+  }
+}
+
+function fixEnglishTutorialLabels() {
+  if (!isEnglishMode()) return;
+
+  document.querySelectorAll("button").forEach((button) => {
+    const text = (button.textContent || "").replace(/\s+/g, " ").trim();
+    if (text === "查看Standard Signup教學" || text === "查看 Standard Signup 教學") {
+      button.textContent = "View Standard Signup Tutorial";
+    } else if (text === "查看On-site Queue教學" || text === "查看 On-site Queue 教學") {
+      button.textContent = "View On-site Queue Tutorial";
+    } else if (text === "看完了") {
+      button.textContent = "Done";
+    }
+  });
+}
+
 function isTutorialCloseButton(element) {
   if (!(element instanceof HTMLButtonElement)) return false;
   if ((element.textContent || "").trim() !== "✕") return false;
   const modal = element.closest(".fixed.inset-0");
-  return !!modal && (modal.textContent || "").includes("教學");
+  if (!modal) return false;
+  const modalText = modal.textContent || "";
+  return modalText.includes("教學") || modalText.includes("Tutorial");
 }
 
 function bindButton(button) {
@@ -74,16 +100,24 @@ export default function TutorialCloseButtonFeedback() {
   useEffect(() => {
     ensureStyle();
 
+    let frame = 0;
     const apply = () => {
-      document.querySelectorAll("button").forEach((button) => {
-        if (isTutorialCloseButton(button)) bindButton(button);
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        fixEnglishTutorialLabels();
+        document.querySelectorAll("button").forEach((button) => {
+          if (isTutorialCloseButton(button)) bindButton(button);
+        });
       });
     };
 
     apply();
-    const observer = new MutationObserver(() => window.requestAnimationFrame(apply));
-    observer.observe(document.body, { childList: true, subtree: true });
-    return () => observer.disconnect();
+    const observer = new MutationObserver(apply);
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
   }, []);
 
   return null;
