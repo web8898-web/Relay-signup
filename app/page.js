@@ -171,7 +171,7 @@ export default function HomePage() {
   }
 
   return (
-    <div data-no-auto-i18n="true" className={`flex-1 flex flex-col min-w-0 ${isTransitioning ? "pointer-events-none" : ""}`}>
+    <div data-no-auto-i18n="true" className={`relative flex-1 flex flex-col min-w-0 ${isTransitioning ? "pointer-events-none" : ""}`}>
       <div
         className={`relative bg-emerald-500 text-white shadow-md overflow-hidden transform-gpu will-change-[height,border-radius,transform,opacity] transition-[height,min-height,padding,border-radius,box-shadow,opacity] duration-[560ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
           heroCollapsed
@@ -342,7 +342,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="mt-auto text-center text-[11px] text-gray-300 pt-8">
+        <div className="absolute inset-x-0 bottom-[max(8px,env(safe-area-inset-bottom))] px-4 text-center text-[10px] leading-none text-gray-300 whitespace-nowrap pointer-events-auto">
           © 2026{" "}
           <a
             href="https://www.wiweb.com.tw"
