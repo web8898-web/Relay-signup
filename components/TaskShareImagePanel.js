@@ -164,6 +164,20 @@ async function svgToPngBlob(svg) {
   });
 }
 
+function shouldUseServerDownload() {
+  if (typeof navigator === "undefined") return false;
+  return /Android|Line\/|LIFF/i.test(navigator.userAgent || "");
+}
+
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("圖片下載準備失敗"));
+    reader.readAsDataURL(blob);
+  });
+}
+
 export default function TaskShareImagePanel({ task, url, signupCount = 0, onToast }) {
   const queue = isQueueTask(task);
   const status = taskLabel(taskStatus(task).label || "進行中");
@@ -183,10 +197,37 @@ export default function TaskShareImagePanel({ task, url, signupCount = 0, onToas
   }
 
   async function fallbackDownload(blob) {
+    const filename = `${fileSafeName(task.title)}_分享圖片.png`;
+
+    if (shouldUseServerDownload()) {
+      const dataUrl = await blobToDataUrl(blob);
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = "/api/share-image-download";
+      form.target = "_self";
+      form.style.display = "none";
+
+      const dataInput = document.createElement("input");
+      dataInput.type = "hidden";
+      dataInput.name = "data";
+      dataInput.value = dataUrl;
+
+      const nameInput = document.createElement("input");
+      nameInput.type = "hidden";
+      nameInput.name = "filename";
+      nameInput.value = filename;
+
+      form.append(dataInput, nameInput);
+      document.body.appendChild(form);
+      form.submit();
+      setTimeout(() => form.remove(), 1500);
+      return;
+    }
+
     const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = objectUrl;
-    a.download = `${fileSafeName(task.title)}_分享圖片.png`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -199,7 +240,7 @@ export default function TaskShareImagePanel({ task, url, signupCount = 0, onToas
       const shared = await shareBlob(blob, "請在開啟的選單中選擇「儲存圖片」");
       if (!shared) {
         await fallbackDownload(blob);
-        onToast?.("分享圖片已下載");
+        onToast?.("正在下載分享圖片");
       }
     } catch (e) {
       if (e?.name !== "AbortError") onToast?.(e.message || "圖片產生失敗");
@@ -212,10 +253,10 @@ export default function TaskShareImagePanel({ task, url, signupCount = 0, onToas
       const shared = await shareBlob(blob, "已開啟分享選單");
       if (!shared) {
         await fallbackDownload(blob);
-        onToast?.("此裝置不支援直接分享，已改為下載圖片");
+        onToast?.("此裝置不支援直接分享，已改用下載圖片");
       }
     } catch (e) {
-      if (e?.name !== "AbortError") onToast?.("無法直接分享，請改用下載圖片");
+      if (e?.name !== "AbortError") onToast?.("無法直接分享，已改用下載圖片");
     }
   }
 
