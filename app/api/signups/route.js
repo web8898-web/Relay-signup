@@ -29,6 +29,11 @@ function isCategoryRequired(task, selectionMode) {
   return (task.categories || []).filter((item) => item === marker).length >= 2;
 }
 
+function orderedCreatedAt(baseMs, offset = 0) {
+  const iso = new Date(baseMs).toISOString();
+  return iso.replace(/\.(\d{3})Z$/, (_, millis) => `.${millis}${String(offset).padStart(3, "0")}Z`);
+}
+
 export async function POST(request) {
   try {
     const body = await request.json();
@@ -150,10 +155,11 @@ export async function POST(request) {
 
     if (cleanProxyEntries.length > 0) {
       const batchId = globalThis.crypto?.randomUUID?.() || null;
+      const batchCreatedAt = Date.now();
       const rows = [
         { task_id, categories: selectedCategories, name: String(name).slice(0, 60), note: String(note || "").slice(0, 500), quantity: null, category_quantities: {}, owner_token, batch_id: batchId },
         ...cleanProxyEntries.map((entry) => ({ task_id, categories: entry.categories, name: entry.name, note: "", quantity: null, category_quantities: {}, owner_token, batch_id: batchId })),
-      ];
+      ].map((row, index) => ({ ...row, created_at: orderedCreatedAt(batchCreatedAt, index) }));
       const { data: inserted, error: proxyErr } = await supabase.from("signups").insert(rows).select();
       if (proxyErr) throw proxyErr;
       await notifySignupActivity({ supabase, task, signup: inserted?.[inserted.length - 1] });
@@ -162,7 +168,18 @@ export async function POST(request) {
 
     if (isMultiEligible && cleanNames.length >= 2) {
       const batchId = globalThis.crypto?.randomUUID?.() || null;
-      const rows = cleanNames.map((nm) => ({ task_id, categories: selectedCategories, name: nm.slice(0, 60), note: "", quantity: null, category_quantities: {}, owner_token, batch_id: batchId }));
+      const batchCreatedAt = Date.now();
+      const rows = cleanNames.map((nm, index) => ({
+        task_id,
+        categories: selectedCategories,
+        name: nm.slice(0, 60),
+        note: "",
+        quantity: null,
+        category_quantities: {},
+        owner_token,
+        batch_id: batchId,
+        created_at: orderedCreatedAt(batchCreatedAt, index),
+      }));
       const { data: inserted, error: multiErr } = await supabase.from("signups").insert(rows).select();
       if (multiErr) throw multiErr;
       await notifySignupActivity({ supabase, task, signup: inserted?.[inserted.length - 1] });
