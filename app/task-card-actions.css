@@ -47,3 +47,9 @@
   height: 2.25rem !important;
   stroke-width: 1.9 !important;
 }
+
+/* 接龍名單姓名：由原本 12px 放大 5px 至 17px；只影響 ThreadList 姓名。 */
+p.text-xs.font-medium.text-gray-600.flex.items-center.gap-1\.5.min-w-0 > span.break-words.min-w-0 {
+  font-size: 17px !important;
+  line-height: 1.25 !important;
+}
