@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>峰裕 × 峰好茶｜把一杯好茶，留給剛剛好的片刻</title>
+  <meta name="description" content="峰裕的峰好茶個人介紹頁。嚴選台灣高山茶，用簡單、講究、順口的方式，讓喝茶成為每天都做得到的生活片刻。" />
+  <meta property="og:title" content="峰裕 × 峰好茶" />
+  <meta property="og:description" content="賣的是好茶，喝的是生活的餘裕。" />
+  <meta property="og:image" content="https://www.goodtea.tw/hero-mobile-clean-v40.jpg" />
+  <meta property="og:type" content="website" />
+  <meta name="theme-color" content="#234c3a" />
+  <style>
+    :root{
+      --cream:#f7f0e4;
+      --paper:#fffaf2;
+      --ink:#1f2b24;
+      --green:#234c3a;
+      --green-2:#365f4a;
+      --sage:#dfe8dc;
+      --purple:#4a315f;
+      --gold:#c9a25d;
+      --line:rgba(35,76,58,.16);
+      --shadow:0 24px 60px rgba(31,43,36,.12);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      color:var(--ink);
+      background:
+        radial-gradient(circle at 8% 10%, rgba(201,162,93,.14), transparent 30%),
+        radial-gradient(circle at 92% 8%, rgba(74,49,95,.08), transparent 28%),
+        var(--cream);
+      font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+      line-height:1.75;
+    }
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
+    .wrap{width:min(1120px,calc(100% - 40px));margin:0 auto}
+    .nav{
+      position:sticky;top:0;z-index:20;
+      backdrop-filter:blur(14px);
+      background:rgba(247,240,228,.82);
+      border-bottom:1px solid rgba(35,76,58,.09);
+    }
+    .nav-inner{height:72px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+    .brand{display:flex;align-items:center;gap:11px;font-weight:800;letter-spacing:.08em}
+    .brand-mark{width:38px;height:38px;border:1px solid var(--green);display:grid;place-items:center;font-family:serif;color:var(--green);transform:rotate(-2deg)}
+    .nav-links{display:flex;align-items:center;gap:22px;font-size:14px}
+    .nav-cta{padding:10px 16px;border-radius:999px;background:var(--green);color:#fff;font-weight:700}
+    .hero{padding:72px 0 60px}
+    .hero-grid{display:grid;grid-template-columns:1.03fr .97fr;gap:56px;align-items:center}
+    .eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:13px;font-weight:800;letter-spacing:.18em;color:var(--green);text-transform:uppercase}
+    .eyebrow:before{content:"";width:34px;height:1px;background:var(--green)}
+    h1{font-size:clamp(44px,6.6vw,82px);line-height:1.08;margin:20px 0 22px;letter-spacing:-.04em}
+    h1 span{color:var(--green)}
+    .lead{font-size:clamp(18px,2.2vw,23px);max-width:630px;color:#4d5a52;margin:0 0 30px}
+    .hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin:32px 0 34px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:50px;padding:0 20px;border-radius:999px;font-weight:800;transition:.22s ease}
+    .btn:hover{transform:translateY(-2px)}
+    .btn.primary{background:var(--green);color:white;box-shadow:0 12px 28px rgba(35,76,58,.18)}
+    .btn.ghost{border:1px solid var(--green);color:var(--green);background:rgba(255,255,255,.26)}
+    .mini{display:flex;gap:22px;flex-wrap:wrap;font-size:13px;color:#68736d}
+    .hero-card{position:relative}
+    .hero-photo{border-radius:34px;overflow:hidden;box-shadow:var(--shadow);aspect-ratio:4/5;background:#d9d1c5}
+    .hero-photo img{width:100%;height:100%;object-fit:cover}
+    .floating-note{position:absolute;left:-30px;bottom:32px;background:rgba(255,250,242,.96);border:1px solid var(--line);padding:18px 20px;border-radius:18px;box-shadow:0 18px 40px rgba(31,43,36,.16);max-width:245px}
+    .floating-note strong{display:block;font-size:20px;color:var(--green);margin-bottom:4px}
+    .section{padding:86px 0}
+    .section-title{display:grid;grid-template-columns:.72fr 1.28fr;gap:56px;align-items:start;margin-bottom:42px}
+    .kicker{font-size:13px;font-weight:900;letter-spacing:.16em;color:var(--green);text-transform:uppercase;margin-bottom:12px}
+    h2{font-size:clamp(32px,4.3vw,54px);line-height:1.2;margin:0;letter-spacing:-.035em}
+    .section-copy{font-size:18px;color:#59655e;margin:4px 0 0}
+    .story-card{background:var(--green);color:#fff;border-radius:32px;padding:54px;display:grid;grid-template-columns:1fr 1fr;gap:46px;align-items:end;overflow:hidden;position:relative}
+    .story-card:after{content:"茶";position:absolute;right:-20px;top:-60px;font-family:serif;font-size:260px;line-height:1;color:rgba(255,255,255,.035);pointer-events:none}
+    .story-quote{font-size:clamp(30px,4vw,50px);line-height:1.3;font-weight:800;letter-spacing:-.03em;position:relative;z-index:1}
+    .story-text{font-size:17px;color:rgba(255,255,255,.82);position:relative;z-index:1}
+    .story-sign{margin-top:24px;color:#ecd7ae;font-weight:800;letter-spacing:.08em}
+    .features{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+    .feature{background:rgba(255,250,242,.72);border:1px solid var(--line);border-radius:24px;padding:28px;min-height:220px}
+    .feature-icon{font-size:32px;margin-bottom:24px}
+    .feature h3{font-size:22px;margin:0 0 8px;color:var(--green)}
+    .feature p{margin:0;color:#647169}
+    .products{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+    .product{background:var(--paper);border:1px solid var(--line);border-radius:30px;overflow:hidden;box-shadow:0 16px 48px rgba(31,43,36,.07)}
+    .product-media{aspect-ratio:1.16/1;background:#eee7db;overflow:hidden}
+    .product-media img{width:100%;height:100%;object-fit:cover;transition:transform .45s ease}
+    .product:hover .product-media img{transform:scale(1.025)}
+    .product-body{padding:28px 30px 32px}
+    .product-tag{font-size:12px;font-weight:900;color:var(--purple);letter-spacing:.12em;margin-bottom:8px}
+    .product h3{font-size:29px;margin:0 0 8px}
+    .product p{margin:0 0 20px;color:#647169}
+    .product-meta{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:22px;padding-top:22px;border-top:1px solid var(--line)}
+    .price{font-size:28px;font-weight:900;color:var(--green)}
+    .text-link{font-weight:900;color:var(--green)}
+    .tea-note{background:linear-gradient(135deg,#e7dfcf,#f9f3e8);border-radius:32px;padding:46px;display:grid;grid-template-columns:.72fr 1.28fr;gap:36px;align-items:center;border:1px solid rgba(35,76,58,.08)}
+    .big-quote{font-family:serif;font-size:74px;color:var(--gold);line-height:.7}
+    .tea-note blockquote{font-size:clamp(28px,3.6vw,44px);line-height:1.38;margin:0;font-weight:800;color:var(--green);letter-spacing:-.02em}
+    .tea-note p{margin:16px 0 0;color:#68736d}
+    .cta{padding:34px 0 100px}
+    .cta-box{border-radius:34px;background:var(--purple);color:#fff;padding:58px;display:grid;grid-template-columns:1.3fr .7fr;gap:30px;align-items:center;box-shadow:0 24px 60px rgba(74,49,95,.16)}
+    .cta-box h2{color:#fff}
+    .cta-box p{margin:14px 0 0;color:rgba(255,255,255,.77);font-size:17px}
+    .cta-actions{display:flex;flex-direction:column;gap:12px}
+    .cta-actions .btn{background:#fff;color:var(--purple)}
+    .cta-actions .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,.5);color:#fff}
+    footer{padding:30px 0 50px;border-top:1px solid rgba(35,76,58,.12);font-size:13px;color:#718078}
+    .footer-inner{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}
+    .reveal{opacity:0;transform:translateY(20px);transition:opacity .7s ease, transform .7s ease}
+    .reveal.show{opacity:1;transform:none}
+    @media (max-width: 860px){
+      .nav-links a:not(.nav-cta){display:none}
+      .hero{padding-top:38px}
+      .hero-grid,.section-title,.story-card,.tea-note,.cta-box{grid-template-columns:1fr}
+      .hero-grid{gap:34px}
+      .hero-card{max-width:620px;margin:0 auto}
+      .floating-note{left:14px;bottom:14px;max-width:210px;padding:14px 16px}
+      .section{padding:66px 0}
+      .section-title{gap:18px}
+      .story-card{padding:36px 30px;gap:24px}
+      .features{grid-template-columns:1fr}
+      .products{grid-template-columns:1fr}
+      .cta-box{padding:38px 28px}
+    }
+    @media (max-width: 560px){
+      .wrap{width:min(100% - 28px,1120px)}
+      .nav-inner{height:64px}
+      .brand span:last-child{font-size:14px}
+      h1{font-size:46px}
+      .lead{font-size:17px}
+      .hero-actions{display:grid;grid-template-columns:1fr}
+      .btn{width:100%}
+      .mini{gap:12px 18px}
+      .hero-photo{border-radius:26px}
+      .section{padding:56px 0}
+      .story-card,.tea-note{border-radius:24px}
+      .feature{min-height:auto}
+      .product{border-radius:24px}
+      .product-body{padding:23px 22px 26px}
+      .product h3{font-size:25px}
+      .product-meta{align-items:flex-end}
+      .price{font-size:24px}
+      .cta{padding-bottom:70px}
+      .cta-box{border-radius:26px}
+    }
+    @media (prefers-reduced-motion: reduce){
+      html{scroll-behavior:auto}
+      *,*:before,*:after{animation:none!important;transition:none!important}
+      .reveal{opacity:1;transform:none}
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="#top" aria-label="回到頁首">
+        <span class="brand-mark">峰</span>
+        <span>峰裕 × 峰好茶</span>
+      </a>
+      <div class="nav-links">
+        <a href="#story">我與峰好茶</a>
+        <a href="#tea">好茶特色</a>
+        <a href="#products">產品</a>
+        <a class="nav-cta" href="https://buy.goodtea.tw" target="_blank" rel="noopener">立即選購</a>
+      </div>
+    </div>
+  </nav>
+
+  <main id="top">
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <div class="eyebrow">MY TEA · MY WAY</div>
+          <h1>我想做的，<br>不是一杯複雜的茶，<br>而是一個<span>剛剛好的片刻。</span></h1>
+          <p class="lead">我是峰裕。峰好茶從一個很簡單的想法開始：讓真正的台灣好茶，不需要很多儀式，也能自然走進每天的生活。</p>
+          <div class="hero-actions">
+            <a class="btn primary" href="#story">認識峰好茶 <span>↓</span></a>
+            <a class="btn ghost" href="https://www.goodtea.tw" target="_blank" rel="noopener">前往品牌官網 ↗</a>
+          </div>
+          <div class="mini">
+            <span>台灣高山茶</span><span>PLA 玉米纖維茶包</span><span>紅茶 × 綠茶盲盒</span>
+          </div>
+        </div>
+        <div class="hero-card reveal">
+          <div class="hero-photo">
+            <img src="https://www.goodtea.tw/hero-mobile-clean-v40.jpg" alt="峰好茶茶包與茶湯生活情境" />
+          </div>
+          <div class="floating-note">
+            <strong>賣的是好茶，</strong>
+            <span>喝的是生活的餘裕。</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="story">
+      <div class="wrap">
+        <div class="section-title reveal">
+          <div>
+            <div class="kicker">WHY GOODTEA</div>
+            <h2>為什麼，我做了峰好茶？</h2>
+          </div>
+          <p class="section-copy">因為我發現，大家不是不想喝好茶，而是「好茶」常常被想得太麻煩。峰好茶要做的，就是把門檻拿掉：一包茶、一杯水、幾分鐘，就能替自己留一段舒服的時間。</p>
+        </div>
+        <div class="story-card reveal">
+          <div class="story-quote">讓平凡日常，<br>多增添一點期待。</div>
+          <div class="story-text">
+            我喜歡茶，也喜歡「拆開之前還不知道今天是哪一款」的感覺。所以峰好茶把紅茶與綠茶放進同一盒，做成像盲盒一樣的小驚喜。你不用先做選擇，只要打開一包，讓今天的心情自己決定味道。
+            <div class="story-sign">— 峰裕</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="tea">
+      <div class="wrap">
+        <div class="section-title reveal">
+          <div>
+            <div class="kicker">SIMPLE · REFINED · SMOOTH</div>
+            <h2>簡單，但不隨便。</h2>
+          </div>
+          <p class="section-copy">峰好茶不是要把喝茶變得更專業，而是讓好茶變得更容易親近。真正該被保留的是茶香、品質與喝下去的舒服感。</p>
+        </div>
+        <div class="features">
+          <article class="feature reveal">
+            <div class="feature-icon">⛰️</div>
+            <h3>台灣高山茶</h3>
+            <p>嚴選台灣茶園，紅茶溫潤、綠茶清新，讓山裡的香氣和甘甜自然留在杯中。</p>
+          </article>
+          <article class="feature reveal">
+            <div class="feature-icon">🌽</div>
+            <h3>PLA 玉米纖維茶包</h3>
+            <p>三角立體空間，讓茶葉沖泡時有更好的舒展空間；方便喝，也把日常體驗做得更完整。</p>
+          </article>
+          <article class="feature reveal">
+            <div class="feature-icon">🎁</div>
+            <h3>每天一點小驚喜</h3>
+            <p>琥珀紅韻或翠峰綠韻，拆開才知道。喝茶這件小事，也可以多一點期待感。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="products">
+      <div class="wrap">
+        <div class="section-title reveal">
+          <div>
+            <div class="kicker">TEA MOMENTS</div>
+            <h2>兩種份量，<br>選你的生活節奏。</h2>
+          </div>
+          <p class="section-copy">不需要收藏一整櫃茶具，也不需要懂一堆術語。想喝時拿一包，就是峰好茶希望留給你的便利。</p>
+        </div>
+        <div class="products">
+          <article class="product reveal">
+            <div class="product-media">
+              <img src="https://www.goodtea.tw/asset-97b1368099ef.png" alt="峰好茶 茶拾光 16 入暖心組" />
+            </div>
+            <div class="product-body">
+              <div class="product-tag">16 TEA MOMENTS</div>
+              <h3>茶拾光｜16 入暖心組</h3>
+              <p>琥珀紅韻 × 8、翠峰綠韻 × 8。適合第一次認識峰好茶，也很適合送一份剛剛好的心意。</p>
+              <div class="product-meta">
+                <div class="price">NT$680</div>
+                <a class="text-link" href="https://buy.goodtea.tw" target="_blank" rel="noopener">立即選購 ↗</a>
+              </div>
+            </div>
+          </article>
+          <article class="product reveal">
+            <div class="product-media">
+              <img src="https://www.goodtea.tw/asset-5bbeb4ca381e.png" alt="峰好茶 茶慢月 30 入日常組" />
+            </div>
+            <div class="product-body">
+              <div class="product-tag">30 DAYS OF TEA</div>
+              <h3>茶慢月｜30 入日常組</h3>
+              <p>琥珀紅韻 × 15、翠峰綠韻 × 15。每天打開一包，讓一整個月都有一個值得期待的喝茶片刻。</p>
+              <div class="product-meta">
+                <div class="price">NT$1,080</div>
+                <a class="text-link" href="https://buy.goodtea.tw" target="_blank" rel="noopener">立即選購 ↗</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <div class="tea-note reveal">
+          <div>
+            <div class="big-quote">“</div>
+            <div class="kicker" style="margin-top:22px">A NOTE FOR TODAY</div>
+          </div>
+          <div>
+            <blockquote>喝茶不是把時間停下來，<br>是提醒自己：時間也可以慢一點。</blockquote>
+            <p>熱泡 90–95°C，等待 3–5 分鐘；或用 500ml 冷水冷藏 6–8 小時。今天想怎麼喝，就怎麼喝。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="wrap">
+        <div class="cta-box reveal">
+          <div>
+            <div class="kicker" style="color:#ead8ff">GOOD TEA, GOOD MOMENT</div>
+            <h2>替今天，留一杯茶的時間。</h2>
+            <p>想更完整認識峰好茶，或直接挑一盒帶回家，都可以從這裡開始。</p>
+          </div>
+          <div class="cta-actions">
+            <a class="btn" href="https://buy.goodtea.tw" target="_blank" rel="noopener">前往選購</a>
+            <a class="btn secondary" href="https://lin.ee/6CveSKD" target="_blank" rel="noopener">加入官方 LINE</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-inner">
+      <span>© 2026 峰裕 × 峰好茶</span>
+      <span>goodtea.tw · 把一杯好茶，留給剛剛好的片刻。</span>
+    </div>
+  </footer>
+
+  <script>
+    const els = document.querySelectorAll('.reveal');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('show');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.14 });
+    els.forEach((el) => io.observe(el));
+  </script>
+</body>
+</html>
