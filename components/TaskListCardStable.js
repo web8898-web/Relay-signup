@@ -6,7 +6,7 @@ import {
   FileSpreadsheet, FileText, Bell, BellOff, ClipboardCheck, Check,
   RotateCcw, Copy, CheckCircle2, Search, X, Undo2, ChevronDown,
 } from "lucide-react";
-import { taskStatus, chipClass, avatarClass, relTime, batchInfoFor, isQueueTask as isQueueTaskConfig } from "@/lib/utils";
+import { taskStatus, chipClass, avatarClass, relTime, batchInfoFor, isQueueTask as isQueueTaskConfig, getVisibleTaskNote } from "@/lib/utils";
 import { getOwnerToken } from "@/lib/ownerToken";
 import { liff } from "@/lib/liff";
 
@@ -53,6 +53,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
   const menuAreaRef = useRef(null);
 
   const st = taskStatus(task);
+  const visibleTaskNote = getVisibleTaskNote(task.note);
   const signupCount = signups.length;
   const isClosed = st.label === "已截止";
   const isQueueTask = isQueueTaskConfig(task);
@@ -331,7 +332,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
             <div className="flex items-center justify-between mb-1.5"><span className={`text-[10px] px-2 py-0.5 rounded-full border ${isFull ? "bg-rose-100 text-rose-600 border-rose-200" : st.cls}`}>{isFull ? "已額滿" : st.label}</span>{isQueueTask && <span className="text-[10px] px-2 py-0.5 rounded-full border border-sky-100 bg-sky-50 text-sky-600">現場排隊</span>}</div>
             {task.description && <p className="text-sm text-gray-600 mb-2 whitespace-pre-wrap">{task.description}</p>}
             <div className="flex flex-wrap items-center gap-x-3 text-[11px] text-gray-400"><span className="flex items-center gap-1"><Calendar size={12} />{formatRange(task.start_date, task.end_date)}</span><span className="flex items-center gap-1"><Users size={12} />{signupCount} 人已報名</span></div>
-            {task.note && <p className="text-xs text-gray-400 mt-2 border-t border-emerald-100 pt-2 whitespace-pre-wrap">備註：{task.note}</p>}
+            {visibleTaskNote && <p className="text-xs text-gray-400 mt-2 border-t border-emerald-100 pt-2 whitespace-pre-wrap">備註：{visibleTaskNote}</p>}
           </div>
 
           <div className="mb-3">
