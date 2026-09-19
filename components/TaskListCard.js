@@ -20,7 +20,7 @@ import {
   Copy,
   CheckCircle2,
 } from "lucide-react";
-import { taskStatus, chipClass, avatarClass, relTime, batchInfoFor } from "@/lib/utils";
+import { taskStatus, chipClass, avatarClass, relTime, batchInfoFor, getVisibleTaskNote } from "@/lib/utils";
 import { getOwnerToken } from "@/lib/ownerToken";
 import { useScrollFadeRight } from "@/lib/useScrollFadeRight";
 import { liff } from "@/lib/liff";
@@ -248,6 +248,7 @@ export default function TaskListCard({
   }
 
   const st = taskStatus(task);
+  const visibleTaskNote = getVisibleTaskNote(task.note);
   const signupCount = signups.length;
   const orderNumber = {};
   signups.forEach((s, i) => {
@@ -397,7 +398,7 @@ export default function TaskListCard({
                   <span className="flex items-center gap-1"><Calendar size={12} />{task.start_date} ~ {task.end_date}</span>
                   <span className="flex items-center gap-1"><Users size={12} />{signupCount} 人已報名</span>
                 </div>
-                {task.note && <p className="text-xs text-gray-400 mt-2 border-t border-emerald-100 pt-2 whitespace-pre-wrap">備註：{task.note}</p>}
+                {visibleTaskNote && <p className="text-xs text-gray-400 mt-2 border-t border-emerald-100 pt-2 whitespace-pre-wrap">備註：{visibleTaskNote}</p>}
               </div>
 
               <div className="mb-3">
