@@ -2,7 +2,7 @@
 
 import QRCode from "qrcode";
 import { Download, Image as ImageIcon, Share2, QrCode, Users, CalendarDays, BadgeCheck } from "lucide-react";
-import { isQueueTask, taskStatus } from "@/lib/utils";
+import { isQueueTask, taskStatus, getVisibleTaskNote } from "@/lib/utils";
 
 const IMAGE_WIDTH = 1080;
 const IMAGE_HEIGHT = 1350;
@@ -80,7 +80,7 @@ async function buildShareSvg(task, url, signupCount = 0) {
   const queue = isQueueTask(task);
   const [titleLine1, titleLine2] = splitTitle(task.title || "接龍報名");
   const descriptionLines = splitInfo(task.description, 19, 2);
-  const noteLines = splitInfo(task.note, 19, 2);
+  const noteLines = splitInfo(getVisibleTaskNote(task.note), 19, 2);
   const dateRange = safeText(formatDateRange(task), 32);
   const rawStatus = taskStatus(task).label || "進行中";
   const status = safeText(taskLabel(rawStatus), 12);
@@ -277,7 +277,7 @@ export default function TaskShareImagePanel({ task, url, signupCount = 0, onToas
               <p className="text-[11px] text-emerald-600 font-semibold">接龍報名小助手</p>
               <p className="text-lg font-bold text-gray-800 mt-1 line-clamp-2">{task.title}</p>
               {task.description && <p className="text-xs text-gray-600 mt-2 line-clamp-2">簡介：{task.description}</p>}
-              {task.note && <p className="text-xs text-gray-500 mt-1 line-clamp-2">備註：{task.note}</p>}
+              {getVisibleTaskNote(task.note) && <p className="text-xs text-gray-500 mt-1 line-clamp-2">備註：{getVisibleTaskNote(task.note)}</p>}
               <p className="text-xs text-gray-400 mt-2">{formatDateRange(task)}</p>
             </div>
             <div className="w-20 h-20 rounded-2xl bg-white border border-gray-100 p-1.5 shrink-0 shadow-sm flex items-center justify-center"><QrCode size={44} className="text-gray-800" /></div>
