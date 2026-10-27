@@ -2,6 +2,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, CheckCircle2, X, AlertTriangle, ChevronDown } from "lucide-react";
+import TaskBannerField from "@/components/TaskBannerField";
+import { noteWithBanner } from "@/lib/taskConfig";
 import AutoGrowTextarea from "@/components/AutoGrowTextarea";
 import DatePickerField from "@/components/DatePickerField";
 import OnboardingTour, {
@@ -73,6 +75,8 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
   const [taskMode, setTaskMode] = useState("normal");
   const [shareEnabled, setShareEnabled] = useState(false);
   const [note, setNote] = useState("");
+  const [bannerUrl, setBannerUrl] = useState("");
+  const [bannerBusy, setBannerBusy] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [titleTouched, setTitleTouched] = useState(false);
@@ -145,6 +149,8 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
     quantityUnit.trim() !== "" ||
     taskMode !== "normal" ||
     shareEnabled ||
+    !!bannerUrl ||
+    bannerBusy ||
     note.trim() !== "" ||
     startDate !== defaults.current.start_date ||
     endDate !== defaults.current.end_date;
@@ -202,6 +208,7 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
   }
 
   async function handleSave() {
+    if (bannerBusy || saving) return;
     if (!title.trim()) {
       setTitleTouched(true);
       titleRef.current?.focus();
@@ -225,10 +232,10 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
           max_signups: maxSignups,
           quantity_unit: taskMode === "queue" ? "" : quantityUnit,
           task_mode: taskMode,
-          note: [
+          note: noteWithBanner([
             note.trim(),
             taskMode === "normal" && shareEnabled ? "__relay_native_share_enabled__" : "",
-          ].filter(Boolean).join("\n"),
+          ].filter(Boolean).join("\n"), bannerUrl),
         }),
       });
       const data = await res.json();
@@ -264,6 +271,8 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
             className={`${fieldClass} ${titleMissing ? "ring-2 ring-rose-300 bg-rose-50/60 focus:ring-rose-400" : ""}`}
           />
         </Field>
+
+        <TaskBannerField value={bannerUrl} onChange={setBannerUrl} accessToken={accessToken} onBusyChange={setBannerBusy} />
 
         <Field label="簡介" tourId="description">
           <AutoGrowTextarea
@@ -528,7 +537,7 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
       <div className="px-6 pb-6 pt-2" data-tour="save">
         <button
           onClick={handleSave}
-          disabled={saving}
+          disabled={saving || bannerBusy}
           className="w-full bg-emerald-500 disabled:opacity-60 text-white rounded-full py-3 font-semibold hover:bg-emerald-600 flex items-center justify-center gap-2 transition"
         >
           {saving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}

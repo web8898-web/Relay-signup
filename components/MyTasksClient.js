@@ -10,6 +10,7 @@ import TaskListCard from "@/components/TaskListCardStable";
 import { useLineProfile } from "@/lib/useLineProfile";
 import { avatarClass } from "@/lib/utils";
 import { supabase } from "@/lib/supabaseClient";
+import { getClientLanguage } from "@/lib/locale";
 
 const FRIEND_ADD_URL = "https://line.me/R/ti/p/%40085uqqfg";
 const FRIEND_BANNER_KEY = "friendBannerExpanded";
@@ -61,28 +62,15 @@ export default function MyTasksClient() {
   async function loadTasks() {
     if (!profile) return;
     setTasksLoading(true);
-    const { data } = await supabase
-      .from("tasks")
-      .select("*")
-      .eq("creator_id", profile.userId)
-      .order("created_at", { ascending: false });
-    setTasks(data || []);
-
-    if (data?.length) {
-      const { data: signupData } = await supabase
-        .from("signups")
-        .select("id, task_id, name, note, categories, quantity, category_quantities, checked_in, created_at")
-        .in("task_id", data.map((t) => t.id))
-        .order("created_at", { ascending: true });
+    try {
+      const response = await fetch("/api/tasks", { headers: { Authorization: `Bearer ${profile.accessToken}` }, cache: "no-store" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      setTasks(data.tasks || []);
       const map = {};
-      (signupData || []).forEach((s) => {
-        if (!map[s.task_id]) map[s.task_id] = [];
-        map[s.task_id].push(s);
-      });
+      for (const signup of data.signups || []) (map[signup.task_id] ||= []).push(signup);
       setSignupsByTask(map);
-    } else {
-      setSignupsByTask({});
-    }
+    } catch { showToast(getClientLanguage() === "en" ? "Unable to load tasks. Please sign in again." : "讀取任務失敗，請重新登入。"); }
     setTasksLoading(false);
   }
 

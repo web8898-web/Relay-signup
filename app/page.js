@@ -91,6 +91,7 @@ export default function HomePage() {
     setLanguage(nextLanguage);
     try {
       localStorage.setItem(HOME_LANGUAGE_KEY, nextLanguage);
+      window.dispatchEvent(new Event("relay-language-updated"));
     } catch (e) {}
     if (typeof document !== "undefined") {
       document.documentElement.lang = nextLanguage === "en" ? "en" : "zh-Hant";

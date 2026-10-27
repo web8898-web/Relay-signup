@@ -1,3 +1,4 @@
+import { SIGNUP_FIELDS } from "@/lib/signupFields";
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { isHeadcountUnit } from "@/lib/utils";
@@ -56,7 +57,7 @@ export async function PUT(request, { params }) {
       .from("signups")
       .update(update)
       .eq("id", params.id)
-      .select()
+      .select(SIGNUP_FIELDS)
       .single();
 
     if (error) throw error;

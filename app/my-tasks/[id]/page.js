@@ -9,10 +9,13 @@ import LoadingBubble from "@/components/LoadingBubble";
 import TaskGoneIllustration from "@/components/TaskGoneIllustration";
 import FadeIn from "@/components/FadeIn";
 import { useLineProfile } from "@/lib/useLineProfile";
+import { loadSignupList } from "@/lib/signupApi";
 import { supabase } from "@/lib/supabaseClient";
 import { getMySignupIds } from "@/lib/ownerToken";
 import { liff } from "@/lib/liff";
-import { taskStatus } from "@/lib/utils";
+import { downloadExport } from "@/lib/downloadExport";
+import { taskStatus, getVisibleCategories } from "@/lib/utils";
+import { getClientLanguage } from "@/lib/locale";
 
 export default function MyTaskDetailPage() {
   const { id } = useParams();
@@ -30,16 +33,7 @@ export default function MyTaskDetailPage() {
   // the phone's default browser (via LIFF's external window), which
   // handles downloads normally.
   function openExportUrl(format) {
-    const url = `${window.location.origin}/api/tasks/${id}/export?format=${format}`;
-    try {
-      if (liff.isInClient && liff.isInClient()) {
-        liff.openWindow({ url, external: true });
-        return;
-      }
-    } catch (e) {
-      // fall through to plain navigation
-    }
-    window.open(url, "_blank", "noopener,noreferrer");
+    return downloadExport(id, format, profile?.accessToken);
   }
 
   function handleExportCsv() {
@@ -51,20 +45,16 @@ export default function MyTaskDetailPage() {
   }
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || authLoading) return;
     (async () => {
       setLoading(true);
       const { data: taskData } = await supabase.from("tasks").select("*").eq("id", id).single();
       setTask(taskData || null);
-      const { data: signupData } = await supabase
-        .from("signups")
-        .select("*")
-        .eq("task_id", id)
-        .order("created_at", { ascending: true });
-      setSignups(signupData || []);
+      try { setSignups(await loadSignupList(id, profile?.accessToken)); setError(""); }
+      catch { setError(getClientLanguage() === "en" ? "Unable to load signups. Please sign in as the organizer." : "讀取名單失敗，請以主辦人身分登入。"); }
       setLoading(false);
     })();
-  }, [id]);
+  }, [id, authLoading, profile?.accessToken]);
 
   const pendingSignups = useMemo(() => signups.filter((s) => !s.checked_in), [signups]);
   const completedSignups = useMemo(() => signups.filter((s) => !!s.checked_in), [signups]);
@@ -246,7 +236,7 @@ export default function MyTaskDetailPage() {
               <ThreadList
                 signups={pendingSignups}
                 myIds={getMySignupIds()}
-                categories={task.categories}
+                categories={getVisibleCategories(task.categories)}
                 quantityUnit={task.quantity_unit}
                 onUpdate={async () => {}}
                 onDelete={async () => {}}
@@ -260,7 +250,7 @@ export default function MyTaskDetailPage() {
                 <ThreadList
                   signups={completedSignups}
                   myIds={getMySignupIds()}
-                  categories={task.categories}
+                  categories={getVisibleCategories(task.categories)}
                   quantityUnit={task.quantity_unit}
                   onUpdate={async () => {}}
                   onDelete={async () => {}}
@@ -274,7 +264,7 @@ export default function MyTaskDetailPage() {
           <ThreadList
             signups={signups}
             myIds={getMySignupIds()}
-            categories={task.categories}
+            categories={getVisibleCategories(task.categories)}
             quantityUnit={task.quantity_unit}
             onUpdate={async () => {}}
             onDelete={async () => {}}

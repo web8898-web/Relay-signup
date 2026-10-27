@@ -6,9 +6,10 @@ import {
   FileSpreadsheet, FileText, Bell, BellOff, ClipboardCheck, Check,
   RotateCcw, Copy, CheckCircle2, Search, X, Undo2, ChevronDown,
 } from "lucide-react";
-import { taskStatus, chipClass, avatarClass, relTime, batchInfoFor, isQueueTask as isQueueTaskConfig, getVisibleTaskNote } from "@/lib/utils";
+import { taskStatus, chipClass, avatarClass, relTime, batchInfoFor, isQueueTask as isQueueTaskConfig, getVisibleTaskNote, getVisibleCategories } from "@/lib/utils";
 import { getOwnerToken } from "@/lib/ownerToken";
 import { liff } from "@/lib/liff";
+import { downloadExport } from "@/lib/downloadExport";
 
 const EXPAND_EVENT = "relay-task-card-stable-expand";
 const MENU_EVENT = "relay-task-card-stable-menu";
@@ -158,14 +159,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
   }
 
   function openExportUrl(format) {
-    const url = `${window.location.origin}/api/tasks/${task.id}/export?format=${format}`;
-    try {
-      if (liff.isInClient && liff.isInClient()) {
-        liff.openWindow({ url, external: true });
-        return;
-      }
-    } catch {}
-    window.open(url, "_blank", "noopener,noreferrer");
+    return downloadExport(task.id, format, accessToken);
   }
 
   async function saveCheckin(signupId, checkedIn) {
@@ -366,7 +360,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
               </> : <div className="flex flex-wrap gap-1.5"><button onClick={(e) => { e.stopPropagation(); setAllCheckin(true); }} className="text-[10px] text-emerald-600 border border-emerald-200 rounded-full px-2 py-0.5">全部已到</button><button onClick={(e) => { e.stopPropagation(); setAllCheckin(false); }} className="text-[10px] text-gray-500 border border-gray-200 rounded-full px-2 py-0.5"><RotateCcw size={11} className="inline" /> 重設</button><button onClick={(e) => { e.stopPropagation(); const absent = signups.filter((s) => !checkedIds.has(s.id)).map((s) => s.name); navigator.clipboard?.writeText(`未報到（${absent.length} 位）：\n${absent.join("、")}`); }} className="text-[10px] text-gray-500 border border-gray-200 rounded-full px-2 py-0.5"><Copy size={11} className="inline" /> 複製未到名單</button></div>}
             </div>}
 
-            {!isQueueTask && task.categories?.length > 0 && signups.length >= SEARCH_MIN_SIGNUPS && <div className="flex gap-1.5 overflow-x-auto pb-2"><button onClick={(e) => { e.stopPropagation(); setFilter("全部"); }} className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${filter === "全部" ? "bg-emerald-700 text-white" : "bg-gray-50 text-gray-500"}`}>全部 {signupCount}</button>{task.categories.map((c) => <button key={c} onClick={(e) => { e.stopPropagation(); setFilter(c); }} className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${filter === c ? "bg-emerald-700 text-white" : "bg-gray-50 text-gray-500"}`}>{c} {categoryCounts[c] || 0}</button>)}</div>}
+            {!isQueueTask && getVisibleCategories(task.categories).length > 0 && signups.length >= SEARCH_MIN_SIGNUPS && <div className="flex gap-1.5 overflow-x-auto pb-2"><button onClick={(e) => { e.stopPropagation(); setFilter("全部"); }} className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${filter === "全部" ? "bg-emerald-700 text-white" : "bg-gray-50 text-gray-500"}`}>全部 {signupCount}</button>{getVisibleCategories(task.categories).map((c) => <button key={c} onClick={(e) => { e.stopPropagation(); setFilter(c); }} className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${filter === c ? "bg-emerald-700 text-white" : "bg-gray-50 text-gray-500"}`}>{c} {categoryCounts[c] || 0}</button>)}</div>}
 
             {filteredSignups.length === 0 ? <p className="text-xs text-gray-300 text-center py-4">還沒有人報名</p> : <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto">{filteredSignups.map((s, i) => {
               const done = checkedIds.has(s.id);

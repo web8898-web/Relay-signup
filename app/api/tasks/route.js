@@ -2,6 +2,28 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { verifyLineAccessToken, getBearerToken } from "@/lib/lineAuth";
 import { generateShortCode } from "@/lib/shortCode";
+import { SIGNUP_FIELDS } from "@/lib/signupFields";
+
+export const dynamic = "force-dynamic";
+
+export async function GET(request) {
+  try {
+    const profile = await verifyLineAccessToken(getBearerToken(request));
+    const supabase = getSupabaseAdmin();
+    const { data: tasks, error } = await supabase.from("tasks").select("*").eq("creator_id", profile.userId).order("created_at", { ascending: false });
+    if (error) throw error;
+    let signups = [];
+    if (tasks.length) {
+      const result = await supabase.from("signups").select(SIGNUP_FIELDS).in("task_id", tasks.map((task) => task.id))
+        .order("created_at", { ascending: true }).order("id", { ascending: true });
+      if (result.error) throw result.error;
+      signups = result.data;
+    }
+    return NextResponse.json({ tasks, signups }, { headers: { "Cache-Control": "no-store" } });
+  } catch {
+    return NextResponse.json({ error: "Unable to load your tasks. Please sign in again." }, { status: 403 });
+  }
+}
 
 const CONFIG_MARKERS = new Set([
   "__relay_category_single__",

@@ -114,12 +114,22 @@ npm run dev
 
 1. 把這個資料夾推到你自己的 GitHub repo。
 2. 到 https://vercel.com，選「Add New → Project」，選擇剛剛的 repo 匯入。
-3. 在 Vercel 專案設定的 **Environment Variables**，把 `.env.local` 裡的五個變數都加進去（跟本機一樣的值）。
+3. 在 Vercel 專案設定的 **Environment Variables**，把 `.env.local` 裡的變數都加進去（跟本機一樣的值）。截止通知另外需要 Production 的 `CRON_SECRET`（長隨機字串）及既有 LINE Messaging API 設定。
 4. 按下「Deploy」，等建置完成後會拿到一個正式網址，例如 `https://relay-signup.vercel.app`。
 5. **回到 LINE Developers Console**，把剛剛那個 LIFF App 的 **Endpoint URL** 改成這個正式網址，儲存。
 6. 之後如果綁定自己的網域，同樣要回來更新這個 Endpoint URL。
 
 到這裡，「建立任務」「LINE 登入」「分享到 LINE 群組」「點連結直接開啟指定任務」就全部是真的可以動作的功能了。
+
+### 2026-10-28 相容性與資料權限更新
+
+- `npm ci` 安裝鎖定版本；`npm test` 執行表單、語言、分享、排序及 API 權限回歸測試；`npm run build` 驗證正式建置。測試使用假資料，不連正式資料庫或發送 LINE 訊息。
+- 先部署包含 `/api/signups`、`/api/tasks` 與驗證匯出功能的版本，確認 Vercel Ready，再依序執行 `supabase/migrations/202610280001_notification_log.sql`、`202610280002_private_signups.sql`。兩份 migration 可重複執行，不修改現有任務或報名內容。
+- `notification_log` 補齊可重建的 schema，保留既有資料及 `(task_id, event_key)` 去重規則。`vercel.json` 安排每天 UTC 16:05（台北次日 00:05）呼叫截止通知；Vercel Hobby 的實際執行可能落在該小時內。部署前須確認 Production 已有 `CRON_SECRET`，未設定時 API 會拒絕執行。
+- 前端不再直接讀 `signups`。一般接龍仍公開顯示名單，現場排隊完整名單只供主辦人讀取，參加者維持使用 `/api/queue-status` 查看自己的資料。所有名單回應排除 `owner_token`，排序維持 `created_at ASC, id ASC`。
+- CSV／文字匯出先驗證 LINE 主辦人身分，再開啟兩分鐘有效、限指定任務的簽章下載網址，保留 LINE 外部瀏覽器下載方式。
+- 權限 migration 完成後，只能回復至仍透過上述 API 讀取名單的版本；不要回復舊版的公開 `signups` SELECT 權限。舊分頁可能需要重新整理。
+- 編輯任務會保留重複類別標記（代表必填）及隱藏備註 metadata；Banner、分類選擇及代理報名由所屬 React 表單處理，不再攔截全域 fetch。
 
 ---
 

@@ -5,6 +5,7 @@ import { avatarClass, chipClass, relTime, batchInfoFor } from "@/lib/utils";
 import { useScrollFadeRight } from "@/lib/useScrollFadeRight";
 import LoadingBubble from "@/components/LoadingBubble";
 import QuantityStepper from "@/components/QuantityStepper";
+import { toggleCategorySelection } from "@/lib/taskConfig";
 
 const PAGE_SIZE = 30;
 
@@ -27,6 +28,8 @@ export default function ThreadList({
   checkinMode,
   onToggleCheckin,
   queueMode = false,
+  categoryMode = "multiple",
+  categoryRequired = false,
 }) {
   const [filter, setFilter] = useState("全部");
   const [editingId, setEditingId] = useState(null);
@@ -117,19 +120,19 @@ export default function ThreadList({
   }
 
   function toggleEditCategory(c) {
-    setEditCategories((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
+    setEditCategories((prev) => toggleCategorySelection(prev, c, categoryMode));
     setEditCategoryQuantities((prev) => {
       if (prev[c] != null) {
         const next = { ...prev };
         delete next[c];
         return next;
       }
-      return { ...prev, [c]: 1 };
+      return categoryMode === "single" ? { [c]: 1 } : { ...prev, [c]: 1 };
     });
   }
 
   async function saveEdit(s) {
-    if (!editName.trim()) return;
+    if (!editName.trim() || (categoryRequired && !editCategories.length)) return;
     setBusy(true);
     await onUpdate(s.id, {
       name: editName.trim(),
@@ -314,7 +317,7 @@ export default function ThreadList({
                       />
                       <div className="flex gap-2 justify-end">
                         <button onClick={() => setEditingId(null)} className="text-xs text-gray-400 px-2">取消</button>
-                        <button disabled={busy} onClick={() => saveEdit(s)} className="text-xs bg-emerald-500 text-white px-3 py-1 rounded-full disabled:opacity-50">儲存</button>
+                        <button disabled={busy || !editName.trim() || (categoryRequired && !editCategories.length)} onClick={() => saveEdit(s)} className="text-xs bg-emerald-500 text-white px-3 py-1 rounded-full disabled:opacity-50">儲存</button>
                       </div>
                     </div>
                   ) : !nameOnly && (s.categories?.length > 0 || s.note || s.quantity != null) ? (
