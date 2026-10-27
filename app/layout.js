@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./task-banner.css";
 import "./task-card-actions.css";
 import "./love-layer-fix.css";
 import "./login-love-visibility.css";
@@ -23,12 +24,7 @@ import InnerHeaderShadow from "@/components/InnerHeaderShadow";
 import HeadcountCategoryQuantityFix from "@/components/HeadcountCategoryQuantityFix";
 import HomeLoveNameReplay from "@/components/HomeLoveNameReplay";
 import CategoryQuantityProxySignupHint from "@/components/CategoryQuantityProxySignupHint";
-import CategoryMultiSignupFix from "@/components/CategoryMultiSignupFix";
-import CreateTaskOptionsEnhancement from "@/components/CreateTaskOptionsEnhancement";
-import TaskCategorySelectionMode from "@/components/TaskCategorySelectionMode";
-import EditTaskConfigMarkerFix from "@/components/EditTaskConfigMarkerFix";
 import TutorialCloseButtonFeedback from "@/components/TutorialCloseButtonFeedback";
-import CreateTaskBannerCollapse from "@/components/CreateTaskBannerCollapse";
 import CreateTaskLeaveGuard from "@/components/CreateTaskLeaveGuard";
 
 const APP_TITLE = "接龍報名小助手";
@@ -241,11 +237,6 @@ export default function RootLayout({ children }) {
         <HeadcountCategoryQuantityFix />
         <HomeLoveNameReplay />
         <CategoryQuantityProxySignupHint />
-        <CategoryMultiSignupFix />
-        <CreateTaskOptionsEnhancement />
-        <CreateTaskBannerCollapse />
-        <TaskCategorySelectionMode />
-        <EditTaskConfigMarkerFix />
         <TutorialCloseButtonFeedback />
         <CreateTaskLeaveGuard />
         <div className="w-full max-w-md mx-auto min-h-screen bg-white shadow-xl relative flex flex-col">{children}</div>

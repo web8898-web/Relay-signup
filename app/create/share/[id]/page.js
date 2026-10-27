@@ -39,7 +39,8 @@ export default function ShareTaskPage() {
     (async () => {
       const { data } = await supabase.from("tasks").select("*").eq("id", id).single();
       setTask(data || null);
-      const { count } = await supabase.from("signups").select("id", { count: "exact", head: true }).eq("task_id", id);
+      const countResponse = await fetch(`/api/signups?task_id=${encodeURIComponent(id)}&count=1`, { cache: "no-store" });
+      const { count } = await countResponse.json();
       setSignupCount(count || 0);
       setLoading(false);
     })();

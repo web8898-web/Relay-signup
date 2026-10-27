@@ -20,10 +20,11 @@ import {
   Copy,
   CheckCircle2,
 } from "lucide-react";
-import { taskStatus, chipClass, avatarClass, relTime, batchInfoFor, getVisibleTaskNote } from "@/lib/utils";
+import { taskStatus, chipClass, avatarClass, relTime, batchInfoFor, getVisibleTaskNote, getVisibleCategories } from "@/lib/utils";
 import { getOwnerToken } from "@/lib/ownerToken";
 import { useScrollFadeRight } from "@/lib/useScrollFadeRight";
 import { liff } from "@/lib/liff";
+import { downloadExport } from "@/lib/downloadExport";
 
 const REVEAL_WIDTH = 84;
 const DELETE_FRACTION = 0.55;
@@ -46,7 +47,7 @@ export default function TaskListCard({
   const [notifyBusy, setNotifyBusy] = useState(false);
   const [checkinMode, setCheckinMode] = useState(false);
   const [checkedIds, setCheckedIds] = useState(() => new Set());
-  const [filterScrollRef, filterSentinelRef, filterCanScrollRight] = useScrollFadeRight(expanded && task.categories?.length > 0);
+  const [filterScrollRef, filterSentinelRef, filterCanScrollRight] = useScrollFadeRight(expanded && getVisibleCategories(task.categories).length > 0);
 
   const cardRef = useRef(null);
   const touchStateRef = useRef(null);
@@ -184,14 +185,7 @@ export default function TaskListCard({
   }
 
   function openExportUrl(format) {
-    const url = `${window.location.origin}/api/tasks/${task.id}/export?format=${format}`;
-    try {
-      if (liff.isInClient && liff.isInClient()) {
-        liff.openWindow({ url, external: true });
-        return;
-      }
-    } catch (e) {}
-    window.open(url, "_blank", "noopener,noreferrer");
+    return downloadExport(task.id, format, accessToken);
   }
 
   function handleExportCsv(e) {
@@ -433,7 +427,7 @@ export default function TaskListCard({
                   </div>
                 )}
 
-                {task.categories?.length > 0 && (
+                {getVisibleCategories(task.categories).length > 0 && (
                   <div className="relative -mx-0.5">
                     <div ref={filterScrollRef} className="flex gap-1.5 overflow-x-auto pb-2 px-0.5">
                       <button onClick={() => setFilter("全部")} className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${filter === "全部" ? "bg-emerald-700 text-white border-emerald-700" : "bg-gray-50 text-gray-500 border-gray-200"}`}>
@@ -442,7 +436,7 @@ export default function TaskListCard({
                       <button onClick={() => setFilter(NO_CATEGORY)} className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${filter === NO_CATEGORY ? "bg-emerald-700 text-white border-emerald-700" : "bg-white text-emerald-600/70 border-emerald-200 border-dashed"}`}>
                         沒選類別 <span className={`ml-1 ${filter === NO_CATEGORY ? "text-white/70" : "text-emerald-400"}`}>{noCategoryCount}</span>
                       </button>
-                      {task.categories.map((c) => (
+                      {getVisibleCategories(task.categories).map((c) => (
                         <button key={c} onClick={() => setFilter(c)} className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full border ${filter === c ? "bg-emerald-700 text-white border-emerald-700" : "bg-gray-50 text-gray-500 border-gray-200"}`}>
                           {c} <span className={`ml-1 ${filter === c ? "text-white/70" : "opacity-60"}`}>{categoryCounts[c] || 0}</span>
                         </button>

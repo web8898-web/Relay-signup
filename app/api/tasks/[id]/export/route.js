@@ -1,9 +1,27 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabaseClient";
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+import { getBearerToken, verifyLineAccessToken } from "@/lib/lineAuth";
+import { createExportTicket, readExportTicket } from "@/lib/exportTicket";
+import { SIGNUP_FIELDS } from "@/lib/signupFields";
 
-function fmtTime(iso) {
+export const dynamic = "force-dynamic";
+
+export async function POST(request, { params }) {
   try {
-    return new Date(iso).toLocaleString("zh-TW", {
+    const profile = await verifyLineAccessToken(getBearerToken(request));
+    const supabase = getSupabaseAdmin();
+    const { data: task } = await supabase.from("tasks").select("creator_id").eq("id", params.id).single();
+    if (!task || task.creator_id !== profile.userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const body = await request.json();
+    const ticket = createExportTicket(params.id, body.format === "txt" ? "txt" : "csv", body.language === "en" ? "en" : "zh", process.env.SUPABASE_SERVICE_ROLE_KEY);
+    return NextResponse.json({ url: `/api/tasks/${params.id}/export?ticket=${ticket}` }, { headers: { "Cache-Control": "no-store" } });
+  } catch { return NextResponse.json({ error: "Unable to authorize export" }, { status: 403 }); }
+}
+
+function fmtTime(iso, language = "zh") {
+  try {
+    return new Date(iso).toLocaleString(language === "en" ? "en-US" : "zh-TW", {
+      timeZone: "Asia/Taipei",
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
@@ -26,14 +44,19 @@ function csvEscape(value) {
   return str;
 }
 
-// GET /api/tasks/:id/export?format=csv|txt
+// GET /api/tasks/:id/export?ticket=<short-lived signed ticket>
 // Returns a real, directly-downloadable file (with Content-Disposition)
 // instead of a client-generated blob — LINE's in-app browser often can't
 // handle blob-based downloads, but a normal file URL works fine, especially
 // when opened in the phone's default browser.
 export async function GET(request, { params }) {
   const { searchParams } = new URL(request.url);
-  const format = searchParams.get("format") === "txt" ? "txt" : "csv";
+  const ticket = readExportTicket(searchParams.get("ticket"), params.id, process.env.SUPABASE_SERVICE_ROLE_KEY);
+  if (!ticket) return NextResponse.json({ error: "Export link is invalid or expired" }, { status: 403 });
+  const supabase = getSupabaseAdmin();
+  const format = ticket.format;
+  const en = ticket.language === "en";
+  const t = (zh, english) => en ? english : zh;
 
   const { data: task } = await supabase.from("tasks").select("*").eq("id", params.id).single();
   if (!task) {
@@ -42,7 +65,7 @@ export async function GET(request, { params }) {
 
   const { data: signupData } = await supabase
     .from("signups")
-    .select("*")
+    .select(SIGNUP_FIELDS)
     .eq("task_id", params.id)
     .order("created_at", { ascending: true });
   const list = signupData || [];
@@ -65,7 +88,7 @@ export async function GET(request, { params }) {
     });
   }
   const categoryTotalsText = Object.entries(categoryTotals)
-    .map(([cat, qty]) => `${cat} 共 ${qty} ${task.quantity_unit}`)
+    .map(([cat, qty]) => `${cat} ${t("共", "total")} ${qty} ${task.quantity_unit}`)
     .join("、");
 
   function quantityDetailText(s) {
@@ -79,15 +102,15 @@ export async function GET(request, { params }) {
 
   if (format === "csv") {
     const headers = hasQuantity
-      ? ["編號", "姓名", "分類", `數量明細（${task.quantity_unit}）`, "備註", "報名時間"]
-      : ["編號", "姓名", "分類", "備註", "報名時間"];
+      ? [t("編號", "No."), t("姓名", "Name"), t("分類", "Category"), `${t("數量明細", "Quantity details")} (${task.quantity_unit})`, t("備註", "Notes"), t("報名時間", "Signup time")]
+      : [t("編號", "No."), t("姓名", "Name"), t("分類", "Category"), t("備註", "Notes"), t("報名時間", "Signup time")];
     const rows = list.map((s, i) =>
       hasQuantity
-        ? [i + 1, s.name, s.categories?.join("、") || "", quantityDetailText(s), s.note || "", fmtTime(s.created_at)]
-        : [i + 1, s.name, s.categories?.join("、") || "", s.note || "", fmtTime(s.created_at)]
+        ? [i + 1, s.name, s.categories?.join("、") || "", quantityDetailText(s), s.note || "", fmtTime(s.created_at, ticket.language)]
+        : [i + 1, s.name, s.categories?.join("、") || "", s.note || "", fmtTime(s.created_at, ticket.language)]
     );
     if (hasQuantity) {
-      rows.push(["", "", "", `合計：${totalQuantity} ${task.quantity_unit}`, "", ""]);
+      rows.push(["", "", "", `${t("合計：", "Total: ")}${totalQuantity} ${task.quantity_unit}`, "", ""]);
       if (categoryTotalsText) rows.push(["", "", "", categoryTotalsText, "", ""]);
     }
     content = "\uFEFF" + [headers, ...rows].map((r) => r.map(csvEscape).join(",")).join("\r\n");
@@ -95,20 +118,20 @@ export async function GET(request, { params }) {
     ext = "csv";
   } else {
     const lines = [];
-    lines.push(`任務：${task.title}`);
-    lines.push(`匯出時間：${fmtTime(new Date().toISOString())}`);
-    lines.push(`總計：${list.length} 人報名`);
+    lines.push(`${t("任務：", "Task: ")}${task.title}`);
+    lines.push(`${t("匯出時間：", "Export time: ")}${fmtTime(new Date().toISOString(), ticket.language)}`);
+    lines.push(en ? `Total: ${list.length} signups` : `總計：${list.length} 人報名`);
     if (hasQuantity) {
-      lines.push(`合計數量：${totalQuantity} ${task.quantity_unit}`);
-      if (categoryTotalsText) lines.push(`分類合計：${categoryTotalsText}`);
+      lines.push(`${t("合計數量：", "Total quantity: ")}${totalQuantity} ${task.quantity_unit}`);
+      if (categoryTotalsText) lines.push(`${t("分類合計：", "Category totals: ")}${categoryTotalsText}`);
     }
     lines.push("");
     list.forEach((s, i) => {
       const parts = [`${i + 1}. ${s.name}`];
-      if (s.categories?.length > 0) parts.push(`分類：${s.categories.join("、")}`);
-      if (hasQuantity) parts.push(`數量：${quantityDetailText(s) || "-"} ${task.quantity_unit}`);
-      parts.push(`備註：${s.note || "無"}`);
-      parts.push(`報名時間：${fmtTime(s.created_at)}`);
+      if (s.categories?.length > 0) parts.push(`${t("分類：", "Category: ")}${s.categories.join("、")}`);
+      if (hasQuantity) parts.push(`${t("數量：", "Quantity: ")}${quantityDetailText(s) || "-"} ${task.quantity_unit}`);
+      parts.push(`${t("備註：", "Notes: ")}${s.note || t("無", "None")}`);
+      parts.push(`${t("報名時間：", "Signup time: ")}${fmtTime(s.created_at, ticket.language)}`);
       lines.push(parts.join("　"));
     });
     content = "\uFEFF" + lines.join("\n");
@@ -116,11 +139,13 @@ export async function GET(request, { params }) {
     ext = "txt";
   }
 
-  const filename = `${safeFilename(task.title)}-報名名單.${ext}`;
+  const filename = `${safeFilename(task.title)}-${en ? "signups" : "報名名單"}.${ext}`;
 
   return new NextResponse(content, {
     headers: {
       "Content-Type": mime,
+      "Cache-Control": "private, no-store",
+      "Referrer-Policy": "no-referrer",
       "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
     },
   });

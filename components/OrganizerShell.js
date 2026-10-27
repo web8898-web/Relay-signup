@@ -7,6 +7,7 @@ import LoadingBubble from "@/components/LoadingBubble";
 import FadeIn from "@/components/FadeIn";
 import { useLineProfile } from "@/lib/useLineProfile";
 import { avatarClass } from "@/lib/utils";
+import { useLanguage } from "@/lib/useLanguage";
 import OrganizerContext from "@/lib/OrganizerContext";
 
 // This shell is rendered once by app/(organizer)/layout.js and wraps both
@@ -18,6 +19,7 @@ import OrganizerContext from "@/lib/OrganizerContext";
 // FadeIn so that swap itself still feels soft instead of an abrupt cut.
 export default function OrganizerShell({ children }) {
   const pathname = usePathname();
+  const en = useLanguage() === "en";
   const { profile, loading, error, login } = useLineProfile();
   const isTasks = pathname?.startsWith("/my-tasks");
   const title = isTasks ? "任務清單" : "建立任務";
@@ -41,11 +43,11 @@ export default function OrganizerShell({ children }) {
           <div className="w-20 h-20 rounded-full bg-emerald-500 text-white flex items-center justify-center mb-6 shadow-lg shadow-emerald-200">
             <MessageCircle size={34} />
           </div>
-          <p className="text-gray-500 text-sm text-center mb-8 leading-relaxed">
+          <p data-no-auto-i18n="true" className="text-gray-500 text-sm text-center mb-8 leading-relaxed">
             {isTasks ? (
-              <>請先使用 LINE 登入，<br />才能查看你建立的任務。</>
+              <>{en ? "Please sign in with LINE" : "請先使用 LINE 登入，"}<br />{en ? "to view your tasks." : "才能查看你建立的任務。"}</>
             ) : (
-              <>建立任務前，請先使用 LINE 登入，<br />這樣才能管理你建立的任務。</>
+              <>{en ? "Sign in with LINE before creating a task" : "建立任務前，請先使用 LINE 登入，"}<br />{en ? "so you can manage it afterwards." : "這樣才能管理你建立的任務。"}</>
             )}
           </p>
           {error && <p className="text-xs text-rose-500 mb-4">{error}</p>}

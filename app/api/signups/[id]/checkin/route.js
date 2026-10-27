@@ -1,3 +1,4 @@
+import { SIGNUP_FIELDS } from "@/lib/signupFields";
 // 點名／現場處理 API：主辦人在任務內容頁勾選或取消某位報名者。
 //
 // 支援兩種權限：
@@ -53,7 +54,7 @@ export async function PATCH(request, { params }) {
       .from("signups")
       .update({ checked_in: !!checked_in })
       .eq("id", params.id)
-      .select()
+      .select(SIGNUP_FIELDS)
       .single();
     if (error) throw error;
 

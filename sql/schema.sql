@@ -31,6 +31,7 @@ create table if not exists signups (
   category_quantities jsonb not null default '{}',
   owner_token text not null,
   checked_in boolean not null default false,
+  batch_id uuid,
   created_at timestamptz not null default now()
 );
 
@@ -47,9 +48,12 @@ alter table signups enable row level security;
 create policy "public can read tasks" on tasks
   for select using (true);
 
-create policy "public can read signups" on signups
-  for select using (true);
+-- Only server API routes may read participant rows and owner credentials.
+revoke all privileges on public.signups from public, anon, authenticated;
+grant all privileges on public.signups to service_role;
 
 -- No insert/update/delete policies for the anon role are created on
 -- purpose. All writes go through /app/api/* route handlers, which use the
 -- service role key (bypasses RLS) after verifying the request server-side.
+
+-- Apply supabase/migrations/202610280001_notification_log.sql for notifications.

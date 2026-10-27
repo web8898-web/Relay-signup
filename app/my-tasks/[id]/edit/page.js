@@ -10,6 +10,7 @@ import TaskGoneIllustration from "@/components/TaskGoneIllustration";
 import FadeIn from "@/components/FadeIn";
 import EditTaskTour, { shouldOfferEditTaskTour } from "@/components/EditTaskTour";
 import { useLineProfile } from "@/lib/useLineProfile";
+import { visibleCategories, visibleNote, mergeTaskCategories, mergeTaskNote } from "@/lib/taskConfig";
 import { chipClass } from "@/lib/utils";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -105,13 +106,13 @@ export default function EditTaskPage() {
 function EditForm({ task, accessToken, onSaved, onLeave }) {
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || "");
-  const [categories, setCategories] = useState(task.categories || []);
+  const [categories, setCategories] = useState(visibleCategories(task.categories || []));
   const [catInput, setCatInput] = useState("");
   const [startDate, setStartDate] = useState(task.start_date);
   const [endDate, setEndDate] = useState(task.end_date);
   const [maxSignups, setMaxSignups] = useState(task.max_signups != null ? String(task.max_signups) : "");
   const [quantityUnit, setQuantityUnit] = useState(task.quantity_unit || "");
-  const [note, setNote] = useState(task.note || "");
+  const [note, setNote] = useState(visibleNote(task.note));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
@@ -122,10 +123,10 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
   const original = useRef({
     title: task.title,
     description: task.description || "",
-    categories: task.categories || [],
+    categories: visibleCategories(task.categories || []),
     start_date: task.start_date,
     end_date: task.end_date,
-    note: task.note || "",
+    note: visibleNote(task.note),
     max_signups: task.max_signups != null ? String(task.max_signups) : "",
     quantity_unit: task.quantity_unit || "",
   });
@@ -207,12 +208,12 @@ function EditForm({ task, accessToken, onSaved, onLeave }) {
         body: JSON.stringify({
           title: title.trim(),
           description: description.trim(),
-          categories,
+          categories: mergeTaskCategories(categories, task.categories || []),
           start_date: startDate,
           end_date: endDate,
           max_signups: maxSignups,
           quantity_unit: quantityUnit,
-          note: note.trim(),
+          note: mergeTaskNote(note, task.note),
         }),
       });
       const data = await res.json();

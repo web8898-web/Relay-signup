@@ -11,9 +11,13 @@ import FadeIn from "@/components/FadeIn";
 import Toast from "@/components/Toast";
 import QuantityStepper from "@/components/QuantityStepper";
 import ConfettiSuccess from "@/components/ConfettiSuccess";
+import { loadSignupList } from "@/lib/signupApi";
 import { supabase } from "@/lib/supabaseClient";
-import { taskStatus, isHeadcountUnit, isQueueTask as isQueueTaskConfig, getVisibleCategories } from "@/lib/utils";
+import { taskStatus, isHeadcountUnit, isQueueTask as isQueueTaskConfig, getVisibleCategories, getCategorySelectionMode } from "@/lib/utils";
 import { getOwnerToken, getMySignupIds, rememberMySignup, forgetMySignup } from "@/lib/ownerToken";
+import { toggleCategorySelection } from "@/lib/taskConfig";
+import { useLanguage } from "@/lib/useLanguage";
+import ProxySignupFields from "@/components/ProxySignupFields";
 import { useScrollFadeRight } from "@/lib/useScrollFadeRight";
 
 const CATEGORY_SINGLE_MARKER = "__relay_category_single__";
@@ -38,6 +42,8 @@ export default function TaskDetailClient() {
   const [loading, setLoading] = useState(true);
   const [task, setTask] = useState(null);
   const [signups, setSignups] = useState([]);
+  const [proxyEntries, setProxyEntries] = useState([]);
+  const en = useLanguage() === "en";
   const [myIds, setMyIds] = useState([]);
   const [categories, setCategories] = useState([]);
   const [name, setName] = useState("");
@@ -105,12 +111,8 @@ export default function TaskDetailClient() {
 
   async function refreshSignups() {
     if (!id) return;
-    const { data: signupData } = await supabase
-      .from("signups")
-      .select("*")
-      .eq("task_id", id)
-      .order("created_at", { ascending: true });
-    setSignups(signupData || []);
+    try { setSignups(await loadSignupList(id)); }
+    catch { setError(en ? "Unable to load signups. Please try again." : "讀取報名名單失敗，請再試一次。"); }
     setMyIds(getMySignupIds());
   }
 
@@ -179,7 +181,7 @@ export default function TaskDetailClient() {
   }, [myWaitingSignup?.id]);
 
   function toggleCategory(c) {
-    setCategories((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
+    setCategories((prev) => toggleCategorySelection(prev, c, getCategorySelectionMode(task)));
     if (categoryError) setCategoryError("");
     setCategoryQuantities((prev) => {
       if (prev[c] != null) {
@@ -187,7 +189,7 @@ export default function TaskDetailClient() {
         delete next[c];
         return next;
       }
-      return { ...prev, [c]: 1 };
+      return getCategorySelectionMode(task) === "single" ? { [c]: 1 } : { ...prev, [c]: 1 };
     });
   }
 
@@ -212,6 +214,10 @@ export default function TaskDetailClient() {
       setCategoryError("請至少選擇一個分類");
       return;
     }
+    if (categoryRequired && proxyEntries.some((entry) => entry.name.trim() && !entry.categories.length)) {
+      setCategoryError(en ? "Select a category for each additional participant." : "請為每位代報者至少選擇一個分類");
+      return;
+    }
     setSending(true);
     setError("");
     setCategoryError("");
@@ -227,6 +233,7 @@ export default function TaskDetailClient() {
           note: isQueueTask || isMultiActive ? "" : note.trim(),
           quantity: usesStandaloneQuantity ? quantity : undefined,
           category_quantities: !isQueueTask && usesPerCategoryQuantity && categories.length > 0 ? categoryQuantities : undefined,
+          proxy_entries: taskHasCategories && !task.quantity_unit ? proxyEntries.filter((entry) => entry.name.trim()) : undefined,
           owner_token: getOwnerToken(),
         }),
       });
@@ -239,6 +246,7 @@ export default function TaskDetailClient() {
       created.forEach((sg) => sg?.id && rememberMySignup(sg.id));
       setMyIds(getMySignupIds());
       setName("");
+      setProxyEntries([]);
       setNames([""]);
       setNote("");
       setQuantity(1);
@@ -479,6 +487,8 @@ export default function TaskDetailClient() {
             signups={queueDisplaySignups}
             myIds={myIds}
             categories={visibleTaskCategories}
+            categoryMode={getCategorySelectionMode(task)}
+            categoryRequired={categoryRequired}
             quantityUnit={task.quantity_unit}
             nameOnly={viewOnly || isQueueTask}
             closed={closed}
@@ -510,8 +520,8 @@ export default function TaskDetailClient() {
           <div ref={formSectionRef} className="px-6 pb-6 pt-3 border-t-2 border-emerald-100 bg-emerald-50/40 min-w-0 overflow-hidden">
             {taskHasCategories && (
               <>
-                <p className="text-[11px] font-semibold text-emerald-700 mb-1.5 px-0.5">
-                  👉 選擇您要報名的類別{categoryRequired ? "（必選）" : "（可複選）"}
+                <p data-no-auto-i18n="true" className="text-[11px] font-semibold text-emerald-700 mb-1.5 px-0.5">
+                  👉 {en ? "Choose your categories" : "選擇您要報名的類別"}（{getCategorySelectionMode(task) === "single" ? (en ? "Single" : "單選") : (en ? "Multiple" : "可複選")}{categoryRequired ? (en ? " · Required" : "・必選") : ""}）
                 </p>
                 <div className={`relative -mx-1 ${categoryError ? "ring-1 ring-rose-300 rounded-xl" : ""}`}>
                   <div ref={catScrollRef} className="flex gap-1.5 overflow-x-auto pb-2 mb-1 px-1">
@@ -580,6 +590,7 @@ export default function TaskDetailClient() {
                   value={name}
                   onChange={(e) => {
                     setName(e.target.value);
+                    if (!e.target.value.trim()) setProxyEntries([]);
                     if (error) setError("");
                   }}
                   placeholder={isQueueTask ? "你的姓名（現場排隊限本人）" : "你的姓名"}
@@ -588,6 +599,7 @@ export default function TaskDetailClient() {
                   }`}
                 />
               )}
+              {taskHasCategories && !task.quantity_unit && name.trim() && <ProxySignupFields categories={visibleTaskCategories} mode={getCategorySelectionMode(task)} required={categoryRequired} entries={proxyEntries} onChange={setProxyEntries} />}
               {isQueueTask && (
                 <p className="text-[11px] text-emerald-600 px-2 -mt-0.5">現場排隊僅限本人報名，不能幫別人報名。</p>
               )}

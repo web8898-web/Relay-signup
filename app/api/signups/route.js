@@ -2,6 +2,39 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { notifySignupActivity } from "@/lib/smartNotify";
 import { isHeadcountUnit, getVisibleCategories, getCategorySelectionMode } from "@/lib/utils";
+import { isQueueTask as isQueueTaskConfig } from "@/lib/utils";
+import { getBearerToken, verifyLineAccessToken } from "@/lib/lineAuth";
+import { SIGNUP_FIELDS } from "@/lib/signupFields";
+
+export const dynamic = "force-dynamic";
+
+export async function GET(request) {
+  try {
+    const params = new URL(request.url).searchParams;
+    const taskId = params.get("task_id");
+    if (!taskId) return NextResponse.json({ error: "Missing task ID" }, { status: 400 });
+    const supabase = getSupabaseAdmin();
+    const { data: task, error } = await supabase.from("tasks").select("id,title,task_mode,categories,creator_id").eq("id", taskId).maybeSingle();
+    if (error || !task) return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    if (params.get("count") === "1") {
+      let query = supabase.from("signups").select("id", { count: "exact", head: true }).eq("task_id", taskId);
+      if (isQueueTaskConfig(task)) query = query.eq("checked_in", false);
+      const { count, error: countError } = await query;
+      if (countError) throw countError;
+      return NextResponse.json({ count }, { headers: { "Cache-Control": "no-store" } });
+    }
+    if (isQueueTaskConfig(task)) {
+      const profile = await verifyLineAccessToken(getBearerToken(request));
+      if (profile.userId !== task.creator_id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    const { data, error: listError } = await supabase.from("signups").select(SIGNUP_FIELDS).eq("task_id", taskId)
+      .order("created_at", { ascending: true }).order("id", { ascending: true });
+    if (listError) throw listError;
+    return NextResponse.json({ signups: data }, { headers: { "Cache-Control": "no-store" } });
+  } catch {
+    return NextResponse.json({ error: "Unable to load signups" }, { status: 403 });
+  }
+}
 
 const DUPLICATE_WINDOW_MS = 30_000;
 const TASK_FIELDS = "id, title, categories, end_date, creator_id, notify_enabled, max_signups, quantity_unit, task_mode";
@@ -160,7 +193,7 @@ export async function POST(request) {
         { task_id, categories: selectedCategories, name: String(name).slice(0, 60), note: String(note || "").slice(0, 500), quantity: null, category_quantities: {}, owner_token, batch_id: batchId },
         ...cleanProxyEntries.map((entry) => ({ task_id, categories: entry.categories, name: entry.name, note: "", quantity: null, category_quantities: {}, owner_token, batch_id: batchId })),
       ].map((row, index) => ({ ...row, created_at: orderedCreatedAt(batchCreatedAt, index) }));
-      const { data: inserted, error: proxyErr } = await supabase.from("signups").insert(rows).select();
+      const { data: inserted, error: proxyErr } = await supabase.from("signups").insert(rows).select(SIGNUP_FIELDS);
       if (proxyErr) throw proxyErr;
       await notifySignupActivity({ supabase, task, signup: inserted?.[inserted.length - 1] });
       return NextResponse.json({ signups: inserted, count: inserted.length });
@@ -180,7 +213,7 @@ export async function POST(request) {
         batch_id: batchId,
         created_at: orderedCreatedAt(batchCreatedAt, index),
       }));
-      const { data: inserted, error: multiErr } = await supabase.from("signups").insert(rows).select();
+      const { data: inserted, error: multiErr } = await supabase.from("signups").insert(rows).select(SIGNUP_FIELDS);
       if (multiErr) throw multiErr;
       await notifySignupActivity({ supabase, task, signup: inserted?.[inserted.length - 1] });
       return NextResponse.json({ signups: inserted, count: inserted.length });
@@ -190,7 +223,7 @@ export async function POST(request) {
       task_id, categories: isQueueTask ? [] : selectedCategories, name: String(name).slice(0, 60),
       note: isQueueTask ? "" : String(note || "").slice(0, 500), quantity: isQueueTask ? null : quantityValue,
       category_quantities: isQueueTask ? {} : categoryQuantitiesValue, owner_token,
-    }).select().single();
+    }).select(SIGNUP_FIELDS).single();
     if (error) throw error;
     await notifySignupActivity({ supabase, task, signup: data });
     return NextResponse.json({ signup: data });
