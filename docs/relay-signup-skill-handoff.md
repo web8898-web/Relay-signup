@@ -8,6 +8,7 @@
 - 分析及測試基準：`686054c70a60c351394fad66171df8ccc7d4005b`；tree `c1db890f98be6f61f0ddaffde8676d78b2d7b8ee`，GitHub API 與本機 Git 相符。
 - 提交分支：`codex/relay-signup-builder-docs`。先建立獨立分支；工作中原目錄出現其他變更，後改用固定在上述 commit 的隔離 checkout。那些網站修改未審核、未納入本 PR；本文件不對它們作狀態宣告。
 - Skill 原始碼位置：`.agents/skills/relay-signup-builder/`。它是此次 PR 的待審查版本，非已合併產品版本。
+- Pull Request：[PR #35](https://github.com/web8898-web/Relay-signup/pull/35)，已建立並附加至工作聊天，未合併。GitHub files API 已確認僅本文件與 12 個 Skill 檔，共 13 個新增檔案。
 
 ## 全部新增檔案（13 個）
 
@@ -39,6 +40,8 @@
 也可自然說「先查 Dropbox AI Skill，修正接龍候位頁的錯誤人數，保留隨機等待小人」。目前持續偏好已要求先查 Dropbox；索引新增 relay-signup-builder、同名資料夾及 ZIP。路徑由使用者 AGENTS.md 提供，不在執行流程中硬編不同電腦的帳號。
 
 Dropbox 保存可讀候選副本；索引註記本次分支、來源 commit／PR。Dropbox 資料夾本身不是 Codex 固定掃描位置，自動查找依賴既有偏好及存取權；repo 的 .agents/skills 可直接被發現。格式依 [OpenAI 官方 Skill 文件](https://learn.chatgpt.com/docs/build-skills)，初始化及結構驗證使用內建 skill-creator 工具。
+
+已寫入本機 Dropbox 同步資料夾的 relay-signup-builder/、relay-signup-builder.zip 與 SKILLS_INDEX.md 新項目，保留既有 website-redesign-cms。12 個檔案與 Git Skill 來源及 ZIP 解壓內容逐一相同，索引相對連結全部存在；ZIP SHA-256：`773a51ac2118aeca85934fa3b22046d22ba40ac5e1d01fe56c23174c144caf61`。此驗證為本機檔案一致性，未另查 Dropbox 服務端同步狀態。
 
 ## 已確認功能與缺口
 
