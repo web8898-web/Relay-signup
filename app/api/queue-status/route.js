@@ -29,39 +29,13 @@ export async function POST(request) {
       return NextResponse.json({ error: "這不是現場排隊任務" }, { status: 400 });
     }
 
-    // 排名計算只讀取非個資欄位；其他排隊者姓名、備註等資料不會回傳給前端。
-    const { data: queueRows, error: queueError } = await supabase
-      .from("signups")
-      .select("id, owner_token, checked_in, created_at")
-      .eq("task_id", taskId)
-      .order("created_at", { ascending: true });
-    if (queueError) throw queueError;
-
-    // 只取得目前瀏覽器自己建立的排隊資料。
-    const { data: mySignups, error: mineError } = await supabase
-      .from("signups")
-      .select("id, task_id, name, checked_in, created_at")
-      .eq("task_id", taskId)
-      .eq("owner_token", ownerToken)
-      .order("created_at", { ascending: true });
-    if (mineError) throw mineError;
-
-    const rows = queueRows || [];
-    const waitingRows = rows.filter((row) => !row.checked_in);
-    const completedRows = rows.filter((row) => row.checked_in);
-    const myWaiting = (mySignups || []).find((row) => !row.checked_in) || null;
-    const queueNumber = myWaiting
-      ? waitingRows.findIndex((row) => row.id === myWaiting.id) + 1
-      : 0;
+    const { data: snapshot, error: snapshotError } = await supabase.rpc("queue_status_snapshot", {
+      p_task_id: taskId, p_owner_token: ownerToken,
+    });
+    if (snapshotError) throw snapshotError;
 
     return NextResponse.json(
-      {
-        waiting_count: waitingRows.length,
-        completed_count: completedRows.length,
-        queue_number: queueNumber > 0 ? queueNumber : 0,
-        people_ahead: queueNumber > 0 ? queueNumber - 1 : 0,
-        my_signups: mySignups || [],
-      },
+      snapshot,
       {
         headers: {
           "Cache-Control": "no-store, max-age=0",

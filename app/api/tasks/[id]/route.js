@@ -1,11 +1,13 @@
+import { validateTaskDatesAndTitle } from "@/lib/taskValidation";
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { verifyLineAccessToken, getBearerToken } from "@/lib/lineAuth";
 
 async function assertOwnership(supabase, taskId, userId) {
-  const { data, error } = await supabase.from("tasks").select("creator_id").eq("id", taskId).single();
+  const { data, error } = await supabase.from("tasks").select("creator_id,title,start_date,end_date").eq("id", taskId).single();
   if (error || !data) throw new Error("找不到這個任務");
   if (data.creator_id !== userId) throw new Error("你不是這個任務的建立者");
+  return data;
 }
 
 // Parses the optional "報名人數上限" field. Empty/blank/zero/invalid all
@@ -23,11 +25,12 @@ export async function PUT(request, { params }) {
     const token = getBearerToken(request);
     const profile = await verifyLineAccessToken(token);
     const supabase = getSupabaseAdmin();
-    await assertOwnership(supabase, params.id, profile.userId);
+    const current = await assertOwnership(supabase, params.id, profile.userId);
 
     const body = await request.json();
+    validateTaskDatesAndTitle({ ...current, ...body });
     const update = {};
-    if (body.title !== undefined) update.title = String(body.title).slice(0, 200);
+    if (body.title !== undefined) update.title = body.title.trim().slice(0, 200);
     if (body.description !== undefined) update.description = String(body.description || "").slice(0, 2000);
     if (body.categories !== undefined) update.categories = Array.isArray(body.categories) ? body.categories.slice(0, 30) : [];
     if (body.start_date !== undefined) update.start_date = body.start_date;

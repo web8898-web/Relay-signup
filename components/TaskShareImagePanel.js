@@ -2,7 +2,7 @@
 
 import { buildShareSvg, IMAGE_WIDTH, IMAGE_HEIGHT, fileSafeName, formatDateRange, taskLabel } from "@/lib/shareImage";
 import { useLanguage } from "@/lib/useLanguage";
-import { Download, Image as ImageIcon, Share2, QrCode, Users, CalendarDays, BadgeCheck } from "lucide-react";
+import { Image as ImageIcon, Share2, QrCode, Users, CalendarDays, BadgeCheck } from "lucide-react";
 import { isQueueTask, taskStatus, getVisibleTaskNote } from "@/lib/utils";
 
 async function svgToPngBlob(svg) {
@@ -100,29 +100,24 @@ export default function TaskShareImagePanel({ task, url, signupCount = 0, onToas
     setTimeout(() => URL.revokeObjectURL(objectUrl), 1200);
   }
 
-  async function handleDownload() {
-    try {
-      const blob = await makeBlob();
-      const shared = await shareBlob(blob, t("請在開啟的選單中選擇「儲存圖片」", "Choose Save Image in the menu"));
-      if (!shared) {
-        await fallbackDownload(blob);
-        onToast?.(t("正在下載分享圖片", "Downloading image"));
-      }
-    } catch (e) {
-      if (e?.name !== "AbortError") onToast?.(t("圖片產生失敗，請再試一次", "Unable to generate the image. Please try again."));
-    }
-  }
-
   async function handleSystemShare() {
+    let blob;
     try {
-      const blob = await makeBlob();
-      const shared = await shareBlob(blob, t("已開啟分享選單", "Share menu opened"));
-      if (!shared) {
-        await fallbackDownload(blob);
-        onToast?.(t("此裝置不支援直接分享，已改用下載圖片", "Sharing is unavailable. Downloading the image instead."));
-      }
-    } catch (e) {
-      if (e?.name !== "AbortError") onToast?.(t("無法直接分享，已改用下載圖片", "Unable to share. Downloading the image instead."));
+      blob = await makeBlob();
+    } catch {
+      onToast?.(t("圖片產生失敗，請再試一次", "Unable to generate the image. Please try again."));
+      return;
+    }
+    try {
+      if (await shareBlob(blob, t("已開啟分享選單", "Share menu opened"))) return;
+    } catch (error) {
+      if (error?.name === "AbortError") return;
+    }
+    try {
+      await fallbackDownload(blob);
+      onToast?.(t("正在下載分享圖片", "Downloading image"));
+    } catch {
+      onToast?.(t("圖片下載失敗，請再試一次", "Unable to download the image. Please try again."));
     }
   }
 
@@ -152,16 +147,15 @@ export default function TaskShareImagePanel({ task, url, signupCount = 0, onToas
           <div className="grid grid-cols-3 gap-1.5 mt-4">
             <div className="rounded-2xl bg-emerald-50 px-2 py-2"><Users size={13} className="text-emerald-600 mb-1" /><p className="text-[10px] text-emerald-600 font-semibold">{queue ? t("等待中", "Waiting") : t("已報名", "Registered")}</p><p className="text-xs font-bold text-emerald-700">{signupCount}{en ? "" : " 人"}</p></div>
             <div className="rounded-2xl bg-gray-50 px-2 py-2"><CalendarDays size={13} className="text-gray-500 mb-1" /><p className="text-[10px] text-gray-500 font-semibold">{t("期間", "Dates")}</p><p className="text-xs font-bold text-gray-700 truncate">{formatDateRange(task)}</p></div>
-            <div className="rounded-2xl bg-gray-50 px-2 py-2"><BadgeCheck size={13} className="text-emerald-600 mb-1" /><p className="text-[10px] text-gray-500 font-semibold">{t("狀態", "Status")}</p><p className="text-xs font-bold text-emerald-700">{en ? ({"已截止":"Closed","已額滿":"Full","進行中":"Active"}[status] || status) : status}</p></div>
+            <div className="rounded-2xl bg-gray-50 px-2 py-2"><BadgeCheck size={13} className="text-emerald-600 mb-1" /><p className="text-[10px] text-gray-500 font-semibold">{t("狀態", "Status")}</p><p className="text-xs font-bold text-emerald-700">{en ? ({"已截止":"Closed","已額滿":"Full","進行中":"Active","尚未開始":"Not Started"}[status] || status) : status}</p></div>
           </div>
 
           <p className="text-[11px] text-emerald-600 font-semibold mt-3 text-center">📱 {en ? (queue ? "Scan to join the queue" : "Scan to sign up") : `掃描 QR Code，${queue ? "立即加入排隊" : "立即完成報名"}`}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 mt-3">
-        <button onClick={handleSystemShare} className="bg-emerald-500 text-white rounded-full py-2.5 text-sm font-semibold flex items-center justify-center gap-1.5 shadow-sm shadow-emerald-100"><Share2 size={15} /> {t("分享圖片", "Share Image")}</button>
-        <button onClick={handleDownload} className="bg-gray-50 text-gray-600 rounded-full py-2.5 text-sm font-semibold flex items-center justify-center gap-1.5"><Download size={15} /> {t("儲存圖片", "Save Image")}</button>
+      <div className="grid grid-cols-1 gap-2 mt-3">
+        <button onClick={handleSystemShare} className="bg-emerald-500 text-white rounded-full py-2.5 text-sm font-semibold flex items-center justify-center gap-1.5 shadow-sm shadow-emerald-100"><Share2 size={15} /> {t("分享／儲存圖片", "Share / Save Image")}</button>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { useLanguage } from "@/lib/useLanguage";
 import { CheckCircle2 } from "lucide-react";
 
 const PIECES = Array.from({ length: 26 }, (_, i) => ({
@@ -12,10 +13,12 @@ const PIECES = Array.from({ length: 26 }, (_, i) => ({
 }));
 
 export default function ConfettiSuccess({ show, message = "報名成功！" }) {
+  const en = useLanguage() === "en";
+  const title = en && ["報名成功！", "已成功接龍！", "已加入排隊！"].includes(message) ? "Signup successful!" : message;
   if (!show) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-[80] flex items-center justify-center overflow-hidden">
+    <div data-no-auto-i18n="true" className="pointer-events-none fixed inset-0 z-[80] flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 bg-white/10 animate-[confetti-fade_1.6s_ease-out_forwards]" />
       {PIECES.map((p) => (
         <span
@@ -34,8 +37,8 @@ export default function ConfettiSuccess({ show, message = "報名成功！" }) {
         <div className="w-14 h-14 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md shadow-emerald-200 mb-2">
           <CheckCircle2 size={30} />
         </div>
-        <p className="font-bold text-gray-800">{message}</p>
-        <p className="text-xs text-gray-400 mt-1">已加入接龍名單</p>
+        <p className="font-bold text-gray-800">{title}</p>
+        <p className="text-xs text-gray-400 mt-1">{en ? "You are on the list" : "已加入接龍名單"}</p>
       </div>
     </div>
   );

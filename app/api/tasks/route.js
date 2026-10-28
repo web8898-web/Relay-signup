@@ -1,3 +1,5 @@
+import { readAllRows } from "@/lib/readAllRows";
+import { validateTaskDatesAndTitle } from "@/lib/taskValidation";
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { verifyLineAccessToken, getBearerToken } from "@/lib/lineAuth";
@@ -10,14 +12,11 @@ export async function GET(request) {
   try {
     const profile = await verifyLineAccessToken(getBearerToken(request));
     const supabase = getSupabaseAdmin();
-    const { data: tasks, error } = await supabase.from("tasks").select("*").eq("creator_id", profile.userId).order("created_at", { ascending: false });
-    if (error) throw error;
+    const tasks = await readAllRows(() => supabase.from("tasks").select("*").eq("creator_id", profile.userId).order("created_at", { ascending: false }).order("id"));
     let signups = [];
     if (tasks.length) {
-      const result = await supabase.from("signups").select(SIGNUP_FIELDS).in("task_id", tasks.map((task) => task.id))
-        .order("created_at", { ascending: true }).order("id", { ascending: true });
-      if (result.error) throw result.error;
-      signups = result.data;
+      signups = await readAllRows(() => supabase.from("signups").select(SIGNUP_FIELDS).in("task_id", tasks.map((task) => task.id))
+        .order("created_at", { ascending: true }).order("id", { ascending: true }));
     }
     return NextResponse.json({ tasks, signups }, { headers: { "Cache-Control": "no-store" } });
   } catch {
@@ -60,6 +59,7 @@ export async function POST(request) {
       return NextResponse.json({ error: "缺少必要欄位" }, { status: 400 });
     }
 
+    validateTaskDatesAndTitle(body);
     const supabase = getSupabaseAdmin();
     const trimmedUnit = String(quantity_unit || "").trim().slice(0, 20) || null;
     const mode = parseTaskMode(task_mode);
@@ -73,7 +73,7 @@ export async function POST(request) {
     let data, error;
     for (let attempt = 0; attempt < 5; attempt++) {
       const payload = {
-        title: String(title).slice(0, 200),
+        title: title.trim().slice(0, 200),
         description: String(description || "").slice(0, 2000),
         categories: storedCategories,
         start_date,

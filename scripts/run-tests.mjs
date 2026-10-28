@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { mkdir } from "node:fs/promises";
 await mkdir("test-results", { recursive: true });
 await build({
-  entryPoints: ["tests/regression.test.jsx"], outfile: "test-results/regression.test.cjs",
+  entryPoints: ["tests/regression.test.jsx", "tests/audit.test.jsx"], outdir: "test-results", outExtension: {".js": ".cjs"},
   bundle: true, platform: "node", format: "cjs", packages: "external", jsx: "automatic",
   loader: { ".js": "jsx" }, tsconfig: "jsconfig.json",
   plugins: [{ name: "test-boundaries", setup(build) {
@@ -20,7 +20,7 @@ await build({
     }));
   } }],
 });
-const result = spawnSync(process.execPath, ["--test", "test-results/regression.test.cjs"], {
+const result = spawnSync(process.execPath, ["--test", "test-results/regression.test.cjs", "test-results/audit.test.cjs"], {
   stdio: "inherit", env: { ...process.env, NEXT_PUBLIC_SUPABASE_URL: "https://test.supabase.co", NEXT_PUBLIC_SUPABASE_ANON_KEY: "test-anon", SUPABASE_SERVICE_ROLE_KEY: "test-service", LINE_LOGIN_CHANNEL_ID: "test-channel" },
 });
 process.exitCode = result.status ?? 1;

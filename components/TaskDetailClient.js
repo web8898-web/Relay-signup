@@ -138,6 +138,7 @@ export default function TaskDetailClient() {
   }, [id]);
 
   const closed = task ? taskStatus(task).label === "已截止" : false;
+  const notStarted = task ? taskStatus(task).label === "尚未開始" : false;
   const queueFromUrl = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("queue") === "1";
   const isQueueTask = !!task && (isQueueTaskConfig(task) || queueFromUrl);
   const headcountMode = isHeadcountUnit(task?.quantity_unit);
@@ -498,7 +499,9 @@ export default function TaskDetailClient() {
           />
         </div>
 
-        {closed ? (
+        {notStarted ? (
+          <p data-no-auto-i18n="true" className="px-6 py-4 text-center text-sm text-gray-400">{en ? "This task has not started yet" : "此任務尚未開始"}</p>
+        ) : closed ? (
           <div ref={formSectionRef} className="px-6 pb-6 pt-2 text-center text-xs text-gray-400 border-t border-gray-100">
             此任務已截止，無法再接龍
           </div>
