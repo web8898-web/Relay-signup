@@ -46,14 +46,21 @@ export default function MyTaskDetailPage() {
 
   useEffect(() => {
     if (!id || authLoading) return;
+    let cancelled = false;
     (async () => {
       setLoading(true);
       const { data: taskData } = await supabase.from("tasks").select("*").eq("id", id).single();
+      if (cancelled) return;
       setTask(taskData || null);
-      try { setSignups(await loadSignupList(id, profile?.accessToken)); setError(""); }
-      catch { setError(getClientLanguage() === "en" ? "Unable to load signups. Please sign in as the organizer." : "讀取名單失敗，請以主辦人身分登入。"); }
-      setLoading(false);
+      try {
+        const rows = await loadSignupList(id, profile?.accessToken);
+        if (cancelled) return;
+        setSignups(rows); setError("");
+      }
+      catch { if (!cancelled) setError(getClientLanguage() === "en" ? "Unable to load signups. Please sign in as the organizer." : "讀取名單失敗，請以主辦人身分登入。"); }
+      if (!cancelled) setLoading(false);
     })();
+    return () => { cancelled = true; };
   }, [id, authLoading, profile?.accessToken]);
 
   const pendingSignups = useMemo(() => signups.filter((s) => !s.checked_in), [signups]);

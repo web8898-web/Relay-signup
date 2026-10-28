@@ -1,6 +1,7 @@
 "use client";
 import { useLanguage } from "@/lib/useLanguage";
-import { useEffect, useRef, useState } from "react";
+import { orderedSignups } from "@/lib/signupOrder";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Edit2, Trash2, ChevronRight, Check } from "lucide-react";
 import { avatarClass, chipClass, relTime, batchInfoFor } from "@/lib/utils";
 import { useScrollFadeRight } from "@/lib/useScrollFadeRight";
@@ -18,7 +19,7 @@ function headcountOf(s) {
 }
 
 export default function ThreadList({
-  signups,
+  signups: inputSignups,
   myIds,
   categories,
   quantityUnit,
@@ -32,6 +33,7 @@ export default function ThreadList({
   categoryMode = "multiple",
   categoryRequired = false,
 }) {
+  const signups = useMemo(() => orderedSignups(inputSignups), [inputSignups]);
   const language = useLanguage();
   const [filter, setFilter] = useState("全部");
   const [editingId, setEditingId] = useState(null);
@@ -261,7 +263,7 @@ export default function ThreadList({
                           完成
                         </span>
                       ) : (
-                        <span className="shrink-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold">
+                        <span data-signup-position={queueMode ? waitingOrderNumber[s.id] : orderNumber[s.id]} className="shrink-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold">
                           {queueMode ? waitingOrderNumber[s.id] : orderNumber[s.id]}
                         </span>
                       )}

@@ -9,6 +9,7 @@ import {
 import { taskStatus, chipClass, avatarClass, relTime, batchInfoFor, isQueueTask as isQueueTaskConfig, getVisibleTaskNote, getVisibleCategories } from "@/lib/utils";
 import { getOwnerToken } from "@/lib/ownerToken";
 import { liff } from "@/lib/liff";
+import { orderedSignups, compareSignupOrder } from "@/lib/signupOrder";
 import { downloadExport } from "@/lib/downloadExport";
 
 const EXPAND_EVENT = "relay-task-card-stable-expand";
@@ -16,6 +17,7 @@ const MENU_EVENT = "relay-task-card-stable-menu";
 
 // 報名人數達到這個數量才顯示搜尋框與分類篩選，人少時保持卡片清爽。
 const SEARCH_MIN_SIGNUPS = 5;
+const EMPTY_SIGNUPS = [];
 
 // 精簡日期區間：同一年只在開頭顯示一次年份，例如 2026/7/11 ~ 9/18。
 function formatRange(start, end) {
@@ -35,7 +37,8 @@ function formatRange(start, end) {
   return `${left} ~ ${right}`;
 }
 
-export default function TaskListCardStable({ task, signups = [], accessToken, onEdit, onDelete, onShare }) {
+export default function TaskListCardStable({ task, signups: inputSignups = EMPTY_SIGNUPS, accessToken, onEdit, onDelete, onShare }) {
+  const signups = useMemo(() => orderedSignups(inputSignups), [inputSignups]);
   const [expanded, setExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -44,7 +47,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
   const [notifyEnabled, setNotifyEnabled] = useState(task.notify_enabled !== false);
   const [notifyBusy, setNotifyBusy] = useState(false);
   const [checkinMode, setCheckinMode] = useState(false);
-  const [checkedIds, setCheckedIds] = useState(() => new Set());
+  const [checkedIds, setCheckedIds] = useState(() => new Set(signups.filter(s => s.checked_in).map(s => s.id)));
   const [processingId, setProcessingId] = useState(null);
   const [lastCompletedId, setLastCompletedId] = useState(null);
   const [confirmCompleteAll, setConfirmCompleteAll] = useState(false);
@@ -96,9 +99,10 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
   }, [menuOpen]);
 
   useEffect(() => {
-    if (!expanded) return;
+    // A new server list may update completion state; opening/closing the card
+    // must not resurrect the stale props that preceded a successful check-in.
     setCheckedIds(new Set(signups.filter((s) => s.checked_in).map((s) => s.id)));
-  }, [expanded, signups]);
+  }, [signups]);
 
   useEffect(() => {
     if (!isQueueTask) return;
@@ -283,7 +287,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
     const keyword = toolsActive ? searchText.trim().toLowerCase() : "";
     let list = !toolsActive || filter === "全部" ? signups : signups.filter((s) => s.categories?.includes(filter));
     if (keyword) list = list.filter((s) => [s.name, s.note, ...(s.categories || [])].filter(Boolean).join(" ").toLowerCase().includes(keyword));
-    if (isQueueTask && checkinMode) list = [...list].sort((a, b) => Number(checkedIds.has(a.id)) - Number(checkedIds.has(b.id)) || new Date(a.created_at) - new Date(b.created_at));
+    if (isQueueTask) list = [...list].sort((a, b) => Number(checkedIds.has(a.id)) - Number(checkedIds.has(b.id)) || compareSignupOrder(a, b));
     return list;
   }, [filter, searchText, signups, checkedIds, checkinMode, isQueueTask]);
 
@@ -367,7 +371,7 @@ export default function TaskListCardStable({ task, signups = [], accessToken, on
               const isFirstWaiting = firstWaitingId === s.id;
               return <div key={s.id || i} onClick={checkinMode ? (e) => handleSignupRowClick(e, s) : undefined} className={`relative flex items-start gap-2 border rounded-xl px-3 py-2 transition ${checkinMode ? `cursor-pointer ${done ? "bg-emerald-50 border-emerald-200" : isQueueTask && isFirstWaiting ? "bg-emerald-50 border-emerald-200" : "bg-gray-50 border-gray-100"}` : "bg-gray-50 border-gray-100"}`}>
                 {checkinMode ? <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border-2 ${done || (isQueueTask && isFirstWaiting) ? "bg-emerald-500 border-emerald-500 text-white" : "bg-white border-gray-300 text-transparent"}`}><Check size={13} /></div> : <div className={`w-6 h-6 rounded-full ${avatarClass(s.name)} text-white flex items-center justify-center text-[10px] font-bold`}>{s.name?.[0] || "?"}</div>}
-                <div className="flex-1 min-w-0"><div className="flex items-center gap-1.5 flex-wrap"><span className="shrink-0 inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-emerald-100 text-emerald-700 text-[9px] font-bold">{checkinMode && isQueueTask && done ? "完成" : checkinMode && isQueueTask ? waitingOrderNumber[s.id] : orderNumber[s.id]}</span><span className="text-xs font-medium text-gray-700 truncate">{s.name}</span>{checkinMode && isQueueTask && isFirstWaiting && !done && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500 text-white">目前第一位</span>}{s.categories?.map((c) => <span key={c} className={`text-[10px] px-1.5 py-0.5 rounded-full border ${chipClass(c)}`}>{c}</span>)}<span className="text-[10px] text-gray-300 ml-auto">{done && isQueueTask ? "已完成" : relTime(s.created_at)}</span></div>{s.note && <p className="text-xs text-gray-500 mt-0.5">{s.note}</p>}</div>
+                <div className="flex-1 min-w-0"><div className="flex items-center gap-1.5 flex-wrap"><span data-signup-position={isQueueTask ? waitingOrderNumber[s.id] : orderNumber[s.id]} className="shrink-0 inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-emerald-100 text-emerald-700 text-[9px] font-bold">{isQueueTask && done ? "完成" : isQueueTask ? waitingOrderNumber[s.id] : orderNumber[s.id]}</span><span className="text-xs font-medium text-gray-700 truncate">{s.name}</span>{checkinMode && isQueueTask && isFirstWaiting && !done && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500 text-white">目前第一位</span>}{s.categories?.map((c) => <span key={c} className={`text-[10px] px-1.5 py-0.5 rounded-full border ${chipClass(c)}`}>{c}</span>)}<span className="text-[10px] text-gray-300 ml-auto">{done && isQueueTask ? "已完成" : relTime(s.created_at)}</span></div>{s.note && <p className="text-xs text-gray-500 mt-0.5">{s.note}</p>}</div>
               </div>;
             })}</div>}
           </div>

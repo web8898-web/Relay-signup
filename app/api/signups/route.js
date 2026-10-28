@@ -1,3 +1,4 @@
+import { readSignupSnapshot } from "@/lib/signupSnapshot";
 import { readAllRows } from "@/lib/readAllRows";
 import { assertRegistrationOpen, signupValues, signupCategories } from "@/lib/signupValidation";
 import { NextResponse } from "next/server";
@@ -29,8 +30,7 @@ export async function GET(request) {
       const profile = await verifyLineAccessToken(getBearerToken(request));
       if (profile.userId !== task.creator_id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-    const data = await readAllRows(() => supabase.from("signups").select(SIGNUP_FIELDS).eq("task_id", taskId)
-      .order("created_at", { ascending: true }).order("id", { ascending: true }));
+    const data = await readSignupSnapshot(supabase, [taskId]);
     return NextResponse.json({ signups: data }, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return NextResponse.json({ error: "Unable to load signups" }, { status: 403 });

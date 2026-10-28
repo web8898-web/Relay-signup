@@ -1,9 +1,8 @@
-import { readAllRows } from "@/lib/readAllRows";
+import { readSignupSnapshot } from "@/lib/signupSnapshot";
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { getBearerToken, verifyLineAccessToken } from "@/lib/lineAuth";
 import { createExportTicket, readExportTicket } from "@/lib/exportTicket";
-import { SIGNUP_FIELDS } from "@/lib/signupFields";
 
 export const dynamic = "force-dynamic";
 
@@ -66,8 +65,7 @@ export async function GET(request, { params }) {
 
   let list;
   try {
-    list = await readAllRows(() => supabase.from("signups").select(SIGNUP_FIELDS).eq("task_id", params.id)
-      .order("created_at", { ascending: true }).order("id", { ascending: true }));
+    list = await readSignupSnapshot(supabase, [params.id]);
   } catch {
     return NextResponse.json({ error: t("讀取名單失敗，請重試", "Unable to load the list. Please retry.") }, { status: 503 });
   }
