@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { verifyLineAccessToken, getBearerToken } from "@/lib/lineAuth";
 import { generateShortCode } from "@/lib/shortCode";
-import { SIGNUP_FIELDS } from "@/lib/signupFields";
+import { readSignupSnapshot } from "@/lib/signupSnapshot";
 
 export const dynamic = "force-dynamic";
 
@@ -15,8 +15,7 @@ export async function GET(request) {
     const tasks = await readAllRows(() => supabase.from("tasks").select("*").eq("creator_id", profile.userId).order("created_at", { ascending: false }).order("id"));
     let signups = [];
     if (tasks.length) {
-      signups = await readAllRows(() => supabase.from("signups").select(SIGNUP_FIELDS).in("task_id", tasks.map((task) => task.id))
-        .order("created_at", { ascending: true }).order("id", { ascending: true }));
+      signups = await readSignupSnapshot(supabase, tasks.map(task => task.id));
     }
     return NextResponse.json({ tasks, signups }, { headers: { "Cache-Control": "no-store" } });
   } catch {

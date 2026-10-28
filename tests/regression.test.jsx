@@ -45,6 +45,9 @@ function fakeApi(selectedTask=task) {
     }
     if(url.pathname==='/api/tasks' || url.pathname==='/api/tasks/task-1') return json({task:selectedTask});
     if(url.pathname==='/rest/v1/tasks') return json(selectedTask);
+    if(url.pathname==='/rest/v1/rpc/signup_list_snapshot') {
+      return json([{id:'signup-1',task_id:'task-1',signup_order:7,name:'Participant',categories:['A'],note:'Note',created_at:'2026-10-28T00:00:00.000000Z'}]);
+    }
     if(url.pathname==='/rest/v1/signups') {
       if(method==='HEAD') return new Response(null,{headers:{'content-range':'0-2/3'}});
       const raw={id:'signup-1',task_id:'task-1',name:'Participant',categories:['A'],note:'Note',created_at:'2026-10-28T00:00:00.000000Z',owner_token:'private-credential'};

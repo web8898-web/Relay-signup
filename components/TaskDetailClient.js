@@ -62,6 +62,10 @@ export default function TaskDetailClient() {
   const [showCancelQueueConfirm, setShowCancelQueueConfirm] = useState(false);
   const [queueActionBusy, setQueueActionBusy] = useState(false);
   const cooldownIntervalRef = useRef(null);
+  const currentTaskId = useRef(id);
+  currentTaskId.current = id;
+  const signupRequestVersion = useRef(0);
+  const taskRequestVersion = useRef(0);
   const listRef = useRef(null);
   const formSectionRef = useRef(null);
   const prevViewOnlyRef = useRef(viewOnly);
@@ -110,16 +114,24 @@ export default function TaskDetailClient() {
   }
 
   async function refreshSignups() {
-    if (!id) return;
-    try { setSignups(await loadSignupList(id)); }
-    catch { setError(en ? "Unable to load signups. Please try again." : "讀取報名名單失敗，請再試一次。"); }
-    setMyIds(getMySignupIds());
+    if (!id || currentTaskId.current !== id) return;
+    const version = ++signupRequestVersion.current;
+    try {
+      const rows = await loadSignupList(id);
+      if (version !== signupRequestVersion.current) return;
+      setSignups(rows);
+      setMyIds(getMySignupIds());
+    } catch {
+      if (version === signupRequestVersion.current) setError(en ? "Unable to load signups. Please try again." : "讀取報名名單失敗，請再試一次。");
+    }
   }
 
   async function load() {
+    const version = ++taskRequestVersion.current;
     setLoading(true);
     const startedAt = Date.now();
     const { data: taskData } = await supabase.from("tasks").select("*").eq("id", id).single();
+    if (version !== taskRequestVersion.current) return;
     setTask(taskData || null);
 
     await refreshSignups();
@@ -130,11 +142,12 @@ export default function TaskDetailClient() {
       await new Promise((resolve) => setTimeout(resolve, MIN_TRANSITION_MS - elapsed));
     }
 
-    setLoading(false);
+    if (version === taskRequestVersion.current) setLoading(false);
   }
 
   useEffect(() => {
     if (id) load();
+    return () => { ++taskRequestVersion.current; ++signupRequestVersion.current; };
   }, [id]);
 
   const closed = task ? taskStatus(task).label === "已截止" : false;
@@ -219,6 +232,7 @@ export default function TaskDetailClient() {
       setCategoryError(en ? "Select a category for each additional participant." : "請為每位代報者至少選擇一個分類");
       return;
     }
+    ++signupRequestVersion.current;
     setSending(true);
     setError("");
     setCategoryError("");
@@ -266,12 +280,14 @@ export default function TaskDetailClient() {
   }
 
   async function handleUpdate(signupId, patch) {
+    ++signupRequestVersion.current;
     const res = await fetch(`/api/signups/${signupId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...patch, owner_token: getOwnerToken() }),
     });
     const data = await res.json();
+    ++signupRequestVersion.current;
     if (res.ok) {
       setSignups((prev) => prev.map((s) => (s.id === signupId ? data.signup : s)));
       showToast("已更新");
@@ -282,9 +298,11 @@ export default function TaskDetailClient() {
   }
 
   async function handleDelete(signupId, successMessage = "已刪除") {
+    ++signupRequestVersion.current;
     const res = await fetch(`/api/signups/${signupId}?owner_token=${encodeURIComponent(getOwnerToken())}`, {
       method: "DELETE",
     });
+    ++signupRequestVersion.current;
     if (res.ok) {
       setSignups((prev) => prev.filter((s) => s.id !== signupId));
       forgetMySignup(signupId);

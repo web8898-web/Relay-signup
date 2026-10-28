@@ -25,6 +25,13 @@ try {
   assert.equal(before.filter(r=>r.status==='fulfilled').length,8);
   console.log('REPRODUCED before migration: 8 registrations admitted for capacity 1');
   await run(await readFile('supabase/migrations/202610280003_signup_integrity.sql','utf8'));
+  const historicalOrder=await run('select id from signups order by created_at,id');
+  const historicalData=await run("select jsonb_agg(to_jsonb(s) order by id) from signups s");
+  await run(await readFile('supabase/migrations/202610280004_stable_signup_order.sql','utf8'));
+  assert.equal(await run('select id from signups order by signup_order'),historicalOrder);
+  assert.equal(await run("select jsonb_agg(to_jsonb(s)-'signup_order' order by id) from signups s"),historicalData);
+  pass('backfill retains all existing fields and the current chronological list order');
+
   await reset(`update tasks set max_signups=1 where id='${task}'`);
   const race=await Promise.allSettled(Array.from({length:8},(_,i)=>run(insert(`race-${i}`))));
   assert.equal(race.filter(r=>r.status==='fulfilled').length,1);
@@ -53,6 +60,9 @@ try {
   await run("update tasks set start_date='2099-01-01',end_date='2099-01-02'");await rejected(insert(),'尚未開始');pass('database enforces registration period');
   await reset(`update tasks set task_mode='queue'`);
   await run(`insert into signups(task_id,name,owner_token,created_at) select '${task}','Private '||i,'owner-'||i,now()-interval '60 seconds'+i*interval '1 microsecond' from generate_series(1,1005) i`);
+  const fullList=JSON.parse(await run(`select signup_list_snapshot(array['${task}'::uuid])`));
+  assert.equal(fullList.length,1005);assert.equal(fullList[0].signup_order,1);assert.equal(fullList[1004].signup_order,1005);
+  assert.ok(fullList.every(s=>!Object.hasOwn(s,'owner_token')));
   let snapshot=JSON.parse(await run(`select queue_status_snapshot('${task}','owner-1005')`));
   assert.equal(snapshot.waiting_count,1005);assert.equal(snapshot.queue_number,1005);assert.equal(snapshot.people_ahead,1004);assert.equal(snapshot.my_signups.length,1);
   assert.ok(!JSON.stringify(snapshot).includes('owner-'));assert.equal(snapshot.my_signups[0].name,'Private 1005');
@@ -61,5 +71,41 @@ try {
   assert.equal(snapshot.waiting_count,1003);assert.equal(snapshot.queue_number,1003);assert.equal(snapshot.completed_count,1);pass('snapshot stays accurate above 1000 rows and only returns own name');
   for(const role of ['anon','authenticated']) assert.equal(await run(`select has_function_privilege('${role}','public.queue_status_snapshot(uuid,text)','execute')`),'f');
   assert.equal(await run("select has_function_privilege('service_role','public.queue_status_snapshot(uuid,text)','execute')"),'t');pass('snapshot RPC is unavailable to anonymous and authenticated database roles');
+  await reset();
+  await run(insert('original',"now()+interval '1 minute'"));
+  for(let i=0;i<4;i++) await run(insert(`late-${i}`,"now()-interval '1 minute'"));
+  assert.equal(await run("select position from (select owner_token,row_number() over(order by created_at,id) as position from signups) s where owner_token='original'"),'5');
+  assert.equal(await run("select signup_order from signups where owner_token='original'"),'1');
+  let list=JSON.parse(await run(`select signup_list_snapshot(array['${task}'::uuid])`));
+  assert.deepEqual(list.map(s=>s.signup_order),[1,2,3,4,5]);
+  assert.ok(list.every(s=>!('owner_token' in s)));
+  await run("delete from signups where signup_order=2; update signups set name='Renamed' where signup_order=1");
+  await run(insert('next'));
+  assert.equal(await run(`select string_agg(signup_order::text,',' order by signup_order) from signups`),'1,3,4,5,6');
+  list=JSON.parse(await run(`select signup_list_snapshot(array['${task}'::uuid])`));
+  assert.equal(list.findIndex(s=>s.signup_order===5)+1,4); // Previously position 5; position 2 was cancelled.
+  await rejected('update signups set signup_order=99 where signup_order=1','不可變更');
+  await run('delete from signups where signup_order=6');
+  await run(await readFile('supabase/migrations/202610280004_stable_signup_order.sql','utf8'));
+  await run(insert('after-rerun'));
+  assert.equal(await run('select max(signup_order) from signups'),'7');
+  pass('clock-skew reproduces old 1-to-5 rank jump; internal order stays 1 and cannot change; visible position advances after cancellation');
+  await reset();
+  const admissions=await Promise.allSettled(Array.from({length:32},(_,i)=>run(insert(`parallel-${i}`))));
+  assert.equal(admissions.filter(r=>r.status==='fulfilled').length,32);
+  assert.equal(await run(`select count(distinct signup_order)||':'||min(signup_order)||':'||max(signup_order) from signups`),'32:1:32');
+  pass('32 parallel successful admissions receive unique, committed admission order');
+  await reset(`update tasks set task_mode='queue'`);
+  await run(insert('A',"now()+interval '1 minute'"));
+  await run(insert('B',"now()-interval '1 minute'"));
+  await run(insert('C',"now()-interval '2 minutes'"));
+  let q=JSON.parse(await run(`select queue_status_snapshot('${task}','A')`));assert.equal(q.queue_number,1);
+  await run("update signups set checked_in=true where owner_token='A'");
+  q=JSON.parse(await run(`select queue_status_snapshot('${task}','B')`));assert.equal(q.queue_number,1);assert.equal(q.my_signups[0].signup_order,2);
+  await run("delete from signups where owner_token='B'");
+  q=JSON.parse(await run(`select queue_status_snapshot('${task}','C')`));assert.equal(q.queue_number,1);assert.equal(q.my_signups[0].signup_order,3);
+  pass('queue rank advances on completion/cancellation without changing internal admission order');
+  for(const role of ['anon','authenticated']) assert.equal(await run(`select has_function_privilege('${role}','public.signup_list_snapshot(uuid[])','execute')`),'f');
+  pass('full-list snapshot remains service-role only');
   console.log(`${checks} database integration checks passed`);
 } finally {await run(`drop database ${db} with (force)`,'postgres');}
