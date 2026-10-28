@@ -13,6 +13,7 @@ export async function PATCH(request, { params }) {
   try {
     const body = await request.json();
     const { owner_token, checked_in } = body || {};
+    if (typeof checked_in !== "boolean") return NextResponse.json({ error: "Invalid check-in status" }, { status: 400 });
     const token = getBearerToken(request);
 
     const supabase = getSupabaseAdmin();
@@ -52,7 +53,7 @@ export async function PATCH(request, { params }) {
 
     const { data, error } = await supabase
       .from("signups")
-      .update({ checked_in: !!checked_in })
+      .update({ checked_in })
       .eq("id", params.id)
       .select(SIGNUP_FIELDS)
       .single();

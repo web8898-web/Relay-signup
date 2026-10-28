@@ -1,4 +1,5 @@
 "use client";
+import { useLanguage } from "@/lib/useLanguage";
 import { useEffect, useRef, useState } from "react";
 import { Edit2, Trash2, ChevronRight, Check } from "lucide-react";
 import { avatarClass, chipClass, relTime, batchInfoFor } from "@/lib/utils";
@@ -31,6 +32,7 @@ export default function ThreadList({
   categoryMode = "multiple",
   categoryRequired = false,
 }) {
+  const language = useLanguage();
   const [filter, setFilter] = useState("全部");
   const [editingId, setEditingId] = useState(null);
   const [confirmId, setConfirmId] = useState(null);
@@ -40,6 +42,7 @@ export default function ThreadList({
   const [editQuantity, setEditQuantity] = useState(1);
   const [editCategoryQuantities, setEditCategoryQuantities] = useState({});
   const [busy, setBusy] = useState(false);
+  const [editError, setEditError] = useState("");
   const [filterScrollRef, filterSentinelRef, filterCanScrollRight] = useScrollFadeRight(categories?.length > 0);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -111,6 +114,7 @@ export default function ThreadList({
   const usesPerCategoryQuantity = !!quantityUnit && categories?.length > 0;
 
   function startEdit(s) {
+    setEditError("");
     setEditingId(s.id);
     setEditName(s.name);
     setEditNote(s.note || "");
@@ -134,19 +138,25 @@ export default function ThreadList({
   async function saveEdit(s) {
     if (!editName.trim() || (categoryRequired && !editCategories.length)) return;
     setBusy(true);
-    await onUpdate(s.id, {
-      name: editName.trim(),
-      note: editNote.trim(),
-      categories: editCategories,
-      quantity: quantityUnit && !usesPerCategoryQuantity ? editQuantity : undefined,
-      category_quantities: usesPerCategoryQuantity ? editCategoryQuantities : undefined,
-    });
-    setBusy(false);
-    setEditingId(null);
+    setEditError("");
+    try {
+      const saved = await onUpdate(s.id, {
+        name: editName.trim(),
+        note: editNote.trim(),
+        categories: editCategories,
+        quantity: quantityUnit && !usesPerCategoryQuantity ? editQuantity : undefined,
+        category_quantities: usesPerCategoryQuantity ? editCategoryQuantities : undefined,
+      });
+      if (saved !== false) setEditingId(null);
+      else setEditError(language === "en" ? "Unable to save. Please retry." : "儲存失敗，請重試");
+    } catch {
+      setEditError(language === "en" ? "Unable to save. Please retry." : "儲存失敗，請重試");
+    } finally { setBusy(false); }
   }
 
   return (
     <div>
+      {editError && <p data-no-auto-i18n="true" role="alert" className="mb-2 text-xs text-rose-500">{editError}</p>}
       {queueMode && signups.length > 0 && (
         <div className="mb-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 px-3 py-2.5">
           <div className="flex items-center justify-between text-[11px]">

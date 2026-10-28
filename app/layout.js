@@ -16,7 +16,6 @@ import QueueMascotOverflowFix from "@/components/QueueMascotOverflowFix";
 import QueueMascotDetailFix from "@/components/QueueMascotDetailFix";
 import QueueSmallScreenFix from "@/components/QueueSmallScreenFix";
 import QueueJoinAutoFocus from "@/components/QueueJoinAutoFocus";
-import TaskShareImageActionFix from "@/components/TaskShareImageActionFix";
 import TaskModeTutorial from "@/components/TaskModeTutorial";
 import TaskModeCopyFix from "@/components/TaskModeCopyFix";
 import TaskTabsScrollFix from "@/components/TaskTabsScrollFix";
@@ -229,7 +228,6 @@ export default function RootLayout({ children }) {
         <QueueMascotDetailFix />
         <QueueSmallScreenFix />
         <QueueJoinAutoFocus />
-        <TaskShareImageActionFix />
         <TaskModeTutorial />
         <TaskModeCopyFix />
         <TaskTabsScrollFix />

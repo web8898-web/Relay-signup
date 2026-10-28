@@ -1,5 +1,6 @@
 "use client";
 
+import { getClientLanguage } from "@/lib/locale";
 import { useEffect } from "react";
 
 const STYLE_ID = "queue-reference-mascot-styles";
@@ -83,7 +84,7 @@ function ensureStyles() {
 
 function mascotSvg() {
   return `
-    <svg viewBox="0 0 180 150" role="img" aria-label="坐著等待的可愛人物">
+    <svg viewBox="0 0 180 150" role="img" aria-label="${getClientLanguage() === "en" ? "Seated waiting mascot" : "坐著等待的可愛人物"}">
       <ellipse cx="88" cy="142" rx="61" ry="7" fill="#E9EEF4" opacity=".65"/>
       <rect x="37" y="84" width="101" height="31" rx="13" fill="#D9EEE1" stroke="#72B993" stroke-width="4"/>
       <rect x="27" y="107" width="121" height="13" rx="7" fill="#D9EEE1" stroke="#72B993" stroke-width="4"/>
@@ -178,7 +179,7 @@ function showSpeech(mascot) {
   const rect = mascot.getBoundingClientRect();
   const bubble = document.createElement("div");
   bubble.className = "queue-reference-speech";
-  bubble.textContent = BUBBLE_TEXTS[Math.floor(Math.random() * BUBBLE_TEXTS.length)];
+  bubble.textContent = (getClientLanguage() === "en" ? ["Is it my turn yet?", "Just a little longer…", "Hope it is soon 😊", "Checking my phone…"] : BUBBLE_TEXTS)[Math.floor(Math.random() * BUBBLE_TEXTS.length)];
   bubble.style.left = `${rect.left + rect.width / 2}px`;
   bubble.style.top = `${Math.max(8, rect.top - 44)}px`;
   document.body.appendChild(bubble);
@@ -204,6 +205,8 @@ function scheduleSpeech(mascot) {
 }
 
 function getRank(card) {
+  const native = card?.querySelector("[data-queue-rank]");
+  if (native) return Number(native.dataset.queueRank);
   const match = (card?.textContent || "").match(/第\s*(\d+)\s*位/);
   return match ? Number(match[1]) : 0;
 }

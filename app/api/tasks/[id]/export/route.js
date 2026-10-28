@@ -1,3 +1,4 @@
+import { readAllRows } from "@/lib/readAllRows";
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { getBearerToken, verifyLineAccessToken } from "@/lib/lineAuth";
@@ -63,12 +64,13 @@ export async function GET(request, { params }) {
     return NextResponse.json({ error: "找不到這個任務" }, { status: 404 });
   }
 
-  const { data: signupData } = await supabase
-    .from("signups")
-    .select(SIGNUP_FIELDS)
-    .eq("task_id", params.id)
-    .order("created_at", { ascending: true });
-  const list = signupData || [];
+  let list;
+  try {
+    list = await readAllRows(() => supabase.from("signups").select(SIGNUP_FIELDS).eq("task_id", params.id)
+      .order("created_at", { ascending: true }).order("id", { ascending: true }));
+  } catch {
+    return NextResponse.json({ error: t("讀取名單失敗，請重試", "Unable to load the list. Please retry.") }, { status: 503 });
+  }
 
   let content, mime, ext;
 

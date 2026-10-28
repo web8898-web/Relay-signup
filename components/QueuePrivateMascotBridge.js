@@ -1,5 +1,6 @@
 "use client";
 
+import { getClientLanguage } from "@/lib/locale";
 import { useEffect } from "react";
 
 const SLOT_ATTR = "data-private-queue-inline-mascot-slot";
@@ -11,6 +12,8 @@ const STYLE_ID = "private-queue-status-polish";
 const TRIGGER_TEXT = "目前等待順位";
 
 function findStatusLabel() {
+  const native = document.querySelector("[data-queue-status-label]");
+  if (native) return native;
   return [...document.querySelectorAll("p")].find(
     (element) =>
       element instanceof HTMLElement &&
@@ -224,6 +227,7 @@ function restoreLoadingEnhancement() {
 }
 
 function enhanceLoadingState() {
+  if (document.querySelector("[data-native-queue]")) return;
   const loadingText = findLoadingText();
   if (!(loadingText instanceof HTMLElement)) {
     restoreLoadingEnhancement();
@@ -267,6 +271,7 @@ function enhanceLoadingState() {
 }
 
 function syncWaitingCountWithStatusCard() {
+  if (document.querySelector("[data-native-queue]")) return;
   if (findLoadingText()) return;
   const count = getWaitingCountFromStatusCard();
   const countLabel = findWaitingCountLabel();
@@ -321,7 +326,7 @@ function polishStatusContent(label) {
   if (rank instanceof HTMLElement) rank.setAttribute("data-private-queue-rank", "true");
   if (ahead instanceof HTMLElement) ahead.setAttribute("data-private-queue-ahead", "true");
 
-  if (infoGrid instanceof HTMLElement) {
+  if (infoGrid instanceof HTMLElement && !label.closest("[data-native-queue]")) {
     infoGrid.setAttribute("data-private-queue-info-grid", "true");
     const cards = [...infoGrid.children].filter((item) => item instanceof HTMLElement);
     const waitCard = cards[1];
@@ -384,7 +389,7 @@ function ensureSingleInlineMascot() {
   if (!(slot instanceof HTMLElement)) {
     slot = document.createElement("div");
     slot.setAttribute(SLOT_ATTR, "true");
-    slot.setAttribute("aria-label", "等待中的可愛人物");
+    slot.setAttribute("aria-label", getClientLanguage() === "en" ? "Waiting mascot" : "等待中的可愛人物");
   }
 
   if (!(trigger instanceof HTMLElement)) {

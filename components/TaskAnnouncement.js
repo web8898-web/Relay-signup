@@ -1,4 +1,5 @@
 "use client";
+import { useLanguage } from "@/lib/useLanguage";
 import { MessageCircle, Calendar } from "lucide-react";
 import { taskStatus, getVisibleCategories, getVisibleTaskNote, getTaskBannerUrl } from "@/lib/utils";
 
@@ -28,6 +29,7 @@ function formatDateRange(startValue, endValue) {
 }
 
 export default function TaskAnnouncement({ task, full }) {
+  const en = useLanguage() === "en";
   const st = taskStatus(task);
   const label = full && st.label === "進行中" ? "已額滿" : st.label;
   const note = getVisibleTaskNote(task.note);
@@ -35,12 +37,12 @@ export default function TaskAnnouncement({ task, full }) {
   const bannerUrl = getTaskBannerUrl(task);
 
   return (
-    <div className="space-y-3">
+    <div data-no-auto-i18n="true" className="space-y-3">
       {bannerUrl && (
         <div className="aspect-[1200/630] w-full overflow-hidden rounded-[24px] border border-emerald-100 bg-emerald-50 shadow-sm">
           <img
             src={bannerUrl}
-            alt={`${task.title} 活動橫幅`}
+            alt={`${task.title} ${en ? "event banner" : "活動橫幅"}`}
             className="h-full w-full object-cover"
             loading="eager"
           />
@@ -52,15 +54,15 @@ export default function TaskAnnouncement({ task, full }) {
           <MessageCircle size={16} />
         </div>
         <div className="flex-1">
-          <p className="text-[11px] text-gray-400 mb-1">{task.creator_name || "主辦人"}</p>
+          <p className="text-[11px] text-gray-400 mb-1">{task.creator_name || (en ? "Organizer" : "主辦人")}</p>
           <div className="bg-emerald-500 text-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
             <div className="flex items-center justify-between gap-2">
               <p className="font-bold">{task.title}</p>
-              <span className="shrink-0 text-[10px] px-2 py-0.5 rounded-full bg-white/20">{label}</span>
+              <span className="shrink-0 text-[10px] px-2 py-0.5 rounded-full bg-white/20">{en ? ({"進行中":"Active","已截止":"Closed","已額滿":"Full","尚未開始":"Not Started"}[label] || label) : label}</span>
             </div>
             {task.description && <p className="text-sm text-emerald-50 mt-1.5 leading-relaxed whitespace-pre-wrap">{task.description}</p>}
             <div className="flex items-center gap-1 text-[11px] text-emerald-50 mt-2">
-              <Calendar size={12} /> {formatDateRange(task.start_date, task.end_date)}
+              <Calendar size={12} /> {en ? `${task.start_date} – ${task.end_date}` : formatDateRange(task.start_date, task.end_date)}
             </div>
             {categories.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-2">
@@ -69,7 +71,7 @@ export default function TaskAnnouncement({ task, full }) {
                 ))}
               </div>
             )}
-            {note && <p className="text-xs text-emerald-50/90 mt-2 border-t border-white/20 pt-2 whitespace-pre-wrap">備註：{note}</p>}
+            {note && <p className="text-xs text-emerald-50/90 mt-2 border-t border-white/20 pt-2 whitespace-pre-wrap">{en ? "Notes: " : "備註："}{note}</p>}
           </div>
         </div>
       </div>
