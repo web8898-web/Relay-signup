@@ -8,6 +8,7 @@ import TaskShareImagePanel from "@/components/TaskShareImagePanel";
 import LoadingBubble from "@/components/LoadingBubble";
 import FadeIn from "@/components/FadeIn";
 import Toast from "@/components/Toast";
+import { SHARE_TOUR_STEPS } from "@/lib/onboardingSteps";
 import OnboardingTour, { getOnboardingState, setOnboardingState } from "@/components/OnboardingTour";
 import { supabase } from "@/lib/supabaseClient";
 import { lineShareUrl, isQueueTask } from "@/lib/utils";
@@ -112,7 +113,7 @@ export default function ShareTaskPage() {
         <button onClick={() => router.push("/my-tasks")} className="mx-auto mt-5 flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 active:text-gray-600 py-2 px-3 transition"><ArrowLeft size={15} /> 回到任務清單</button>
       </FadeIn>
       <Toast className="bottom-4">{toast && <div className="bg-rose-500 text-white text-[13px] px-6 py-2 rounded-full shadow-lg whitespace-nowrap text-center leading-relaxed">{toast}</div>}</Toast>
-      {showTour && <OnboardingTour steps={[{ target: "line-share", tapTarget: true, title: "最後一步：分享到 LINE", text: "任務建立好了！按這個按鈕，把報名卡片分享到 LINE 群組或好友，大家點報名卡片就能直接報名。" }]} finishLabel="完成教學" onFinish={finishTour} onSkip={finishTour} />}
+      {showTour && <OnboardingTour steps={SHARE_TOUR_STEPS} finishLabel={{ zh: "完成教學", en: "Finish Tutorial" }} onFinish={finishTour} onSkip={finishTour} />}
     </div>
   );
 }

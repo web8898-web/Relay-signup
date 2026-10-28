@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useLanguage } from "@/lib/useLanguage";
 
 export const ONBOARDING_KEY = "relay_onboarding_v1";
 
@@ -39,56 +40,19 @@ export function resetOnboarding() {
   } catch (e) {}
 }
 
-const CREATE_BANNER_STEP = {
-  target: "banner",
-  title: "活動橫幅圖（選填）",
-  text: "需要時可點擊展開並上傳活動圖片。建議尺寸為 1200 × 630 像素，圖片會顯示在接龍頁、轉分享畫面與 LINE 分享卡片；沒有圖片也可以直接略過。",
-};
-
-export default function OnboardingTour({ steps, finishLabel = "知道了", onFinish, onSkip }) {
+export default function OnboardingTour({ steps, finishLabel, onFinish, onSkip }) {
+  const language = useLanguage();
+  const en = language === "en";
+  const copy = (value) => typeof value === "string" ? value : value?.[language];
   const [mounted, setMounted] = useState(false);
   const [index, setIndex] = useState(0);
   const [rect, setRect] = useState(null);
   const [place, setPlace] = useState("below");
-  const [effectiveSteps, setEffectiveSteps] = useState(steps);
   const [animate, setAnimate] = useState(true);
   const [shown, setShown] = useState(false);
   const rafRef = useRef(0);
 
   useEffect(() => setMounted(true), []);
-
-  useEffect(() => {
-    if (!mounted) return;
-    let cancelled = false;
-    const timers = [];
-
-    const resolveSteps = () => {
-      if (cancelled) return;
-      const isCreatePage = window.location.pathname === "/create";
-      const hasBannerTarget = Boolean(document.querySelector('[data-tour="banner"]'));
-      const alreadyIncluded = steps.some((item) => item.target === "banner");
-
-      if (isCreatePage && hasBannerTarget && !alreadyIncluded) {
-        const titleIndex = steps.findIndex((item) => item.target === "title");
-        const insertAt = titleIndex >= 0 ? titleIndex + 1 : 0;
-        setEffectiveSteps([
-          ...steps.slice(0, insertAt),
-          CREATE_BANNER_STEP,
-          ...steps.slice(insertAt),
-        ]);
-      } else {
-        setEffectiveSteps(steps);
-      }
-    };
-
-    resolveSteps();
-    [80, 220, 500].forEach((delay) => timers.push(window.setTimeout(resolveSteps, delay)));
-
-    return () => {
-      cancelled = true;
-      timers.forEach((timer) => window.clearTimeout(timer));
-    };
-  }, [mounted, steps]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -103,8 +67,8 @@ export default function OnboardingTour({ steps, finishLabel = "知道了", onFin
     };
   }, [mounted]);
 
-  const step = effectiveSteps[index];
-  const isLast = index === effectiveSteps.length - 1;
+  const step = steps[index];
+  const isLast = index === steps.length - 1;
 
   useEffect(() => {
     if (!rect || shown) return;
@@ -206,6 +170,8 @@ export default function OnboardingTour({ steps, finishLabel = "知道了", onFin
 
   return createPortal(
     <div
+      data-no-auto-i18n="true"
+      data-onboarding-tour="true"
       className={`fixed inset-0 z-[80] pointer-events-none transition-opacity duration-500 ease-out ${
         shown ? "opacity-100" : "opacity-0"
       }`}
@@ -265,7 +231,7 @@ export default function OnboardingTour({ steps, finishLabel = "知道了", onFin
       >
         <div className="bg-white rounded-3xl p-5 shadow-2xl">
           <div className="flex items-center gap-1.5 mb-2">
-            {effectiveSteps.map((item, itemIndex) => (
+            {steps.map((item, itemIndex) => (
               <span
                 key={`${item.target}-${itemIndex}`}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
@@ -273,17 +239,17 @@ export default function OnboardingTour({ steps, finishLabel = "知道了", onFin
                 }`}
               />
             ))}
-            {effectiveSteps.length > 1 && (
+            {steps.length > 1 && (
               <span className="ml-auto text-[11px] text-gray-400 font-medium">
-                {index + 1} / {effectiveSteps.length}
+                {index + 1} / {steps.length}
               </span>
             )}
           </div>
           <p className="font-semibold text-gray-800 mb-1" style={{ textWrap: "balance" }}>
-            {step.title}
+            {copy(step.title)}
           </p>
           <p className="text-sm text-gray-500 leading-relaxed">
-            {splitAtPunctuation(step.text).map((segment, segmentIndex) => (
+            {en ? copy(step.text) : splitAtPunctuation(copy(step.text)).map((segment, segmentIndex) => (
               <span key={segmentIndex} className="inline-block">
                 {segment}
               </span>
@@ -294,13 +260,13 @@ export default function OnboardingTour({ steps, finishLabel = "知道了", onFin
               onClick={() => onSkip?.()}
               className="text-xs text-gray-400 hover:text-gray-500 py-2 px-1 transition"
             >
-              略過教學
+              {en ? "Skip Tutorial" : "略過教學"}
             </button>
             <button
               onClick={handleNext}
               className="bg-emerald-500 hover:bg-emerald-600 active:scale-[0.97] text-white text-sm font-semibold rounded-full px-6 py-2.5 transition"
             >
-              {isLast ? finishLabel : "下一步"}
+              {isLast ? (copy(finishLabel) || (en ? "Got it" : "知道了")) : (en ? "Next" : "下一步")}
             </button>
           </div>
         </div>

@@ -16,6 +16,7 @@ function fixTutorialText(root = document) {
   if (!isEnglishMode()) return;
 
   root.querySelectorAll?.("button").forEach((button) => {
+    if (button.closest("[data-no-auto-i18n='true']")) return;
     const text = (button.textContent || "").replace(/\s+/g, " ").trim();
     if (text === "查看Standard Signup教學" || text === "查看 Standard Signup 教學") {
       button.textContent = "View Standard Signup Tutorial";

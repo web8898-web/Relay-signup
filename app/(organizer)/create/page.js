@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, CheckCircle2, X, AlertTriangle, ChevronDown } from "lucide-react";
+import { CREATE_TOUR_STEPS } from "@/lib/onboardingSteps";
 import TaskBannerField from "@/components/TaskBannerField";
 import { noteWithBanner } from "@/lib/taskConfig";
 import AutoGrowTextarea from "@/components/AutoGrowTextarea";
@@ -90,49 +91,6 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
     const t = setTimeout(() => setShowTour(true), 500);
     return () => clearTimeout(t);
   }, []);
-
-  const tourSteps = [
-    {
-      target: "title",
-      title: "填寫任務標題",
-      text: "先幫這個任務取個名字，例如「週日爬山健行」「週五團購水果」。標題是唯一必填的欄位。",
-    },
-    {
-      target: "banner",
-      title: "加入活動橫幅圖（選填）",
-      text: "想讓接龍更有辨識度，可以點擊展開並上傳圖片。建議尺寸為 1200 × 630，會顯示在接龍頁、轉分享畫面與 LINE 分享卡片；沒有圖片也可以直接略過。",
-    },
-    {
-      target: "description",
-      title: "填寫簡介（選填）",
-      text: "簡單說明這個任務在做什麼，例如集合時間地點、團購截止日，報名的人在報名頁就看得到。",
-    },
-    {
-      target: "dates",
-      title: "選擇日期",
-      text: "設定任務的起始日和到期日，點一下就會打開日期選擇器。",
-    },
-    {
-      target: "max",
-      title: "報名人數上限（選填）",
-      text: "設定最多幾人可以報名，額滿後就無法再報名。不填代表不限人數。",
-    },
-    {
-      target: "note",
-      title: "備註（選填）",
-      text: "其他想提醒大家的事項，例如集合地點、付款方式。",
-    },
-    {
-      target: "advanced",
-      title: "進階設定（選填）",
-      text: "需要調整任務模式、分類或統計數量時再展開，沒有需要可以略過。預設會用一般報名。",
-    },
-    {
-      target: "save",
-      title: "儲存任務",
-      text: "全部填寫好後，按這個按鈕，建立任務。完成後會跳到分享頁，再接續，最後一步教學。",
-    },
-  ];
 
   const defaults = useRef({ start_date: todayStr(), end_date: todayStr() });
 
@@ -584,8 +542,8 @@ function TaskForm({ accessToken, onCreated, onLeave }) {
 
       {showTour && (
         <OnboardingTour
-          steps={tourSteps}
-          finishLabel="知道了，開始填寫"
+          steps={CREATE_TOUR_STEPS}
+          finishLabel={{ zh: "知道了，開始填寫", en: "Got it, Start Filling" }}
           onFinish={() => {
             setOnboardingState("pending-share");
             setShowTour(false);

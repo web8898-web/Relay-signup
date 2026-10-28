@@ -16,6 +16,8 @@ import OrganizerContext from "@/lib/OrganizerContext";
 import OrganizerShell from "@/components/OrganizerShell";
 import ProxySignupFields from "@/components/ProxySignupFields";
 import ThreadList from "@/components/ThreadList";
+import ActualOnboardingTour from "../components/OnboardingTour";
+import { CREATE_TOUR_STEPS, SHARE_TOUR_STEPS } from "@/lib/onboardingSteps";
 
 const single = "__relay_category_single__";
 const multiple = "__relay_category_multiple__";
@@ -182,4 +184,32 @@ test('editing a signup keeps Single selection and blocks an empty Required categ
   await act(async()=>button(rendered.root,'A').props.onClick());
   assert.equal(button(rendered.root,'儲存').props.disabled,true);
   await act(async()=>rendered.unmount());
+});
+
+test('all eight create tutorial steps and the share tutorial render complete native zh/en copy',async()=>{
+  const originalDocument=globalThis.document;
+  const target={parentElement:null,getBoundingClientRect:()=>({top:150,left:20,width:340,height:80,bottom:230})};
+  globalThis.document={...originalDocument,querySelector:()=>target,addEventListener(){},removeEventListener(){}};
+  window.innerHeight=900;
+  try {
+    for(const steps of [CREATE_TOUR_STEPS,SHARE_TOUR_STEPS]) for(const language of ['en','zh']) {
+      // An incoming share link must override a different saved language.
+      store.set('relay_home_language',language==='en'?'zh':'en');
+      window.location.search=`?lang=${language}`;
+      let rendered,finished=0,skipped=0;
+      const finishLabel={zh:'知道了，開始填寫',en:'Got it, Start Filling'};
+      await act(async()=>{rendered=create(<ActualOnboardingTour steps={steps} finishLabel={finishLabel} onFinish={()=>finished++} onSkip={()=>skipped++}/>);});
+      for(let i=0;i<steps.length;i++) {
+        const output=text(rendered.toJSON());
+        assert.ok(output.includes(steps[i].title[language]));
+        assert.ok(output.includes(steps[i].text[language]));
+        if(language==='en') assert.ok(!/[\u3400-\u9fff]/.test(output),`Chinese leaked in step ${i+1}`);
+        assert.equal(rendered.root.findByProps({'data-onboarding-tour':'true'}).props['data-no-auto-i18n'],'true');
+        if(i===0) await act(async()=>button(rendered.root,language==='en'?'Skip Tutorial':'略過教學').props.onClick());
+        await act(async()=>button(rendered.root,i===steps.length-1?finishLabel[language]:language==='en'?'Next':'下一步').props.onClick());
+      }
+      assert.equal(finished,1);assert.equal(skipped,1);
+      await act(async()=>rendered.unmount());
+    }
+  } finally { globalThis.document=originalDocument;window.location.search=''; }
 });
